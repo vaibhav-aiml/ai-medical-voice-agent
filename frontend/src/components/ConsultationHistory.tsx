@@ -65,7 +65,7 @@ export default function ConsultationHistory({ consultations, onViewReport, onNew
                 <th style={styles.th}>Duration</th>
                 <th style={styles.th}>Status</th>
                 <th style={styles.th}>Action</th>
-              </table>
+              </tr>
             </thead>
             <tbody>
               {consultations.map((consultation) => (
@@ -173,7 +173,6 @@ const styles = {
   },
   tableRow: {
     transition: 'background 0.3s',
-    cursor: 'pointer',
   },
   specialistBadge: {
     background: '#e7f3ff',
