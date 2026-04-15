@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { 
-  Home, LayoutDashboard, FileText, Calendar, Plus, User, Mic, Stethoscope,
+  Home, LayoutDashboard, FileText, Calendar, Plus, Mic, Stethoscope,
   ClipboardList, ArrowRight, Download, X, Activity, Brain, Heart, Bone, Baby,
   Sparkles, MessageCircle, Clock, CheckCircle
 } from 'lucide-react';
@@ -14,14 +14,12 @@ import DashboardStatsComponent from './components/DashboardStats';
 import MedicalReportModal from './components/MedicalReportModal';
 import AppointmentBooking from './components/AppointmentBooking';
 import MyAppointments from './components/MyAppointments';
-import { api } from './services/api';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
 
 function AppContent() {
   const { userId } = useAuth();
   const { user } = useUser();
   const [currentPage, setCurrentPage] = useState('home');
-  const [showConsultation, setShowConsultation] = useState(false);
   const [selectedSpecialist, setSelectedSpecialist] = useState('');
   const [consultationId, setConsultationId] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -160,7 +158,6 @@ function AppContent() {
     updateStats(updatedConsultations);
     
     setConsultationStarted(false);
-    setShowConsultation(false);
     setSelectedSpecialist('');
     setCurrentPage('dashboard');
     setMessages([]);
@@ -185,7 +182,6 @@ function AppContent() {
 
   const handleNewConsultation = () => {
     setCurrentPage('consultation');
-    setShowConsultation(true);
     setConsultationStarted(false);
     setSelectedSpecialist('');
     setMessages([]);
@@ -232,7 +228,7 @@ function AppContent() {
             <button onClick={() => { setCurrentPage('dashboard'); setRefreshKey(prev => prev + 1); }} style={styles.navButton}><LayoutDashboard size={18} /><span>Dashboard</span></button>
             <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>Reports</span></button>
             <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>Appointments</span></button>
-            <button onClick={() => { setCurrentPage('consultation'); setShowConsultation(true); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>New Consultation</span></button>
+            <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>New Consultation</span></button>
           </div>
         </div>
       </nav>
@@ -258,7 +254,7 @@ function AppContent() {
               <div style={styles.card}><div style={styles.cardIcon}><ClipboardList size={28} /></div><h3>Medical Reports</h3><p>Download detailed PDF reports instantly</p></div>
             </div>
 
-            <button onClick={() => { setCurrentPage('consultation'); setShowConsultation(true); }} style={styles.startButton}>Start Consultation <ArrowRight size={18} /></button>
+            <button onClick={() => { setCurrentPage('consultation'); }} style={styles.startButton}>Start Consultation <ArrowRight size={18} /></button>
           </div>
         </div>
       )}
