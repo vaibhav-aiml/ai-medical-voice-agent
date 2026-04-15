@@ -29,6 +29,14 @@ export default function ConsultationHistory({ consultations, onViewReport, onNew
     return `${hours}h ${mins}m`;
   };
 
+  const getSymptomsPreview = (symptoms: string | undefined) => {
+    if (!symptoms) return 'No symptoms recorded';
+    if (symptoms.length > 50) {
+      return symptoms.substring(0, 50) + '...';
+    }
+    return symptoms;
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -57,7 +65,7 @@ export default function ConsultationHistory({ consultations, onViewReport, onNew
                 <th style={styles.th}>Duration</th>
                 <th style={styles.th}>Status</th>
                 <th style={styles.th}>Action</th>
-              </tr>
+              </table>
             </thead>
             <tbody>
               {consultations.map((consultation) => (
@@ -68,10 +76,7 @@ export default function ConsultationHistory({ consultations, onViewReport, onNew
                       {consultation.specialistName || consultation.specialistType}
                     </span>
                   </td>
-                  <td style={styles.td}>
-                    {consultation.symptoms?.substring(0, 50) || 'No symptoms recorded'}
-                    {consultation.symptoms?.length > 50 && '...'}
-                  </td>
+                  <td style={styles.td}>{getSymptomsPreview(consultation.symptoms)}</td>
                   <td style={styles.td}>{formatDuration(consultation.duration)}</td>
                   <td style={styles.td}>
                     <span style={{...styles.statusBadge, backgroundColor: getStatusColor(consultation.status)}}>

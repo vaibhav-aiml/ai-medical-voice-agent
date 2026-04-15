@@ -86,12 +86,11 @@ export default function AppointmentBooking({ consultationId, specialistType, spe
             <label style={styles.label}>Select Date:</label>
             <DatePicker
               selected={selectedDate}
-              onChange={(date) => setSelectedDate(date)}
+              onChange={(date: Date | null) => setSelectedDate(date)}
               minDate={minDate}
               maxDate={maxDate}
               dateFormat="MMMM d, yyyy"
               placeholderText="Choose a date"
-              style={styles.datePicker}
             />
           </div>
 
@@ -200,13 +199,6 @@ const styles = {
     marginBottom: '8px',
     fontWeight: 'bold',
     color: '#333',
-  },
-  datePicker: {
-    width: '100%',
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    fontSize: '16px',
   },
   select: {
     width: '100%',
