@@ -6,7 +6,6 @@ import {
   Sparkles, MessageCircle, Clock, CheckCircle
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
-import UserProfile from './components/UserProfile';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -30,7 +29,6 @@ function AppContent() {
   const [consultations, setConsultations] = useState<ConsultationSession[]>([]);
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState<ConsultationSession | null>(null);
-  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showAppointmentsList, setShowAppointmentsList] = useState(false);
   const [currentConsultationForAppointment, setCurrentConsultationForAppointment] = useState<any>(null);
@@ -235,7 +233,6 @@ function AppContent() {
             <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>Reports</span></button>
             <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>Appointments</span></button>
             <button onClick={() => { setCurrentPage('consultation'); setShowConsultation(true); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>New Consultation</span></button>
-            <button onClick={() => setShowProfileModal(true)} style={styles.profileButton}><User size={18} /><span>{getUserName()}</span></button>
           </div>
         </div>
       </nav>
@@ -321,7 +318,6 @@ function AppContent() {
       )}
 
       {showReportModal && selectedConsultation && <MedicalReportModal consultationId={selectedConsultation.id} specialistType={selectedConsultation.specialistType} symptoms={selectedConsultation.symptoms || 'No symptoms recorded'} onClose={() => setShowReportModal(false)} />}
-      {showProfileModal && <UserProfile onClose={() => setShowProfileModal(false)} />}
       {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert('✅ Appointment booked successfully!'); }} />}
       
       {showAppointmentsList && (
@@ -356,7 +352,6 @@ const styles = {
   navLinks: { display: 'flex', gap: '6px', flexWrap: 'wrap' as const, alignItems: 'center' },
   navButton: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'transparent', border: 'none', borderRadius: '10px', cursor: 'pointer', color: '#64748b', fontSize: '0.875rem', fontWeight: 500 },
   consultButton: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 20px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 },
-  profileButton: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 },
   hero: { minHeight: 'calc(100vh - 72px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px' },
   heroContent: { maxWidth: '1200px', textAlign: 'center' as const },
   badge: { display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#e0e7ff', padding: '6px 16px', borderRadius: '50px', color: '#3b82f6', fontSize: '0.75rem', fontWeight: 500, marginBottom: '24px' },
