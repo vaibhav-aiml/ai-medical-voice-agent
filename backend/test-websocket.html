@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Testing Voice WebSocket</h1>
+    <button onclick="connect()">Connect</button>
+    <button onclick="joinConsultation()">Join Consultation</button>
+    <button onclick="sendAudio()">Send Test Audio</button>
+    
+    <script>
+        let socket;
+        
+        function connect() {
+            socket = io('http://localhost:3000');
+            socket.on('connect', () => console.log('Connected!'));
+            socket.on('joined', (data) => console.log('Joined:', data));
+            socket.on('transcript-update', (data) => console.log('Transcript:', data));
+            console.log('Connecting...');
+        }
+        
+        function joinConsultation() {
+            socket.emit('join-consultation', 'test-consultation-123');
+        }
+        
+        function sendAudio() {
+            const testData = {
+                consultationId: 'test-consultation-123',
+                audioChunk: Buffer.from('test audio data'),
+                timestamp: new Date()
+            };
+            socket.emit('audio-stream', testData);
+        }
+    </script>
+</body>
+</html>
