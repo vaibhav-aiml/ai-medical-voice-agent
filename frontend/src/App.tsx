@@ -3,12 +3,15 @@ import { useAuth, useUser } from '@clerk/clerk-react';
 import { 
   Home, LayoutDashboard, FileText, Calendar, Plus, Mic, Stethoscope,
   ClipboardList, ArrowRight, Download, X, Activity, Brain, Heart, Bone, Baby,
-  Sparkles, MessageCircle, Clock, CheckCircle
+  Sparkles, MessageCircle, Clock, CheckCircle, Star
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
 import ThemeToggle from './components/ThemeToggle';
 import SymptomChecker from './components/SymptomChecker';
 import HealthTips from './components/HealthTips';
+import EmergencyContacts from './components/EmergencyContacts';
+import ConsultationRating from './components/ConsultationRating';
+import HealthGoals from './components/HealthGoals';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -34,6 +37,10 @@ function AppContent() {
   const [showAppointmentsList, setShowAppointmentsList] = useState(false);
   const [showSymptomChecker, setShowSymptomChecker] = useState(false);
   const [showHealthTips, setShowHealthTips] = useState(false);
+  const [showEmergencyContacts, setShowEmergencyContacts] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showHealthGoals, setShowHealthGoals] = useState(false);
+  const [selectedRatingConsultation, setSelectedRatingConsultation] = useState<ConsultationSession | null>(null);
   const [currentConsultationForAppointment, setCurrentConsultationForAppointment] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [manualSymptoms, setManualSymptoms] = useState('');
@@ -201,6 +208,30 @@ function AppContent() {
     setMessages([]);
   };
 
+  const handleRateConsultation = (consultation: ConsultationSession) => {
+    setSelectedRatingConsultation(consultation);
+    setShowRatingModal(true);
+  };
+
+  const handleRatingSubmit = (rating: number, feedback: string) => {
+    if (selectedRatingConsultation) {
+      const ratings = JSON.parse(localStorage.getItem('consultationRatings') || '{}');
+      ratings[selectedRatingConsultation.id] = { 
+        rating, 
+        feedback, 
+        date: new Date().toISOString(),
+        consultationTitle: selectedRatingConsultation.specialistName
+      };
+      localStorage.setItem('consultationRatings', JSON.stringify(ratings));
+      
+      const allRatings = Object.values(ratings);
+      const avgRating = allRatings.length > 0 
+        ? (allRatings.reduce((acc: number, r: any) => acc + r.rating, 0) / allRatings.length).toFixed(1)
+        : 0;
+      localStorage.setItem('averageRating', avgRating.toString());
+    }
+  };
+
   const getUserName = () => {
     if (user?.fullName) return user.fullName.split(' ')[0];
     if (user?.firstName) return user.firstName;
@@ -246,6 +277,12 @@ function AppContent() {
             </button>
             <button onClick={() => setShowHealthTips(true)} style={styles.healthButton}>
               📚 Health Tips
+            </button>
+            <button onClick={() => setShowEmergencyContacts(true)} style={styles.emergencyButton}>
+              🚨 Emergency
+            </button>
+            <button onClick={() => setShowHealthGoals(true)} style={styles.goalsButton}>
+              🎯 Health Goals
             </button>
             <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>New Consultation</span></button>
             <ThemeToggle />
@@ -319,13 +356,32 @@ function AppContent() {
               <div key={consultation.id} style={styles.reportCard}>
                 <div style={styles.reportHeader}>
                   <div style={styles.reportIconArea}>{getSpecialistIcon(consultation.specialistType)}</div>
-                  <div style={styles.reportInfo}><h3 style={styles.reportTitle}>{consultation.specialistName}</h3><p style={styles.reportDate}>{new Date(consultation.startedAt).toLocaleDateString()}</p></div>
-                  <div style={styles.reportStatus}><CheckCircle size={14} color="#10b981" /><span>Completed</span></div>
+                  <div style={styles.reportInfo}>
+                    <h3 style={styles.reportTitle}>Consultation with {consultation.specialistName}</h3>
+                    <p style={styles.reportDate}>{new Date(consultation.startedAt).toLocaleDateString()}</p>
+                  </div>
+                  <div style={styles.reportStatus}>
+                    <CheckCircle size={14} color="#10b981" />
+                    <span>Completed</span>
+                  </div>
                 </div>
-                <div style={styles.reportContent}><p><strong>Symptoms:</strong> {consultation.symptoms?.substring(0, 100)}...</p><p><strong>Duration:</strong> {consultation.duration} minutes</p></div>
+                <div style={styles.reportContent}>
+                  <p><strong>Symptoms:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
+                  <p><strong>Duration:</strong> {consultation.duration} minutes</p>
+                </div>
                 <div style={styles.reportActions}>
-                  <button onClick={() => handleViewReport(consultation.id)} style={styles.downloadButton}><Download size={16} /><span>View Report</span></button>
-                  <button onClick={() => handleBookAppointment(consultation)} style={styles.bookButton}><Calendar size={16} /><span>Book Follow-up</span></button>
+                  <button onClick={() => handleViewReport(consultation.id)} style={styles.downloadButton}>
+                    <Download size={16} />
+                    <span>View Report</span>
+                  </button>
+                  <button onClick={() => handleBookAppointment(consultation)} style={styles.bookButton}>
+                    <Calendar size={16} />
+                    <span>Book Follow-up</span>
+                  </button>
+                  <button onClick={() => handleRateConsultation(consultation)} style={styles.ratingButton}>
+                    <Star size={16} />
+                    <span>Rate Consultation</span>
+                  </button>
                 </div>
               </div>
             ))}
@@ -337,6 +393,16 @@ function AppContent() {
       {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert('✅ Appointment booked successfully!'); }} />}
       {showSymptomChecker && <SymptomChecker onClose={() => setShowSymptomChecker(false)} onStartConsultation={handleSymptomCheckerConsultation} />}
       {showHealthTips && <HealthTips onClose={() => setShowHealthTips(false)} />}
+      {showEmergencyContacts && <EmergencyContacts onClose={() => setShowEmergencyContacts(false)} />}
+      {showRatingModal && selectedRatingConsultation && (
+        <ConsultationRating
+          consultationId={selectedRatingConsultation.id}
+          consultationTitle={`Consultation with ${selectedRatingConsultation.specialistName}`}
+          onClose={() => setShowRatingModal(false)}
+          onSubmit={handleRatingSubmit}
+        />
+      )}
+      {showHealthGoals && <HealthGoals onClose={() => setShowHealthGoals(false)} />}
       
       {showAppointmentsList && (
         <div style={styles.modalOverlay}>
@@ -466,6 +532,32 @@ const styles = {
     fontWeight: 500,
   },
   healthButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  emergencyButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  goalsButton: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
@@ -752,16 +844,17 @@ const styles = {
   reportContent: { 
     marginBottom: '16px' 
   },
-  reportActions: { 
-    display: 'flex', 
-    gap: '12px' 
+  reportActions: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
   },
   downloadButton: { 
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center', 
     gap: '8px', 
-    flex: 1, 
+    width: '100%', 
     padding: '10px', 
     background: 'var(--badge-bg)', 
     color: 'var(--text-secondary)', 
@@ -776,7 +869,7 @@ const styles = {
     alignItems: 'center', 
     justifyContent: 'center', 
     gap: '8px', 
-    flex: 1, 
+    width: '100%', 
     padding: '10px', 
     background: 'var(--badge-bg)', 
     color: 'var(--button-primary)', 
@@ -785,6 +878,21 @@ const styles = {
     cursor: 'pointer', 
     fontWeight: 500, 
     fontSize: '13px' 
+  },
+  ratingButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    width: '100%',
+    padding: '10px',
+    background: '#f59e0b',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    fontSize: '13px',
   },
   modalOverlay: { 
     position: 'fixed' as const, 
