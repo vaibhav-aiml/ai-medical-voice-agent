@@ -8,6 +8,7 @@ import {
 import AuthGuard from './components/AuthGuard';
 import ThemeToggle from './components/ThemeToggle';
 import SymptomChecker from './components/SymptomChecker';
+import HealthTips from './components/HealthTips';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -32,6 +33,7 @@ function AppContent() {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showAppointmentsList, setShowAppointmentsList] = useState(false);
   const [showSymptomChecker, setShowSymptomChecker] = useState(false);
+  const [showHealthTips, setShowHealthTips] = useState(false);
   const [currentConsultationForAppointment, setCurrentConsultationForAppointment] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [manualSymptoms, setManualSymptoms] = useState('');
@@ -242,6 +244,9 @@ function AppContent() {
             <button onClick={() => setShowSymptomChecker(true)} style={styles.symptomButton}>
               🤖 Symptom Checker
             </button>
+            <button onClick={() => setShowHealthTips(true)} style={styles.healthButton}>
+              📚 Health Tips
+            </button>
             <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>New Consultation</span></button>
             <ThemeToggle />
           </div>
@@ -331,6 +336,7 @@ function AppContent() {
       {showReportModal && selectedConsultation && <MedicalReportModal consultationId={selectedConsultation.id} specialistType={selectedConsultation.specialistType} symptoms={selectedConsultation.symptoms || 'No symptoms recorded'} onClose={() => setShowReportModal(false)} />}
       {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert('✅ Appointment booked successfully!'); }} />}
       {showSymptomChecker && <SymptomChecker onClose={() => setShowSymptomChecker(false)} onStartConsultation={handleSymptomCheckerConsultation} />}
+      {showHealthTips && <HealthTips onClose={() => setShowHealthTips(false)} />}
       
       {showAppointmentsList && (
         <div style={styles.modalOverlay}>
@@ -452,6 +458,19 @@ const styles = {
     gap: '8px',
     padding: '8px 16px',
     background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  healthButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    background: 'linear-gradient(135deg, #10b981, #059669)',
     color: 'white',
     border: 'none',
     borderRadius: '10px',
