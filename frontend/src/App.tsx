@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
 import ThemeToggle from './components/ThemeToggle';
+import SymptomChecker from './components/SymptomChecker';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -30,6 +31,7 @@ function AppContent() {
   const [selectedConsultation, setSelectedConsultation] = useState<ConsultationSession | null>(null);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showAppointmentsList, setShowAppointmentsList] = useState(false);
+  const [showSymptomChecker, setShowSymptomChecker] = useState(false);
   const [currentConsultationForAppointment, setCurrentConsultationForAppointment] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [manualSymptoms, setManualSymptoms] = useState('');
@@ -189,6 +191,14 @@ function AppContent() {
     setManualSymptoms('');
   };
 
+  const handleSymptomCheckerConsultation = (specialistType: string, symptoms: string) => {
+    setSelectedSpecialist(specialistType);
+    setManualSymptoms(symptoms);
+    setCurrentPage('consultation');
+    setConsultationStarted(true);
+    setMessages([]);
+  };
+
   const getUserName = () => {
     if (user?.fullName) return user.fullName.split(' ')[0];
     if (user?.firstName) return user.firstName;
@@ -229,6 +239,9 @@ function AppContent() {
             <button onClick={() => { setCurrentPage('dashboard'); setRefreshKey(prev => prev + 1); }} style={styles.navButton}><LayoutDashboard size={18} /><span>Dashboard</span></button>
             <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>Reports</span></button>
             <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>Appointments</span></button>
+            <button onClick={() => setShowSymptomChecker(true)} style={styles.symptomButton}>
+              🤖 Symptom Checker
+            </button>
             <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>New Consultation</span></button>
             <ThemeToggle />
           </div>
@@ -317,6 +330,7 @@ function AppContent() {
 
       {showReportModal && selectedConsultation && <MedicalReportModal consultationId={selectedConsultation.id} specialistType={selectedConsultation.specialistType} symptoms={selectedConsultation.symptoms || 'No symptoms recorded'} onClose={() => setShowReportModal(false)} />}
       {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert('✅ Appointment booked successfully!'); }} />}
+      {showSymptomChecker && <SymptomChecker onClose={() => setShowSymptomChecker(false)} onStartConsultation={handleSymptomCheckerConsultation} />}
       
       {showAppointmentsList && (
         <div style={styles.modalOverlay}>
@@ -431,6 +445,19 @@ const styles = {
     cursor: 'pointer', 
     fontSize: '0.875rem', 
     fontWeight: 500 
+  },
+  symptomButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
   },
   hero: { 
     minHeight: 'calc(100vh - 72px)', 
