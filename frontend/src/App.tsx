@@ -6,6 +6,7 @@ import {
   Sparkles, MessageCircle, Clock, CheckCircle
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
+import ThemeToggle from './components/ThemeToggle';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -210,7 +211,7 @@ function AppContent() {
     return (
       <div style={styles.loadingContainer}>
         <div style={styles.loader}></div>
-        <p style={{ marginTop: '20px', color: '#4a5568' }}>Loading your consultations...</p>
+        <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>Loading your consultations...</p>
       </div>
     );
   }
@@ -229,6 +230,7 @@ function AppContent() {
             <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>Reports</span></button>
             <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>Appointments</span></button>
             <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>New Consultation</span></button>
+            <ThemeToggle />
           </div>
         </div>
       </nav>
@@ -337,63 +339,445 @@ function App() {
 }
 
 const styles = {
-  app: { minHeight: '100vh', background: '#f0f9ff' },
-  loadingContainer: { display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f0f9ff' },
-  loader: { width: '50px', height: '50px', border: '3px solid #e0e7ff', borderTop: '3px solid #3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite' },
-  nav: { background: 'white', padding: '1rem 0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', position: 'sticky' as const, top: 0, zIndex: 100, borderBottom: '1px solid #e5e7eb' },
-  navContent: { maxWidth: '1280px', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: '16px' },
-  logoContainer: { display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' },
-  logoIcon: { width: '36px', height: '36px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' },
-  logo: { fontSize: '1.25rem', fontWeight: 700, color: '#1e293b', margin: 0 },
-  navLinks: { display: 'flex', gap: '6px', flexWrap: 'wrap' as const, alignItems: 'center' },
-  navButton: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'transparent', border: 'none', borderRadius: '10px', cursor: 'pointer', color: '#64748b', fontSize: '0.875rem', fontWeight: 500 },
-  consultButton: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 20px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 },
-  hero: { minHeight: 'calc(100vh - 72px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px' },
-  heroContent: { maxWidth: '1200px', textAlign: 'center' as const },
-  badge: { display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#e0e7ff', padding: '6px 16px', borderRadius: '50px', color: '#3b82f6', fontSize: '0.75rem', fontWeight: 500, marginBottom: '24px' },
-  title: { fontSize: '48px', fontWeight: 700, color: '#1e293b', marginBottom: '16px', letterSpacing: '-0.02em' },
-  titleAccent: { color: '#3b82f6' },
-  subtitle: { fontSize: '18px', color: '#64748b', marginBottom: '48px', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 },
-  statsRow: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '32px', marginBottom: '64px', background: 'white', padding: '24px 48px', borderRadius: '60px', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' },
-  statItem: { display: 'flex', alignItems: 'center', gap: '12px' },
-  statIcon: { width: '40px', height: '40px', background: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' },
-  statValue: { fontSize: '20px', fontWeight: 700, color: '#1e293b' },
-  statLabel: { fontSize: '12px', color: '#64748b' },
-  statDivider: { width: '1px', height: '30px', background: '#e2e8f0' },
-  features: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', marginBottom: '48px' },
-  card: { background: 'white', padding: '32px 24px', borderRadius: '20px', textAlign: 'center' as const, border: '1px solid #e5e7eb' },
-  cardIcon: { width: '64px', height: '64px', background: '#eff6ff', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#3b82f6' },
-  startButton: { display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '14px 32px', fontSize: '16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 500 },
-  pageContainer: { maxWidth: '1280px', margin: '40px auto', padding: '0 24px' },
-  pageHeader: { marginBottom: '32px' },
-  pageTitle: { fontSize: '28px', fontWeight: 700, color: '#1e293b', marginBottom: '8px' },
-  pageSubtitle: { fontSize: '14px', color: '#64748b' },
-  consultationContainer: { maxWidth: '1200px', margin: '40px auto', padding: '32px', background: 'white', borderRadius: '24px', border: '1px solid #e5e7eb' },
-  consultationTitle: { fontSize: '22px', fontWeight: 600, color: '#1e293b' },
-  consultationSubtitle: { fontSize: '13px', color: '#64748b', marginTop: '4px' },
-  consultationHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid #e5e7eb' },
-  closeButton: { background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '8px', borderRadius: '8px' },
-  setupSection: { padding: '20px' },
-  startConsultButton: { marginTop: '30px', padding: '14px 28px', fontSize: '16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 500, width: '100%' },
-  activeConsultation: { padding: '20px' },
-  specialistInfo: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '14px 20px', background: '#f8fafc', borderRadius: '12px' },
-  specialistBadge: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: 500, color: '#3b82f6' },
-  endButton: { padding: '8px 20px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
-  reportsList: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '24px' },
-  reportCard: { background: 'white', borderRadius: '16px', padding: '20px', border: '1px solid #e5e7eb' },
-  reportHeader: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #e5e7eb' },
-  reportIconArea: { width: '40px', height: '40px', background: '#eff6ff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' },
-  reportInfo: { flex: 1 },
-  reportTitle: { fontSize: '15px', fontWeight: 600, margin: 0, color: '#1e293b' },
-  reportDate: { fontSize: '11px', color: '#64748b', margin: '4px 0 0' },
-  reportStatus: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#10b981', background: '#ecfdf5', padding: '4px 10px', borderRadius: '20px' },
-  reportContent: { marginBottom: '16px' },
-  reportActions: { display: 'flex', gap: '12px' },
-  downloadButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: 1, padding: '10px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
-  bookButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: 1, padding: '10px', background: '#eff6ff', color: '#3b82f6', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
-  modalOverlay: { position: 'fixed' as const, top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modalContent: { background: 'white', borderRadius: '20px', maxWidth: '600px', width: '90%', maxHeight: '85vh', overflow: 'auto' as const, position: 'relative' as const, padding: '24px' },
-  modalClose: { position: 'absolute' as const, top: '16px', right: '16px', background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#64748b', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  app: { 
+    minHeight: '100vh', 
+    background: 'var(--bg-primary)',
+  },
+  loadingContainer: { 
+    display: 'flex', 
+    flexDirection: 'column' as const, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    height: '100vh', 
+    background: 'var(--bg-primary)',
+  },
+  loader: { 
+    width: '50px', 
+    height: '50px', 
+    border: '3px solid var(--border-color)', 
+    borderTop: '3px solid var(--button-primary)', 
+    borderRadius: '50%', 
+    animation: 'spin 1s linear infinite' 
+  },
+  nav: { 
+    background: 'var(--nav-bg)', 
+    padding: '1rem 0', 
+    boxShadow: 'var(--card-shadow)', 
+    position: 'sticky' as const, 
+    top: 0, 
+    zIndex: 100, 
+    borderBottom: '1px solid var(--border-color)' 
+  },
+  navContent: { 
+    maxWidth: '1280px', 
+    margin: '0 auto', 
+    padding: '0 24px', 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    flexWrap: 'wrap' as const, 
+    gap: '16px' 
+  },
+  logoContainer: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '10px', 
+    cursor: 'pointer' 
+  },
+  logoIcon: { 
+    width: '36px', 
+    height: '36px', 
+    background: 'linear-gradient(135deg, var(--button-primary), #2563eb)', 
+    borderRadius: '10px', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    color: 'white' 
+  },
+  logo: { 
+    fontSize: '1.25rem', 
+    fontWeight: 700, 
+    color: 'var(--text-primary)', 
+    margin: 0 
+  },
+  navLinks: { 
+    display: 'flex', 
+    gap: '6px', 
+    flexWrap: 'wrap' as const, 
+    alignItems: 'center' 
+  },
+  navButton: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '8px', 
+    padding: '8px 16px', 
+    background: 'transparent', 
+    border: 'none', 
+    borderRadius: '10px', 
+    cursor: 'pointer', 
+    color: 'var(--text-secondary)', 
+    fontSize: '0.875rem', 
+    fontWeight: 500 
+  },
+  consultButton: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '8px', 
+    padding: '8px 20px', 
+    background: 'var(--button-primary)', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '10px', 
+    cursor: 'pointer', 
+    fontSize: '0.875rem', 
+    fontWeight: 500 
+  },
+  hero: { 
+    minHeight: 'calc(100vh - 72px)', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    padding: '48px 24px' 
+  },
+  heroContent: { 
+    maxWidth: '1200px', 
+    textAlign: 'center' as const 
+  },
+  badge: { 
+    display: 'inline-flex', 
+    alignItems: 'center', 
+    gap: '8px', 
+    background: 'var(--badge-bg)', 
+    padding: '6px 16px', 
+    borderRadius: '50px', 
+    color: 'var(--badge-text)', 
+    fontSize: '0.75rem', 
+    fontWeight: 500, 
+    marginBottom: '24px' 
+  },
+  title: { 
+    fontSize: '48px', 
+    fontWeight: 700, 
+    color: 'var(--text-primary)', 
+    marginBottom: '16px', 
+    letterSpacing: '-0.02em' 
+  },
+  titleAccent: { 
+    color: 'var(--button-primary)' 
+  },
+  subtitle: { 
+    fontSize: '18px', 
+    color: 'var(--text-secondary)', 
+    marginBottom: '48px', 
+    maxWidth: '600px', 
+    marginLeft: 'auto', 
+    marginRight: 'auto', 
+    lineHeight: 1.6 
+  },
+  statsRow: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: '32px', 
+    marginBottom: '64px', 
+    background: 'var(--bg-card)', 
+    padding: '24px 48px', 
+    borderRadius: '60px', 
+    maxWidth: '500px', 
+    marginLeft: 'auto', 
+    marginRight: 'auto' 
+  },
+  statItem: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '12px' 
+  },
+  statIcon: { 
+    width: '40px', 
+    height: '40px', 
+    background: 'var(--badge-bg)', 
+    borderRadius: '50%', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    color: 'var(--button-primary)' 
+  },
+  statValue: { 
+    fontSize: '20px', 
+    fontWeight: 700, 
+    color: 'var(--text-primary)' 
+  },
+  statLabel: { 
+    fontSize: '12px', 
+    color: 'var(--text-secondary)' 
+  },
+  statDivider: { 
+    width: '1px', 
+    height: '30px', 
+    background: 'var(--border-color)' 
+  },
+  features: { 
+    display: 'grid', 
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', 
+    gap: '24px', 
+    marginBottom: '48px' 
+  },
+  card: { 
+    background: 'var(--bg-card)', 
+    padding: '32px 24px', 
+    borderRadius: '20px', 
+    textAlign: 'center' as const, 
+    border: '1px solid var(--border-color)' 
+  },
+  cardIcon: { 
+    width: '64px', 
+    height: '64px', 
+    background: 'var(--badge-bg)', 
+    borderRadius: '20px', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    margin: '0 auto 20px', 
+    color: 'var(--button-primary)' 
+  },
+  startButton: { 
+    display: 'inline-flex', 
+    alignItems: 'center', 
+    gap: '10px', 
+    padding: '14px 32px', 
+    fontSize: '16px', 
+    background: 'var(--button-primary)', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '12px', 
+    cursor: 'pointer', 
+    fontWeight: 500 
+  },
+  pageContainer: { 
+    maxWidth: '1280px', 
+    margin: '40px auto', 
+    padding: '0 24px' 
+  },
+  pageHeader: { 
+    marginBottom: '32px' 
+  },
+  pageTitle: { 
+    fontSize: '28px', 
+    fontWeight: 700, 
+    color: 'var(--text-primary)', 
+    marginBottom: '8px' 
+  },
+  pageSubtitle: { 
+    fontSize: '14px', 
+    color: 'var(--text-secondary)' 
+  },
+  consultationContainer: { 
+    maxWidth: '1200px', 
+    margin: '40px auto', 
+    padding: '32px', 
+    background: 'var(--bg-card)', 
+    borderRadius: '24px', 
+    border: '1px solid var(--border-color)' 
+  },
+  consultationTitle: { 
+    fontSize: '22px', 
+    fontWeight: 600, 
+    color: 'var(--text-primary)' 
+  },
+  consultationSubtitle: { 
+    fontSize: '13px', 
+    color: 'var(--text-secondary)', 
+    marginTop: '4px' 
+  },
+  consultationHeader: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'flex-start', 
+    marginBottom: '24px', 
+    paddingBottom: '20px', 
+    borderBottom: '1px solid var(--border-color)' 
+  },
+  closeButton: { 
+    background: 'transparent', 
+    border: 'none', 
+    cursor: 'pointer', 
+    color: 'var(--text-secondary)', 
+    padding: '8px', 
+    borderRadius: '8px' 
+  },
+  setupSection: { 
+    padding: '20px' 
+  },
+  startConsultButton: { 
+    marginTop: '30px', 
+    padding: '14px 28px', 
+    fontSize: '16px', 
+    background: 'var(--button-primary)', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '12px', 
+    cursor: 'pointer', 
+    fontWeight: 500, 
+    width: '100%' 
+  },
+  activeConsultation: { 
+    padding: '20px' 
+  },
+  specialistInfo: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: '24px', 
+    padding: '14px 20px', 
+    background: 'var(--badge-bg)', 
+    borderRadius: '12px' 
+  },
+  specialistBadge: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '10px', 
+    fontSize: '14px', 
+    fontWeight: 500, 
+    color: 'var(--button-primary)' 
+  },
+  endButton: { 
+    padding: '8px 20px', 
+    background: 'var(--button-danger)', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '8px', 
+    cursor: 'pointer', 
+    fontWeight: 500, 
+    fontSize: '13px' 
+  },
+  reportsList: { 
+    display: 'grid', 
+    gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', 
+    gap: '24px' 
+  },
+  reportCard: { 
+    background: 'var(--bg-card)', 
+    borderRadius: '16px', 
+    padding: '20px', 
+    border: '1px solid var(--border-color)' 
+  },
+  reportHeader: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '12px', 
+    marginBottom: '16px', 
+    paddingBottom: '16px', 
+    borderBottom: '1px solid var(--border-color)' 
+  },
+  reportIconArea: { 
+    width: '40px', 
+    height: '40px', 
+    background: 'var(--badge-bg)', 
+    borderRadius: '12px', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    color: 'var(--button-primary)' 
+  },
+  reportInfo: { 
+    flex: 1 
+  },
+  reportTitle: { 
+    fontSize: '15px', 
+    fontWeight: 600, 
+    margin: 0, 
+    color: 'var(--text-primary)' 
+  },
+  reportDate: { 
+    fontSize: '11px', 
+    color: 'var(--text-secondary)', 
+    margin: '4px 0 0' 
+  },
+  reportStatus: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '6px', 
+    fontSize: '11px', 
+    color: 'var(--status-completed-text)', 
+    background: 'var(--status-completed-bg)', 
+    padding: '4px 10px', 
+    borderRadius: '20px' 
+  },
+  reportContent: { 
+    marginBottom: '16px' 
+  },
+  reportActions: { 
+    display: 'flex', 
+    gap: '12px' 
+  },
+  downloadButton: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: '8px', 
+    flex: 1, 
+    padding: '10px', 
+    background: 'var(--badge-bg)', 
+    color: 'var(--text-secondary)', 
+    border: 'none', 
+    borderRadius: '10px', 
+    cursor: 'pointer', 
+    fontWeight: 500, 
+    fontSize: '13px' 
+  },
+  bookButton: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: '8px', 
+    flex: 1, 
+    padding: '10px', 
+    background: 'var(--badge-bg)', 
+    color: 'var(--button-primary)', 
+    border: 'none', 
+    borderRadius: '10px', 
+    cursor: 'pointer', 
+    fontWeight: 500, 
+    fontSize: '13px' 
+  },
+  modalOverlay: { 
+    position: 'fixed' as const, 
+    top: 0, 
+    left: 0, 
+    right: 0, 
+    bottom: 0, 
+    background: 'rgba(0,0,0,0.4)', 
+    backdropFilter: 'blur(4px)', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    zIndex: 1000 
+  },
+  modalContent: { 
+    background: 'var(--bg-card)', 
+    borderRadius: '20px', 
+    maxWidth: '600px', 
+    width: '90%', 
+    maxHeight: '85vh', 
+    overflow: 'auto' as const, 
+    position: 'relative' as const, 
+    padding: '24px' 
+  },
+  modalClose: { 
+    position: 'absolute' as const, 
+    top: '16px', 
+    right: '16px', 
+    background: 'var(--badge-bg)', 
+    border: 'none', 
+    cursor: 'pointer', 
+    color: 'var(--text-secondary)', 
+    width: '32px', 
+    height: '32px', 
+    borderRadius: '8px', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
 };
 
 // Add animation CSS

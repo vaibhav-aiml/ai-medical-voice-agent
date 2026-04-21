@@ -1,6 +1,74 @@
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+/* Light Theme (Default) */
+:root {
+  --bg-primary: #f0f9ff;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e5e7eb;
+  --nav-bg: #ffffff;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --button-primary: #3b82f6;
+  --button-primary-hover: #2563eb;
+  --button-danger: #ef4444;
+  --button-success: #10b981;
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --badge-bg: #eff6ff;
+  --badge-text: #3b82f6;
+  --status-completed-bg: #ecfdf5;
+  --status-completed-text: #10b981;
+  --status-pending-bg: #fffbeb;
+  --status-pending-text: #f59e0b;
+  --status-cancelled-bg: #fef2f2;
+  --status-cancelled-text: #ef4444;
+  --skeleton-start: #f1f5f9;
+  --skeleton-end: #e2e8f0;
+  --pattern-opacity: 0.4;
+  --radial-opacity-1: 0.03;
+  --radial-opacity-2: 0.02;
+  --scrollbar-track: #e2e8f0;
+  --scrollbar-thumb: #94a3b8;
+  --scrollbar-thumb-hover: #3b82f6;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --nav-bg: #1e293b;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --button-primary: #3b82f6;
+  --button-primary-hover: #60a5fa;
+  --button-danger: #ef4444;
+  --button-success: #10b981;
+  --input-bg: #0f172a;
+  --input-border: #334155;
+  --badge-bg: #1e293b;
+  --badge-text: #60a5fa;
+  --status-completed-bg: #064e3b;
+  --status-completed-text: #34d399;
+  --status-pending-bg: #78350f;
+  --status-pending-text: #fbbf24;
+  --status-cancelled-bg: #7f1d1d;
+  --status-cancelled-text: #f87171;
+  --skeleton-start: #1e293b;
+  --skeleton-end: #334155;
+  --pattern-opacity: 0.1;
+  --radial-opacity-1: 0.05;
+  --radial-opacity-2: 0.03;
+  --scrollbar-track: #334155;
+  --scrollbar-thumb: #64748b;
+  --scrollbar-thumb-hover: #3b82f6;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -11,9 +79,11 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f0f9ff;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
   position: relative;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Subtle gradient overlay */
@@ -25,13 +95,13 @@ body::before {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.02) 0%, transparent 50%);
+    radial-gradient(circle at 20% 50%, rgba(59, 130, 246, var(--radial-opacity-1)) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, var(--radial-opacity-2)) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
 
-/* Medical cross pattern overlay - very subtle */
+/* Medical cross pattern overlay */
 body::after {
   content: '';
   position: fixed;
@@ -42,7 +112,11 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233b82f6' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 0;
-  opacity: 0.4;
+  opacity: var(--pattern-opacity);
+}
+
+[data-theme="dark"] body::after {
+  opacity: 0.15;
 }
 
 #root {
@@ -50,24 +124,24 @@ body::after {
   z-index: 1;
 }
 
-/* Custom scrollbar - light blue theme */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #e2e8f0;
+  background: var(--scrollbar-track);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #94a3b8;
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Smooth transitions */
@@ -93,7 +167,7 @@ button:active {
 
 /* Glowing text effect */
 .gradient-text {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, var(--button-primary), #2563eb);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -113,8 +187,6 @@ button:active {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* Additional modern UI elements */
-
 /* Glass card effect */
 .glass-card {
   background: rgba(255, 255, 255, 0.95);
@@ -123,14 +195,18 @@ button:active {
   border-radius: 20px;
 }
 
+[data-theme="dark"] .glass-card {
+  background: rgba(30, 41, 59, 0.95);
+}
+
 /* Modern badge */
 .modern-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  background: #eff6ff;
-  color: #3b82f6;
+  background: var(--badge-bg);
+  color: var(--badge-text);
   border-radius: 50px;
   font-size: 0.75rem;
   font-weight: 500;
@@ -148,26 +224,26 @@ button:active {
 }
 
 .status-completed {
-  background: #ecfdf5;
-  color: #10b981;
+  background: var(--status-completed-bg);
+  color: var(--status-completed-text);
 }
 
 .status-pending {
-  background: #fffbeb;
-  color: #f59e0b;
+  background: var(--status-pending-bg);
+  color: var(--status-pending-text);
 }
 
 .status-cancelled {
-  background: #fef2f2;
-  color: #ef4444;
+  background: var(--status-cancelled-bg);
+  color: var(--status-cancelled-text);
 }
 
 /* Loading spinner */
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #3b82f6;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--button-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -198,9 +274,9 @@ button:active {
 .skeleton {
   background: linear-gradient(
     90deg,
-    #f1f5f9 25%,
-    #e2e8f0 50%,
-    #f1f5f9 75%
+    var(--skeleton-start) 25%,
+    var(--skeleton-end) 50%,
+    var(--skeleton-start) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
@@ -230,13 +306,13 @@ button:active {
 
 /* Focus styles for accessibility */
 *:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--button-primary);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
 /* Selection color */
 ::selection {
-  background: #3b82f6;
+  background: var(--button-primary);
   color: white;
 }
