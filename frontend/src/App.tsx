@@ -17,6 +17,7 @@ import VoiceCustomization from './components/VoiceCustomization';
 import ProgressDashboard from './components/ProgressDashboard';
 import TwoFactorAuth from './components/TwoFactorAuth';
 import DataExport from './components/DataExport';
+import VideoConsultation from './components/VideoConsultation';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -51,6 +52,8 @@ function AppContent() {
   const [showProgressDashboard, setShowProgressDashboard] = useState(false);
   const [showTwoFactorAuth, setShowTwoFactorAuth] = useState(false);
   const [showDataExport, setShowDataExport] = useState(false);
+  const [showVideoConsultation, setShowVideoConsultation] = useState(false);
+  const [selectedVideoConsultation, setSelectedVideoConsultation] = useState<ConsultationSession | null>(null);
   const [selectedRatingConsultation, setSelectedRatingConsultation] = useState<ConsultationSession | null>(null);
   const [currentConsultationForAppointment, setCurrentConsultationForAppointment] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -243,6 +246,10 @@ function AppContent() {
     }
   };
 
+   const handleVideoConsultation = (consultation: ConsultationSession) => {
+  alert('🎥 Video Consultation Coming Soon!\n\nTo enable real video calls:\n1. Sign up at daily.co\n2. Add your API key\n3. Real video calls will work instantly');
+};
+
   const getUserName = () => {
     if (user?.fullName) return user.fullName.split(' ')[0];
     if (user?.firstName) return user.firstName;
@@ -406,6 +413,9 @@ function AppContent() {
                     <Star size={16} />
                     <span>{t('reports.rateConsultation')}</span>
                   </button>
+                  <button onClick={() => handleVideoConsultation(consultation)} style={styles.videoButton}>
+                    🎥 Video Consultation
+                  </button>
                 </div>
               </div>
             ))}
@@ -431,6 +441,18 @@ function AppContent() {
       {showProgressDashboard && <ProgressDashboard onClose={() => setShowProgressDashboard(false)} />}
       {showTwoFactorAuth && <TwoFactorAuth onClose={() => setShowTwoFactorAuth(false)} />}
       {showDataExport && <DataExport onClose={() => setShowDataExport(false)} />}
+      {showVideoConsultation && selectedVideoConsultation && (
+        <VideoConsultation
+          consultationId={selectedVideoConsultation.id}
+          specialistName={selectedVideoConsultation.specialistName}
+          specialistType={selectedVideoConsultation.specialistType}
+          onClose={() => setShowVideoConsultation(false)}
+          onEndCall={() => {
+            setShowVideoConsultation(false);
+            alert('Video consultation ended. A report will be generated.');
+          }}
+        />
+      )}
       
       {showAppointmentsList && (
         <div style={styles.modalOverlay}>
@@ -967,6 +989,21 @@ const styles = {
     width: '100%',
     padding: '10px',
     background: '#f59e0b',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    fontSize: '13px',
+  },
+  videoButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    width: '100%',
+    padding: '10px',
+    background: '#8b5cf6',
     color: 'white',
     border: 'none',
     borderRadius: '10px',
