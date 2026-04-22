@@ -16,6 +16,7 @@ import HealthGoals from './components/HealthGoals';
 import VoiceCustomization from './components/VoiceCustomization';
 import ProgressDashboard from './components/ProgressDashboard';
 import TwoFactorAuth from './components/TwoFactorAuth';
+import DataExport from './components/DataExport';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -49,6 +50,7 @@ function AppContent() {
   const [showVoiceCustomization, setShowVoiceCustomization] = useState(false);
   const [showProgressDashboard, setShowProgressDashboard] = useState(false);
   const [showTwoFactorAuth, setShowTwoFactorAuth] = useState(false);
+  const [showDataExport, setShowDataExport] = useState(false);
   const [selectedRatingConsultation, setSelectedRatingConsultation] = useState<ConsultationSession | null>(null);
   const [currentConsultationForAppointment, setCurrentConsultationForAppointment] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -302,6 +304,9 @@ function AppContent() {
             <button onClick={() => setShowTwoFactorAuth(true)} style={styles.twoFactorButton}>
               🔒 {t('nav.twoFactor')}
             </button>
+            <button onClick={() => setShowDataExport(true)} style={styles.exportDataButton}>
+              📥 Export Data
+            </button>
             <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>{t('nav.newConsultation')}</span></button>
             <LanguageSelector />
             <ThemeToggle />
@@ -425,6 +430,7 @@ function AppContent() {
       {showVoiceCustomization && <VoiceCustomization onClose={() => setShowVoiceCustomization(false)} />}
       {showProgressDashboard && <ProgressDashboard onClose={() => setShowProgressDashboard(false)} />}
       {showTwoFactorAuth && <TwoFactorAuth onClose={() => setShowTwoFactorAuth(false)} />}
+      {showDataExport && <DataExport onClose={() => setShowDataExport(false)} />}
       
       {showAppointmentsList && (
         <div style={styles.modalOverlay}>
@@ -624,6 +630,19 @@ const styles = {
     gap: '8px',
     padding: '8px 16px',
     background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  exportDataButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     color: 'white',
     border: 'none',
     borderRadius: '10px',
