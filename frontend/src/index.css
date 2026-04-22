@@ -6,25 +6,27 @@
   --bg-primary: #f0f9ff;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
+  --bg-nav: #ffffff;
   --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --border-color: #e5e7eb;
-  --nav-bg: #ffffff;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --border-light: #f1f5f9;
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   --button-primary: #3b82f6;
   --button-primary-hover: #2563eb;
   --button-danger: #ef4444;
   --button-success: #10b981;
   --input-bg: #ffffff;
-  --input-border: #e2e8f0;
-  --badge-bg: #eff6ff;
-  --badge-text: #3b82f6;
-  --status-completed-bg: #ecfdf5;
-  --status-completed-text: #10b981;
+  --input-border: #cbd5e1;
+  --badge-bg: #f1f5f9;
+  --badge-text: #475569;
+  --status-completed-bg: #dcfce7;
+  --status-completed-text: #166534;
   --status-pending-bg: #fffbeb;
-  --status-pending-text: #f59e0b;
-  --status-cancelled-bg: #fef2f2;
-  --status-cancelled-text: #ef4444;
+  --status-pending-text: #92400e;
+  --status-cancelled-bg: #fee2e2;
+  --status-cancelled-text: #991b1b;
   --skeleton-start: #f1f5f9;
   --skeleton-end: #e2e8f0;
   --pattern-opacity: 0.4;
@@ -33,6 +35,10 @@
   --scrollbar-track: #e2e8f0;
   --scrollbar-thumb: #94a3b8;
   --scrollbar-thumb-hover: #3b82f6;
+  --gradient-start: #667eea;
+  --gradient-end: #764ba2;
+  --hero-bg: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
 }
 
 /* Dark Theme */
@@ -40,10 +46,12 @@
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-card: #1e293b;
+  --bg-nav: #1e293b;
   --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
   --border-color: #334155;
-  --nav-bg: #1e293b;
+  --border-light: #1e293b;
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --button-primary: #3b82f6;
   --button-primary-hover: #60a5fa;
@@ -51,8 +59,8 @@
   --button-success: #10b981;
   --input-bg: #0f172a;
   --input-border: #334155;
-  --badge-bg: #1e293b;
-  --badge-text: #60a5fa;
+  --badge-bg: #334155;
+  --badge-text: #cbd5e1;
   --status-completed-bg: #064e3b;
   --status-completed-text: #34d399;
   --status-pending-bg: #78350f;
@@ -67,6 +75,10 @@
   --scrollbar-track: #334155;
   --scrollbar-thumb: #64748b;
   --scrollbar-thumb-hover: #3b82f6;
+  --gradient-start: #4f46e5;
+  --gradient-end: #7c3aed;
+  --hero-bg: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -153,7 +165,7 @@ button, a, .card, .report-card, .feature-card {
 .feature-card:hover,
 .report-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--card-hover-shadow);
 }
 
 /* Button hover effects */
@@ -167,7 +179,7 @@ button:active {
 
 /* Glowing text effect */
 .gradient-text {
-  background: linear-gradient(135deg, var(--button-primary), #2563eb);
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -315,4 +327,92 @@ button:active {
 ::selection {
   background: var(--button-primary);
   color: white;
+}
+
+/* Hero section specific */
+.hero-gradient {
+  background: var(--hero-bg);
+}
+
+/* Card text contrast improvements */
+.card-title {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.card-description {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Button text contrast */
+.btn-primary-text {
+  color: white;
+}
+
+.btn-secondary-text {
+  color: var(--text-primary);
+}
+
+/* Navigation link contrast */
+.nav-link {
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--button-primary);
+}
+
+/* Stat card text */
+.stat-value {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+}
+
+.stat-trend {
+  color: var(--button-success);
+}
+
+/* Feature card text */
+.feature-title {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.feature-description {
+  color: var(--text-secondary);
+}
+
+/* Testimonial text */
+.testimonial-text {
+  color: var(--text-primary);
+}
+
+.testimonial-author-name {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.testimonial-author-title {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Footer text */
+.footer-text {
+  color: var(--text-secondary);
+}
+
+/* Modal text */
+.modal-title {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  color: var(--text-secondary);
 }

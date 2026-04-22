@@ -35,13 +35,6 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
     try {
       const reportDataComplete = generateMockCompleteReport(consultationId, specialistType, symptoms);
       setReportData(reportDataComplete);
-      
-      // Generate PDF as base64 for email attachment
-      const element = document.createElement('div');
-      element.innerHTML = `<div>Generating PDF...</div>`;
-      document.body.appendChild(element);
-      
-      // Simplified: Store report data and show email modal
       setGeneratedPdfData('generated');
       setShowEmailModal(true);
     } catch (error) {
@@ -65,21 +58,32 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
           
           <div style={styles.content}>
             <div style={styles.infoSection}>
-              <h3>Consultation Details</h3>
-              <p><strong>ID:</strong> {consultationId}</p>
-              <p><strong>Specialist:</strong> {specialistType}</p>
-              <p><strong>Date:</strong> {new Date().toLocaleString()}</p>
-            </div>
-            
-            <div style={styles.infoSection}>
-              <h3>Symptoms Summary</h3>
-              <div style={styles.symptomsBox}>
-                {symptoms}
+              <h3 style={styles.sectionTitle}>Consultation Details</h3>
+              <div style={styles.infoGrid}>
+                <div style={styles.infoRow}>
+                  <span style={styles.infoLabel}>ID:</span>
+                  <span style={styles.infoValue}>{consultationId}</span>
+                </div>
+                <div style={styles.infoRow}>
+                  <span style={styles.infoLabel}>Specialist:</span>
+                  <span style={styles.infoValue}>{specialistType}</span>
+                </div>
+                <div style={styles.infoRow}>
+                  <span style={styles.infoLabel}>Date:</span>
+                  <span style={styles.infoValue}>{new Date().toLocaleString()}</span>
+                </div>
               </div>
             </div>
             
             <div style={styles.infoSection}>
-              <h3>What's included in the report:</h3>
+              <h3 style={styles.sectionTitle}>Symptoms Summary</h3>
+              <div style={styles.symptomsBox}>
+                <p style={styles.symptomsText}>{symptoms}</p>
+              </div>
+            </div>
+            
+            <div style={styles.infoSection}>
+              <h3 style={styles.sectionTitle}>What's included in the report:</h3>
               <div style={styles.featuresGrid}>
                 <div style={styles.featureItem}>✅ Patient Information</div>
                 <div style={styles.featureItem}>✅ Vital Signs Monitoring</div>
@@ -142,7 +146,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0,0,0,0.5)',
+    background: 'rgba(0,0,0,0.6)',
     backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
@@ -150,73 +154,119 @@ const styles = {
     zIndex: 1000,
   },
   modal: {
-    background: 'white',
-    borderRadius: '16px',
+    background: 'var(--bg-card)',
+    borderRadius: '20px',
     maxWidth: '550px',
     width: '90%',
     maxHeight: '85vh',
     overflow: 'auto' as const,
-    boxShadow: '0 20px 35px -10px rgba(0,0,0,0.2)',
+    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+    border: '1px solid var(--border-color)',
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px 24px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border-color)',
+    background: 'linear-gradient(135deg, var(--gradient-start), var(--gradient-end))',
+    borderRadius: '20px 20px 0 0',
   },
   title: {
     margin: 0,
-    color: '#333',
+    color: 'white',
     fontSize: '20px',
+    fontWeight: 600,
   },
   closeButton: {
-    background: 'transparent',
+    background: 'rgba(255,255,255,0.2)',
     border: 'none',
+    borderRadius: '8px',
     cursor: 'pointer',
-    color: '#999',
-    padding: '4px',
-    borderRadius: '6px',
+    color: 'white',
+    width: '32px',
+    height: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.2s ease',
   },
   content: {
     padding: '24px',
   },
   infoSection: {
-    marginBottom: '20px',
+    marginBottom: '24px',
+  },
+  sectionTitle: {
+    fontSize: '16px',
+    fontWeight: 600,
+    marginBottom: '12px',
+    color: 'var(--text-primary)',
+  },
+  infoGrid: {
+    background: 'var(--badge-bg)',
+    borderRadius: '12px',
+    padding: '16px',
+    border: '1px solid var(--border-color)',
+  },
+  infoRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '8px 0',
+    borderBottom: '1px solid var(--border-light)',
+  },
+  infoLabel: {
+    fontWeight: 500,
+    color: 'var(--text-secondary)',
+  },
+  infoValue: {
+    color: 'var(--text-primary)',
+    fontWeight: 500,
   },
   symptomsBox: {
-    background: '#f8f9fa',
-    padding: '15px',
-    borderRadius: '8px',
-    marginTop: '10px',
+    background: 'var(--badge-bg)',
+    padding: '16px',
+    borderRadius: '12px',
+    border: '1px solid var(--border-color)',
+  },
+  symptomsText: {
+    margin: 0,
     lineHeight: 1.5,
+    color: 'var(--text-primary)',
   },
   featuresGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '10px',
-    marginTop: '10px',
+    marginTop: '8px',
   },
   featureItem: {
-    padding: '8px',
-    background: '#f8f9fa',
-    borderRadius: '6px',
+    padding: '8px 12px',
+    background: 'var(--badge-bg)',
+    borderRadius: '8px',
     fontSize: '13px',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-light)',
   },
   footer: {
     display: 'flex',
     gap: '12px',
     padding: '16px 24px',
-    borderTop: '1px solid #eee',
+    borderTop: '1px solid var(--border-color)',
+    background: 'var(--bg-secondary)',
+    borderRadius: '0 0 20px 20px',
   },
   cancelButton: {
     flex: 1,
     padding: '10px',
-    background: '#f0f0f0',
-    border: 'none',
-    borderRadius: '8px',
+    background: 'transparent',
+    border: '1px solid var(--border-color)',
+    borderRadius: '10px',
     cursor: 'pointer',
     fontWeight: 500,
+    fontSize: '14px',
+    color: 'var(--text-secondary)',
+    transition: 'all 0.2s ease',
   },
   downloadButton: {
     flex: 1,
@@ -225,12 +275,14 @@ const styles = {
     justifyContent: 'center',
     gap: '8px',
     padding: '10px',
-    background: '#3b82f6',
+    background: 'var(--button-primary)',
     color: 'white',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '10px',
     cursor: 'pointer',
     fontWeight: 500,
+    fontSize: '14px',
+    transition: 'all 0.2s ease',
   },
   emailButton: {
     flex: 1,
@@ -239,11 +291,13 @@ const styles = {
     justifyContent: 'center',
     gap: '8px',
     padding: '10px',
-    background: '#10b981',
+    background: 'var(--button-success)',
     color: 'white',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '10px',
     cursor: 'pointer',
     fontWeight: 500,
+    fontSize: '14px',
+    transition: 'all 0.2s ease',
   },
 };
