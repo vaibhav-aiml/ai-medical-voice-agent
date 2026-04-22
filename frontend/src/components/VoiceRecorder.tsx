@@ -19,6 +19,52 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const socketRef = useRef<any>(null);
   const finalTranscriptRef = useRef<string>('');
 
+  // Voice settings
+  const [voiceSettings, setVoiceSettings] = useState(() => {
+    const saved = localStorage.getItem('voiceSettings');
+    return saved ? JSON.parse(saved) : { enabled: true, voice: 'default', rate: 1, pitch: 1, volume: 1, autoSpeak: true };
+  });
+
+  // Speak function using voice settings
+  const speakResponse = (text: string) => {
+    if (!voiceSettings.enabled || !window.speechSynthesis) return;
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = voiceSettings.rate;
+    utterance.pitch = voiceSettings.pitch;
+    utterance.volume = voiceSettings.volume;
+    
+    // Try to set voice based on selection
+    if (voiceSettings.voice !== 'default') {
+      const voices = window.speechSynthesis.getVoices();
+      const voiceMap: Record<string, string> = {
+        'google-us-female': 'Google UK English Female',
+        'google-us-male': 'Google UK English Male',
+        'google-uk-female': 'Google UK English Female',
+        'google-uk-male': 'Google UK English Male',
+        'amazon-joanna': 'Joanna',
+        'amazon-matthew': 'Matthew',
+        'microsoft-jenny': 'Microsoft Jenny',
+      };
+      const voiceName = voiceMap[voiceSettings.voice];
+      const selectedVoice = voices.find(v => v.name.includes(voiceName || ''));
+      if (selectedVoice) utterance.voice = selectedVoice;
+    }
+    
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Listen for voice settings changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('voiceSettings');
+      if (saved) setVoiceSettings(JSON.parse(saved));
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
@@ -78,6 +124,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         setTimeout(() => {
           const mockResponse = getMockResponse(text, specialistType);
           onAIResponse(mockResponse);
+          if (voiceSettings.autoSpeak && voiceSettings.enabled) {
+            speakResponse(mockResponse);
+          }
           setIsProcessing(false);
         }, 1000);
       }
@@ -107,6 +156,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.log('🤖 AI Response received:', data);
       if (data.response) {
         onAIResponse(data.response);
+        if (voiceSettings.autoSpeak && voiceSettings.enabled) {
+          speakResponse(data.response);
+        }
       }
       setIsProcessing(false);
     });
@@ -209,6 +261,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         <span style={connectionStatus === 'Connected' ? styles.statusConnected : styles.statusDisconnected}>
           {connectionStatus}
         </span>
+        <span style={styles.voiceStatus}>
+          {voiceSettings.enabled ? '🔊 Voice ON' : '🔇 Voice OFF'}
+        </span>
       </div>
       
       <div style={styles.modeSelector}>
@@ -231,6 +286,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
           <div style={styles.voiceInstructions}>
             <p>🎤 Click "Start Speaking" and say your symptoms clearly</p>
             <p style={styles.tip}>💡 Tip: Speak slowly and clearly for best results</p>
+            {voiceSettings.enabled && (
+              <p style={styles.voiceTip}>🔊 AI will speak responses aloud</p>
+            )}
           </div>
           
           {!isRecording ? (
@@ -309,7 +367,7 @@ const styles = {
     borderRadius: '5px',
     fontSize: '12px',
     display: 'flex',
-    gap: '8px',
+    gap: '12px',
     alignItems: 'center',
   },
   statusConnected: {
@@ -318,6 +376,11 @@ const styles = {
   },
   statusDisconnected: {
     color: 'red',
+    fontWeight: 'bold',
+  },
+  voiceStatus: {
+    marginLeft: 'auto',
+    color: '#8b5cf6',
     fontWeight: 'bold',
   },
   modeSelector: {
@@ -348,6 +411,11 @@ const styles = {
   tip: {
     fontSize: '12px',
     color: '#999',
+  },
+  voiceTip: {
+    fontSize: '12px',
+    color: '#8b5cf6',
+    marginTop: '5px',
   },
   recordButton: {
     padding: '15px 30px',

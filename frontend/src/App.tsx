@@ -12,6 +12,8 @@ import HealthTips from './components/HealthTips';
 import EmergencyContacts from './components/EmergencyContacts';
 import ConsultationRating from './components/ConsultationRating';
 import HealthGoals from './components/HealthGoals';
+import VoiceCustomization from './components/VoiceCustomization';
+import ProgressDashboard from './components/ProgressDashboard';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -40,6 +42,8 @@ function AppContent() {
   const [showEmergencyContacts, setShowEmergencyContacts] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showHealthGoals, setShowHealthGoals] = useState(false);
+  const [showVoiceCustomization, setShowVoiceCustomization] = useState(false);
+  const [showProgressDashboard, setShowProgressDashboard] = useState(false);
   const [selectedRatingConsultation, setSelectedRatingConsultation] = useState<ConsultationSession | null>(null);
   const [currentConsultationForAppointment, setCurrentConsultationForAppointment] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -284,6 +288,12 @@ function AppContent() {
             <button onClick={() => setShowHealthGoals(true)} style={styles.goalsButton}>
               🎯 Health Goals
             </button>
+            <button onClick={() => setShowVoiceCustomization(true)} style={styles.voiceButton}>
+              🎤 Voice Settings
+            </button>
+            <button onClick={() => setShowProgressDashboard(true)} style={styles.progressButton}>
+              📈 Progress
+            </button>
             <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>New Consultation</span></button>
             <ThemeToggle />
           </div>
@@ -403,6 +413,8 @@ function AppContent() {
         />
       )}
       {showHealthGoals && <HealthGoals onClose={() => setShowHealthGoals(false)} />}
+      {showVoiceCustomization && <VoiceCustomization onClose={() => setShowVoiceCustomization(false)} />}
+      {showProgressDashboard && <ProgressDashboard onClose={() => setShowProgressDashboard(false)} />}
       
       {showAppointmentsList && (
         <div style={styles.modalOverlay}>
@@ -563,6 +575,32 @@ const styles = {
     gap: '8px',
     padding: '8px 16px',
     background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  voiceButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  progressButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     color: 'white',
     border: 'none',
     borderRadius: '10px',
