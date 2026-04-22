@@ -26,6 +26,7 @@ import ConsultationHistory from './components/ConsultationHistory';
 import MedicalReportModal from './components/MedicalReportModal';
 import AppointmentBooking from './components/AppointmentBooking';
 import MyAppointments from './components/MyAppointments';
+import Footer from './components/Footer';
 import { useLanguage } from './context/LanguageContext';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
 
@@ -629,7 +630,7 @@ function AppContent() {
         />
       )}
       
-      {showAppointmentsList && (
+            {showAppointmentsList && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
             <button onClick={() => setShowAppointmentsList(false)} style={styles.modalClose}><X size={18} /></button>
@@ -637,6 +638,9 @@ function AppContent() {
           </div>
         </div>
       )}
+      
+      <Footer />
+
     </div>
   );
 }
