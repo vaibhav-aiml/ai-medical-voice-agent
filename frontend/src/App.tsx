@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
 import ThemeToggle from './components/ThemeToggle';
+import LanguageSelector from './components/LanguageSelector';
 import SymptomChecker from './components/SymptomChecker';
 import HealthTips from './components/HealthTips';
 import EmergencyContacts from './components/EmergencyContacts';
@@ -23,11 +24,13 @@ import DashboardStatsComponent from './components/DashboardStats';
 import MedicalReportModal from './components/MedicalReportModal';
 import AppointmentBooking from './components/AppointmentBooking';
 import MyAppointments from './components/MyAppointments';
+import { useLanguage } from './context/LanguageContext';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
 
 function AppContent() {
   const { userId } = useAuth();
   const { user } = useUser();
+  const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedSpecialist, setSelectedSpecialist] = useState('');
   const [consultationId, setConsultationId] = useState('');
@@ -260,7 +263,7 @@ function AppContent() {
     return (
       <div style={styles.loadingContainer}>
         <div style={styles.loader}></div>
-        <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>Loading your consultations...</p>
+        <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>{t('common.loading')}</p>
       </div>
     );
   }
@@ -274,32 +277,33 @@ function AppContent() {
             <h1 style={styles.logo}>MediVoice AI</h1>
           </div>
           <div style={styles.navLinks}>
-            <button onClick={() => setCurrentPage('home')} style={styles.navButton}><Home size={18} /><span>Home</span></button>
-            <button onClick={() => { setCurrentPage('dashboard'); setRefreshKey(prev => prev + 1); }} style={styles.navButton}><LayoutDashboard size={18} /><span>Dashboard</span></button>
-            <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>Reports</span></button>
-            <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>Appointments</span></button>
+            <button onClick={() => setCurrentPage('home')} style={styles.navButton}><Home size={18} /><span>{t('nav.home')}</span></button>
+            <button onClick={() => { setCurrentPage('dashboard'); setRefreshKey(prev => prev + 1); }} style={styles.navButton}><LayoutDashboard size={18} /><span>{t('nav.dashboard')}</span></button>
+            <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>{t('nav.reports')}</span></button>
+            <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>{t('nav.appointments')}</span></button>
             <button onClick={() => setShowSymptomChecker(true)} style={styles.symptomButton}>
-              🤖 Symptom Checker
+              🤖 {t('nav.symptomChecker')}
             </button>
             <button onClick={() => setShowHealthTips(true)} style={styles.healthButton}>
-              📚 Health Tips
+              📚 {t('nav.healthTips')}
             </button>
             <button onClick={() => setShowEmergencyContacts(true)} style={styles.emergencyButton}>
-              🚨 Emergency
+              🚨 {t('nav.emergency')}
             </button>
             <button onClick={() => setShowHealthGoals(true)} style={styles.goalsButton}>
-              🎯 Health Goals
+              🎯 {t('nav.healthGoals')}
             </button>
             <button onClick={() => setShowVoiceCustomization(true)} style={styles.voiceButton}>
-              🎤 Voice Settings
+              🎤 {t('nav.voiceSettings')}
             </button>
             <button onClick={() => setShowProgressDashboard(true)} style={styles.progressButton}>
-              📈 Progress
+              📈 {t('nav.progress')}
             </button>
             <button onClick={() => setShowTwoFactorAuth(true)} style={styles.twoFactorButton}>
-              🔒 2FA
+              🔒 {t('nav.twoFactor')}
             </button>
-            <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>New Consultation</span></button>
+            <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>{t('nav.newConsultation')}</span></button>
+            <LanguageSelector />
             <ThemeToggle />
           </div>
         </div>
@@ -308,32 +312,32 @@ function AppContent() {
       {currentPage === 'home' && (
         <div style={styles.hero}>
           <div style={styles.heroContent}>
-            <div style={styles.badge}><Sparkles size={14} /><span>AI-Powered Healthcare</span></div>
-            <h1 style={styles.title}>Welcome back, <span style={styles.titleAccent}>{getUserName()}</span></h1>
-            <p style={styles.subtitle}>Your personal AI medical assistant. Get instant advice from specialized doctors, anytime, anywhere.</p>
+            <div style={styles.badge}><Sparkles size={14} /><span>{t('home.aiPowered')}</span></div>
+            <h1 style={styles.title}>{t('home.welcome')}, <span style={styles.titleAccent}>{getUserName()}</span></h1>
+            <p style={styles.subtitle}>{t('home.subtitle')}</p>
             
             <div style={styles.statsRow}>
-              <div style={styles.statItem}><div style={styles.statIcon}><MessageCircle size={20} /></div><div><div style={styles.statValue}>{stats.totalConsultations}</div><div style={styles.statLabel}>Consultations</div></div></div>
+              <div style={styles.statItem}><div style={styles.statIcon}><MessageCircle size={20} /></div><div><div style={styles.statValue}>{stats.totalConsultations}</div><div style={styles.statLabel}>{t('home.consultations')}</div></div></div>
               <div style={styles.statDivider}></div>
-              <div style={styles.statItem}><div style={styles.statIcon}><CheckCircle size={20} /></div><div><div style={styles.statValue}>{stats.completedConsultations}</div><div style={styles.statLabel}>Completed</div></div></div>
+              <div style={styles.statItem}><div style={styles.statIcon}><CheckCircle size={20} /></div><div><div style={styles.statValue}>{stats.completedConsultations}</div><div style={styles.statLabel}>{t('home.completed')}</div></div></div>
               <div style={styles.statDivider}></div>
-              <div style={styles.statItem}><div style={styles.statIcon}><Clock size={20} /></div><div><div style={styles.statValue}>{stats.averageDuration}</div><div style={styles.statLabel}>Avg Minutes</div></div></div>
+              <div style={styles.statItem}><div style={styles.statIcon}><Clock size={20} /></div><div><div style={styles.statValue}>{stats.averageDuration}</div><div style={styles.statLabel}>{t('home.avgMinutes')}</div></div></div>
             </div>
 
             <div style={styles.features}>
-              <div style={styles.card}><div style={styles.cardIcon}><Mic size={28} /></div><h3>Voice Consultation</h3><p>Speak naturally and get real-time AI responses</p></div>
-              <div style={styles.card}><div style={styles.cardIcon}><Stethoscope size={28} /></div><h3>5+ Specialists</h3><p>General, Orthopedic, Cardiologist & more</p></div>
-              <div style={styles.card}><div style={styles.cardIcon}><ClipboardList size={28} /></div><h3>Medical Reports</h3><p>Download detailed PDF reports instantly</p></div>
+              <div style={styles.card}><div style={styles.cardIcon}><Mic size={28} /></div><h3>{t('home.voiceConsultation')}</h3><p>{t('home.voiceDesc')}</p></div>
+              <div style={styles.card}><div style={styles.cardIcon}><Stethoscope size={28} /></div><h3>{t('home.specialists')}</h3><p>{t('home.specialistsDesc')}</p></div>
+              <div style={styles.card}><div style={styles.cardIcon}><ClipboardList size={28} /></div><h3>{t('home.medicalReports')}</h3><p>{t('home.medicalReportsDesc')}</p></div>
             </div>
 
-            <button onClick={() => { setCurrentPage('consultation'); }} style={styles.startButton}>Start Consultation <ArrowRight size={18} /></button>
+            <button onClick={() => { setCurrentPage('consultation'); }} style={styles.startButton}>{t('home.startConsultation')} <ArrowRight size={18} /></button>
           </div>
         </div>
       )}
 
       {currentPage === 'dashboard' && (
         <div style={styles.pageContainer}>
-          <div style={styles.pageHeader}><h2 style={styles.pageTitle}>Dashboard</h2><p style={styles.pageSubtitle}>Overview of your medical consultations</p></div>
+          <div style={styles.pageHeader}><h2 style={styles.pageTitle}>{t('dashboard.title')}</h2><p style={styles.pageSubtitle}>{t('dashboard.subtitle')}</p></div>
           <DashboardStatsComponent stats={stats} />
           <ConsultationHistory consultations={consultations} onViewReport={handleViewReport} onNewConsultation={handleNewConsultation} />
         </div>
@@ -342,19 +346,19 @@ function AppContent() {
       {currentPage === 'consultation' && (
         <div style={styles.consultationContainer}>
           <div style={styles.consultationHeader}>
-            <div><h2 style={styles.consultationTitle}>AI Medical Consultation</h2><p style={styles.consultationSubtitle}>Get expert advice from our AI specialists</p></div>
+            <div><h2 style={styles.consultationTitle}>{t('consultation.title')}</h2><p style={styles.consultationSubtitle}>{t('consultation.subtitle')}</p></div>
             <button onClick={() => setCurrentPage('home')} style={styles.closeButton}><X size={20} /></button>
           </div>
           {!consultationStarted ? (
             <div style={styles.setupSection}>
               <SpecialistSelector selectedSpecialist={selectedSpecialist} onSelect={setSelectedSpecialist} />
-              <button onClick={startConsultation} disabled={!selectedSpecialist} style={styles.startConsultButton}>Start Consultation with {selectedSpecialist || 'Selected Specialist'}</button>
+              <button onClick={startConsultation} disabled={!selectedSpecialist} style={styles.startConsultButton}>{t('consultation.startWith')} {selectedSpecialist || t('consultation.selectedSpecialist')}</button>
             </div>
           ) : (
             <div style={styles.activeConsultation}>
               <div style={styles.specialistInfo}>
-                <div style={styles.specialistBadge}>{getSpecialistIcon(selectedSpecialist)}<span>{selectedSpecialist} Specialist</span></div>
-                <button onClick={endConsultation} style={styles.endButton}>End Consultation</button>
+                <div style={styles.specialistBadge}>{getSpecialistIcon(selectedSpecialist)}<span>{selectedSpecialist} {t('consultation.specialist') || 'Specialist'}</span></div>
+                <button onClick={endConsultation} style={styles.endButton}>{t('consultation.endConsultation')}</button>
               </div>
               <VoiceRecorder consultationId={consultationId} specialistType={selectedSpecialist} onTranscriptUpdate={handleTranscriptUpdate} onAIResponse={handleAIResponse} />
               <ChatMessages messages={messages} />
@@ -365,37 +369,37 @@ function AppContent() {
 
       {currentPage === 'reports' && (
         <div style={styles.pageContainer}>
-          <div style={styles.pageHeader}><h2 style={styles.pageTitle}>Medical Reports</h2><p style={styles.pageSubtitle}>Access and download your consultation reports</p></div>
+          <div style={styles.pageHeader}><h2 style={styles.pageTitle}>{t('reports.title')}</h2><p style={styles.pageSubtitle}>{t('reports.subtitle')}</p></div>
           <div style={styles.reportsList}>
             {consultations.filter(c => c.status === 'completed').map((consultation) => (
               <div key={consultation.id} style={styles.reportCard}>
                 <div style={styles.reportHeader}>
                   <div style={styles.reportIconArea}>{getSpecialistIcon(consultation.specialistType)}</div>
                   <div style={styles.reportInfo}>
-                    <h3 style={styles.reportTitle}>Consultation with {consultation.specialistName}</h3>
+                    <h3 style={styles.reportTitle}>{t('consultation.title')} with {consultation.specialistName}</h3>
                     <p style={styles.reportDate}>{new Date(consultation.startedAt).toLocaleDateString()}</p>
                   </div>
                   <div style={styles.reportStatus}>
                     <CheckCircle size={14} color="#10b981" />
-                    <span>Completed</span>
+                    <span>{t('reports.completed')}</span>
                   </div>
                 </div>
                 <div style={styles.reportContent}>
-                  <p><strong>Symptoms:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
-                  <p><strong>Duration:</strong> {consultation.duration} minutes</p>
+                  <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
+                  <p><strong>{t('reports.duration')}:</strong> {consultation.duration} {t('home.avgMinutes')}</p>
                 </div>
                 <div style={styles.reportActions}>
                   <button onClick={() => handleViewReport(consultation.id)} style={styles.downloadButton}>
                     <Download size={16} />
-                    <span>View Report</span>
+                    <span>{t('reports.viewReport')}</span>
                   </button>
                   <button onClick={() => handleBookAppointment(consultation)} style={styles.bookButton}>
                     <Calendar size={16} />
-                    <span>Book Follow-up</span>
+                    <span>{t('reports.bookFollowup')}</span>
                   </button>
                   <button onClick={() => handleRateConsultation(consultation)} style={styles.ratingButton}>
                     <Star size={16} />
-                    <span>Rate Consultation</span>
+                    <span>{t('reports.rateConsultation')}</span>
                   </button>
                 </div>
               </div>
