@@ -6,7 +6,6 @@ import {
   Sparkles, MessageCircle, Clock, CheckCircle, Star
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
-import ThemeToggle from './components/ThemeToggle';
 import LanguageSelector from './components/LanguageSelector';
 import SymptomChecker from './components/SymptomChecker';
 import HealthTips from './components/HealthTips';
@@ -19,11 +18,11 @@ import TwoFactorAuth from './components/TwoFactorAuth';
 import DataExport from './components/DataExport';
 import VideoConsultation from './components/VideoConsultation';
 import EnhancedDashboard from './components/EnhancedDashboard';
+import ProfileDropdown from './components/ProfileDropdown';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
 import ConsultationHistory from './components/ConsultationHistory';
-import DashboardStatsComponent from './components/DashboardStats';
 import MedicalReportModal from './components/MedicalReportModal';
 import AppointmentBooking from './components/AppointmentBooking';
 import MyAppointments from './components/MyAppointments';
@@ -309,15 +308,11 @@ function AppContent() {
             <button onClick={() => setShowProgressDashboard(true)} style={styles.progressButton}>
               📈 {t('nav.progress')}
             </button>
-            <button onClick={() => setShowTwoFactorAuth(true)} style={styles.twoFactorButton}>
-              🔒 {t('nav.twoFactor')}
-            </button>
             <button onClick={() => setShowDataExport(true)} style={styles.exportDataButton}>
               📥 Export Data
             </button>
             <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>{t('nav.newConsultation')}</span></button>
-            <LanguageSelector />
-            <ThemeToggle />
+            <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
           </div>
         </div>
       </nav>
@@ -638,19 +633,6 @@ const styles = {
     gap: '8px',
     padding: '8px 16px',
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  twoFactorButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
     color: 'white',
     border: 'none',
     borderRadius: '10px',
