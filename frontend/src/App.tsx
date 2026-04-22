@@ -18,6 +18,7 @@ import ProgressDashboard from './components/ProgressDashboard';
 import TwoFactorAuth from './components/TwoFactorAuth';
 import DataExport from './components/DataExport';
 import VideoConsultation from './components/VideoConsultation';
+import EnhancedDashboard from './components/EnhancedDashboard';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -246,9 +247,9 @@ function AppContent() {
     }
   };
 
-   const handleVideoConsultation = (consultation: ConsultationSession) => {
-  alert('🎥 Video Consultation Coming Soon!\n\nTo enable real video calls:\n1. Sign up at daily.co\n2. Add your API key\n3. Real video calls will work instantly');
-};
+  const handleVideoConsultation = (consultation: ConsultationSession) => {
+    alert('🎥 Video Consultation Coming Soon!\n\nTo enable real video calls:\n1. Sign up at daily.co\n2. Add your API key\n3. Real video calls will work instantly');
+  };
 
   const getUserName = () => {
     if (user?.fullName) return user.fullName.split(' ')[0];
@@ -349,9 +350,7 @@ function AppContent() {
 
       {currentPage === 'dashboard' && (
         <div style={styles.pageContainer}>
-          <div style={styles.pageHeader}><h2 style={styles.pageTitle}>{t('dashboard.title')}</h2><p style={styles.pageSubtitle}>{t('dashboard.subtitle')}</p></div>
-          <DashboardStatsComponent stats={stats} />
-          <ConsultationHistory consultations={consultations} onViewReport={handleViewReport} onNewConsultation={handleNewConsultation} />
+          <EnhancedDashboard consultations={consultations} stats={stats} />
         </div>
       )}
 
