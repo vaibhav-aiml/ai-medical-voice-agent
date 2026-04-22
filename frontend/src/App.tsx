@@ -3,7 +3,7 @@ import { useAuth, useUser } from '@clerk/clerk-react';
 import { 
   Home, LayoutDashboard, FileText, Calendar, Plus, Mic, Stethoscope,
   ClipboardList, ArrowRight, Download, X, Activity, Brain, Heart, Bone, Baby,
-  Sparkles, MessageCircle, Clock, CheckCircle, Star
+  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
 import LanguageSelector from './components/LanguageSelector';
@@ -318,27 +318,208 @@ function AppContent() {
       </nav>
 
       {currentPage === 'home' && (
-        <div style={styles.hero}>
-          <div style={styles.heroContent}>
-            <div style={styles.badge}><Sparkles size={14} /><span>{t('home.aiPowered')}</span></div>
-            <h1 style={styles.title}>{t('home.welcome')}, <span style={styles.titleAccent}>{getUserName()}</span></h1>
-            <p style={styles.subtitle}>{t('home.subtitle')}</p>
-            
-            <div style={styles.statsRow}>
-              <div style={styles.statItem}><div style={styles.statIcon}><MessageCircle size={20} /></div><div><div style={styles.statValue}>{stats.totalConsultations}</div><div style={styles.statLabel}>{t('home.consultations')}</div></div></div>
-              <div style={styles.statDivider}></div>
-              <div style={styles.statItem}><div style={styles.statIcon}><CheckCircle size={20} /></div><div><div style={styles.statValue}>{stats.completedConsultations}</div><div style={styles.statLabel}>{t('home.completed')}</div></div></div>
-              <div style={styles.statDivider}></div>
-              <div style={styles.statItem}><div style={styles.statIcon}><Clock size={20} /></div><div><div style={styles.statValue}>{stats.averageDuration}</div><div style={styles.statLabel}>{t('home.avgMinutes')}</div></div></div>
+        <div style={styles.homeContainer}>
+          {/* Hero Section */}
+          <div style={styles.heroSection}>
+            <div style={styles.heroContent}>
+              <div style={styles.heroBadge}>
+                <Sparkles size={16} />
+                <span>AI-Powered Healthcare</span>
+              </div>
+              <h1 style={styles.heroTitle}>
+                Your Health,<br />
+                <span style={styles.heroTitleAccent}>Our Priority</span>
+              </h1>
+              <p style={styles.heroSubtitle}>
+                Experience the future of healthcare with AI-powered consultations. 
+                Get instant medical advice from specialized doctors, anytime, anywhere.
+              </p>
+              <div style={styles.heroButtons}>
+                <button onClick={() => setCurrentPage('consultation')} style={styles.primaryButton}>
+                  Start Consultation
+                  <ArrowRight size={18} />
+                </button>
+                <button onClick={() => setShowSymptomChecker(true)} style={styles.secondaryButton}>
+                  Check Symptoms
+                </button>
+              </div>
             </div>
-
-            <div style={styles.features}>
-              <div style={styles.card}><div style={styles.cardIcon}><Mic size={28} /></div><h3>{t('home.voiceConsultation')}</h3><p>{t('home.voiceDesc')}</p></div>
-              <div style={styles.card}><div style={styles.cardIcon}><Stethoscope size={28} /></div><h3>{t('home.specialists')}</h3><p>{t('home.specialistsDesc')}</p></div>
-              <div style={styles.card}><div style={styles.cardIcon}><ClipboardList size={28} /></div><h3>{t('home.medicalReports')}</h3><p>{t('home.medicalReportsDesc')}</p></div>
+            <div style={styles.heroImage}>
+              <div style={styles.floatingCard1}>
+                <Mic size={24} color="#3b82f6" />
+                <span>Voice Consultation</span>
+              </div>
+              <div style={styles.floatingCard2}>
+                <Stethoscope size={24} color="#10b981" />
+                <span>AI Specialists</span>
+              </div>
+              <div style={styles.floatingCard3}>
+                <ClipboardList size={24} color="#f59e0b" />
+                <span>Medical Reports</span>
+              </div>
+              <div style={styles.heroCircle}></div>
             </div>
+          </div>
 
-            <button onClick={() => { setCurrentPage('consultation'); }} style={styles.startButton}>{t('home.startConsultation')} <ArrowRight size={18} /></button>
+          {/* Stats Section */}
+          <div style={styles.statsSection}>
+            <div style={styles.statsContainer}>
+              <div style={styles.statCard}>
+                <div style={styles.statIconBg}><MessageCircle size={24} /></div>
+                <div style={styles.statNumber}>{stats.totalConsultations}</div>
+                <div style={styles.statLabel}>Total Consultations</div>
+                <div style={styles.statTrend}>↑ 12% this month</div>
+              </div>
+              <div style={styles.statCard}>
+                <div style={styles.statIconBg}><CheckCircle size={24} /></div>
+                <div style={styles.statNumber}>{stats.completedConsultations}</div>
+                <div style={styles.statLabel}>Completed</div>
+                <div style={styles.statTrend}>↑ 8% this month</div>
+              </div>
+              <div style={styles.statCard}>
+                <div style={styles.statIconBg}><Clock size={24} /></div>
+                <div style={styles.statNumber}>{stats.averageDuration}</div>
+                <div style={styles.statLabel}>Avg Minutes</div>
+                <div style={styles.statTrend}>↓ 5% faster</div>
+              </div>
+              <div style={styles.statCard}>
+                <div style={styles.statIconBg}><Star size={24} /></div>
+                <div style={styles.statNumber}>4.8</div>
+                <div style={styles.statLabel}>User Rating</div>
+                <div style={styles.statTrend}>★★★★★</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Features Section */}
+          <div style={styles.featuresSection}>
+            <div style={styles.sectionHeader}>
+              <h2>Why Choose <span style={styles.sectionHeaderAccent}>MediVoice AI?</span></h2>
+              <p>Experience healthcare reimagined with cutting-edge AI technology</p>
+            </div>
+            <div style={styles.featuresGrid}>
+              <div style={styles.featureCard}>
+                <div style={styles.featureIcon}><Mic size={32} /></div>
+                <h3>Voice Consultation</h3>
+                <p>Speak naturally and get real-time AI responses without typing</p>
+                <div style={styles.featureTag}>Real-time</div>
+              </div>
+              <div style={styles.featureCard}>
+                <div style={styles.featureIcon}><Stethoscope size={32} /></div>
+                <h3>5+ Specialists</h3>
+                <p>General, Orthopedic, Cardiologist, Neurologist & Pediatrician</p>
+                <div style={styles.featureTag}>Multi-specialty</div>
+              </div>
+              <div style={styles.featureCard}>
+                <div style={styles.featureIcon}><ClipboardList size={32} /></div>
+                <h3>Medical Reports</h3>
+                <p>Download detailed PDF reports instantly after consultation</p>
+                <div style={styles.featureTag}>Instant Download</div>
+              </div>
+              <div style={styles.featureCard}>
+                <div style={styles.featureIcon}><Calendar size={32} /></div>
+                <h3>Appointment Booking</h3>
+                <p>Schedule follow-up appointments with your preferred specialist</p>
+                <div style={styles.featureTag}>Easy Booking</div>
+              </div>
+              <div style={styles.featureCard}>
+                <div style={styles.featureIcon}><Mail size={32} /></div>
+                <h3>Email Reports</h3>
+                <p>Receive medical reports directly in your inbox</p>
+                <div style={styles.featureTag}>Share with Doctors</div>
+              </div>
+              <div style={styles.featureCard}>
+                <div style={styles.featureIcon}><Shield size={32} /></div>
+                <h3>Secure & Private</h3>
+                <p>Your medical data is encrypted and securely stored</p>
+                <div style={styles.featureTag}>HIPAA Compliant</div>
+              </div>
+            </div>
+          </div>
+
+          {/* How It Works Section */}
+          <div style={styles.howItWorksSection}>
+            <div style={styles.sectionHeader}>
+              <h2>How It <span style={styles.sectionHeaderAccent}>Works</span></h2>
+              <p>Get started in three simple steps</p>
+            </div>
+            <div style={styles.stepsContainer}>
+              <div style={styles.stepCard}>
+                <div style={styles.stepNumber}>01</div>
+                <div style={styles.stepIcon}>🎤</div>
+                <h3>Speak Your Symptoms</h3>
+                <p>Simply speak or type your symptoms naturally</p>
+              </div>
+              <div style={styles.stepArrow}>→</div>
+              <div style={styles.stepCard}>
+                <div style={styles.stepNumber}>02</div>
+                <div style={styles.stepIcon}>🤖</div>
+                <h3>AI Doctor Analysis</h3>
+                <p>Our AI analyzes your symptoms and provides advice</p>
+              </div>
+              <div style={styles.stepArrow}>→</div>
+              <div style={styles.stepCard}>
+                <div style={styles.stepNumber}>03</div>
+                <div style={styles.stepIcon}>📋</div>
+                <h3>Get Report & Follow-up</h3>
+                <p>Download report and schedule follow-up if needed</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Testimonials Section */}
+          <div style={styles.testimonialsSection}>
+            <div style={styles.sectionHeader}>
+              <h2>What Our <span style={styles.sectionHeaderAccent}>Users Say</span></h2>
+              <p>Trusted by thousands of patients worldwide</p>
+            </div>
+            <div style={styles.testimonialsGrid}>
+              <div style={styles.testimonialCard}>
+                <div style={styles.testimonialStars}>★★★★★</div>
+                <p>"Amazing experience! The AI doctor understood my symptoms perfectly and gave helpful advice."</p>
+                <div style={styles.testimonialAuthor}>
+                  <div style={styles.testimonialAvatar}>R</div>
+                  <div>
+                    <strong>Rajesh Kumar</strong>
+                    <span>Verified User</span>
+                  </div>
+                </div>
+              </div>
+              <div style={styles.testimonialCard}>
+                <div style={styles.testimonialStars}>★★★★★</div>
+                <p>"Saved me a trip to the clinic. Quick, accurate, and the report was very detailed."</p>
+                <div style={styles.testimonialAuthor}>
+                  <div style={styles.testimonialAvatar}>P</div>
+                  <div>
+                    <strong>Priya Sharma</strong>
+                    <span>Verified User</span>
+                  </div>
+                </div>
+              </div>
+              <div style={styles.testimonialCard}>
+                <div style={styles.testimonialStars}>★★★★★</div>
+                <p>"The voice consultation feature is fantastic! So easy to use and the AI is very responsive."</p>
+                <div style={styles.testimonialAuthor}>
+                  <div style={styles.testimonialAvatar}>A</div>
+                  <div>
+                    <strong>Amit Patel</strong>
+                    <span>Verified User</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Section */}
+          <div style={styles.ctaSection}>
+            <div style={styles.ctaContent}>
+              <h2>Ready to Experience the Future of Healthcare?</h2>
+              <p>Join thousands of satisfied users who trust MediVoice AI for their healthcare needs</p>
+              <button onClick={() => setCurrentPage('consultation')} style={styles.ctaButton}>
+                Start Your Free Consultation
+                <ArrowRight size={18} />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -653,126 +834,318 @@ const styles = {
     fontSize: '0.875rem',
     fontWeight: 500,
   },
-  hero: { 
-    minHeight: 'calc(100vh - 72px)', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    padding: '48px 24px' 
+  homeContainer: {
+    overflowX: 'hidden' as const,
   },
-  heroContent: { 
-    maxWidth: '1200px', 
-    textAlign: 'center' as const 
+  heroSection: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '48px',
+    padding: '60px 24px',
+    background: 'linear-gradient(135deg, var(--bg-primary), var(--bg-secondary))',
+    alignItems: 'center',
   },
-  badge: { 
-    display: 'inline-flex', 
-    alignItems: 'center', 
-    gap: '8px', 
-    background: 'var(--badge-bg)', 
-    padding: '6px 16px', 
-    borderRadius: '50px', 
-    color: 'var(--badge-text)', 
-    fontSize: '0.75rem', 
-    fontWeight: 500, 
-    marginBottom: '24px' 
+  heroContent: {
+    maxWidth: '600px',
   },
-  title: { 
-    fontSize: '48px', 
-    fontWeight: 700, 
-    color: 'var(--text-primary)', 
-    marginBottom: '16px', 
-    letterSpacing: '-0.02em' 
+  heroBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '6px 16px',
+    background: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: '50px',
+    color: '#3b82f6',
+    fontSize: '14px',
+    marginBottom: '24px',
   },
-  titleAccent: { 
-    color: 'var(--button-primary)' 
+  heroTitle: {
+    fontSize: '56px',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    lineHeight: 1.2,
+    marginBottom: '20px',
   },
-  subtitle: { 
-    fontSize: '18px', 
-    color: 'var(--text-secondary)', 
-    marginBottom: '48px', 
-    maxWidth: '600px', 
-    marginLeft: 'auto', 
-    marginRight: 'auto', 
-    lineHeight: 1.6 
+  heroTitleAccent: {
+    color: '#3b82f6',
   },
-  statsRow: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    gap: '32px', 
-    marginBottom: '64px', 
-    background: 'var(--bg-card)', 
-    padding: '24px 48px', 
-    borderRadius: '60px', 
-    maxWidth: '500px', 
-    marginLeft: 'auto', 
-    marginRight: 'auto' 
+  heroSubtitle: {
+    fontSize: '18px',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.6,
+    marginBottom: '32px',
   },
-  statItem: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '12px' 
+  heroButtons: {
+    display: 'flex',
+    gap: '16px',
   },
-  statIcon: { 
-    width: '40px', 
-    height: '40px', 
-    background: 'var(--badge-bg)', 
-    borderRadius: '50%', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    color: 'var(--button-primary)' 
+  primaryButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '14px 28px',
+    background: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 600,
   },
-  statValue: { 
-    fontSize: '20px', 
-    fontWeight: 700, 
-    color: 'var(--text-primary)' 
+  secondaryButton: {
+    padding: '14px 28px',
+    background: 'transparent',
+    border: '1px solid var(--border-color)',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 500,
+    color: 'var(--text-primary)',
   },
-  statLabel: { 
-    fontSize: '12px', 
-    color: 'var(--text-secondary)' 
+  heroImage: {
+    position: 'relative' as const,
+    height: '400px',
   },
-  statDivider: { 
-    width: '1px', 
-    height: '30px', 
-    background: 'var(--border-color)' 
+  floatingCard1: {
+    position: 'absolute' as const,
+    top: '20%',
+    left: '10%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+    animation: 'float 3s ease-in-out infinite',
   },
-  features: { 
-    display: 'grid', 
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', 
-    gap: '24px', 
-    marginBottom: '48px' 
+  floatingCard2: {
+    position: 'absolute' as const,
+    top: '50%',
+    right: '10%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+    animation: 'float 4s ease-in-out infinite',
   },
-  card: { 
-    background: 'var(--bg-card)', 
-    padding: '32px 24px', 
-    borderRadius: '20px', 
-    textAlign: 'center' as const, 
-    border: '1px solid var(--border-color)' 
+  floatingCard3: {
+    position: 'absolute' as const,
+    bottom: '20%',
+    left: '20%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+    animation: 'float 3.5s ease-in-out infinite',
   },
-  cardIcon: { 
-    width: '64px', 
-    height: '64px', 
-    background: 'var(--badge-bg)', 
-    borderRadius: '20px', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    margin: '0 auto 20px', 
-    color: 'var(--button-primary)' 
+  heroCircle: {
+    position: 'absolute' as const,
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '300px',
+    height: '300px',
+    background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0) 70%)',
+    borderRadius: '50%',
   },
-  startButton: { 
-    display: 'inline-flex', 
-    alignItems: 'center', 
-    gap: '10px', 
-    padding: '14px 32px', 
-    fontSize: '16px', 
-    background: 'var(--button-primary)', 
-    color: 'white', 
-    border: 'none', 
-    borderRadius: '12px', 
-    cursor: 'pointer', 
-    fontWeight: 500 
+  statsSection: {
+    padding: '40px 24px',
+    background: 'var(--bg-card)',
+  },
+  statsContainer: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '24px',
+  },
+  statCard: {
+    textAlign: 'center' as const,
+    padding: '24px',
+    background: 'var(--bg-secondary)',
+    borderRadius: '20px',
+    border: '1px solid var(--border-color)',
+  },
+  statIconBg: {
+    width: '56px',
+    height: '56px',
+    background: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 16px',
+    color: '#3b82f6',
+  },
+  statNumber: {
+    fontSize: '36px',
+    fontWeight: 700,
+    color: 'var(--text-primary)',
+  },
+  statLabel: {
+    fontSize: '14px',
+    color: 'var(--text-secondary)',
+    marginTop: '8px',
+  },
+  statTrend: {
+    fontSize: '12px',
+    color: '#10b981',
+    marginTop: '8px',
+  },
+  featuresSection: {
+    padding: '60px 24px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+  },
+  sectionHeader: {
+    textAlign: 'center' as const,
+    marginBottom: '48px',
+  },
+  sectionHeaderAccent: {
+    color: '#3b82f6',
+  },
+  featuresGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '32px',
+  },
+  featureCard: {
+    padding: '32px',
+    background: 'var(--bg-card)',
+    borderRadius: '24px',
+    border: '1px solid var(--border-color)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    position: 'relative' as const,
+    overflow: 'hidden',
+  },
+  featureIcon: {
+    width: '64px',
+    height: '64px',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    borderRadius: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '24px',
+    color: 'white',
+  },
+  featureTag: {
+    position: 'absolute' as const,
+    top: '20px',
+    right: '20px',
+    padding: '4px 12px',
+    background: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: '20px',
+    fontSize: '12px',
+    color: '#3b82f6',
+  },
+  howItWorksSection: {
+    padding: '60px 24px',
+    background: 'var(--bg-secondary)',
+  },
+  stepsContainer: {
+    maxWidth: '1000px',
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '24px',
+  },
+  stepCard: {
+    flex: 1,
+    textAlign: 'center' as const,
+    padding: '32px',
+    background: 'var(--bg-card)',
+    borderRadius: '24px',
+    position: 'relative' as const,
+  },
+  stepNumber: {
+    position: 'absolute' as const,
+    top: '-12px',
+    left: '20px',
+    fontSize: '48px',
+    fontWeight: 800,
+    color: 'rgba(59, 130, 246, 0.1)',
+  },
+  stepIcon: {
+    fontSize: '48px',
+    marginBottom: '16px',
+  },
+  stepArrow: {
+    fontSize: '32px',
+    color: '#3b82f6',
+  },
+  testimonialsSection: {
+    padding: '60px 24px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+  },
+  testimonialsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '32px',
+  },
+  testimonialCard: {
+    padding: '28px',
+    background: 'var(--bg-card)',
+    borderRadius: '24px',
+    border: '1px solid var(--border-color)',
+  },
+  testimonialStars: {
+    fontSize: '20px',
+    color: '#f59e0b',
+    marginBottom: '16px',
+  },
+  testimonialAuthor: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginTop: '20px',
+  },
+  testimonialAvatar: {
+    width: '48px',
+    height: '48px',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    fontWeight: 600,
+    color: 'white',
+  },
+  ctaSection: {
+    margin: '40px 24px 60px',
+    padding: '60px',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    borderRadius: '32px',
+    textAlign: 'center' as const,
+    color: 'white',
+  },
+  ctaContent: {
+    maxWidth: '600px',
+    margin: '0 auto',
+  },
+  ctaButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '14px 32px',
+    background: 'white',
+    color: '#3b82f6',
+    border: 'none',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 600,
+    marginTop: '24px',
   },
   pageContainer: { 
     maxWidth: '1280px', 
@@ -1038,6 +1411,10 @@ styleSheet.textContent = `
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
   }
 `;
 document.head.appendChild(styleSheet);
