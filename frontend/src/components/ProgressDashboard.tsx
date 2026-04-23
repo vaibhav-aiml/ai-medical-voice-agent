@@ -1,3 +1,4 @@
+import { Star, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { X, TrendingUp, Activity, Droplet, Moon, Flame, Brain, Calendar, Award, Target, BarChart3, LineChart, PieChart } from 'lucide-react';
 

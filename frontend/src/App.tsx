@@ -240,10 +240,13 @@ function AppContent() {
       localStorage.setItem('consultationRatings', JSON.stringify(ratings));
       
       const allRatings = Object.values(ratings);
-      const avgRating = allRatings.length > 0 
-        ? (allRatings.reduce((acc: number, r: any) => acc + r.rating, 0) / allRatings.length).toFixed(1)
-        : 0;
-      localStorage.setItem('averageRating', avgRating.toString());
+      let totalRating = 0;
+      for (let i = 0; i < allRatings.length; i++) {
+        totalRating += (allRatings[i] as any).rating;
+      }
+      const avgRatingNum = allRatings.length > 0 ? totalRating / allRatings.length : 0;
+      const avgRating = avgRatingNum.toFixed(1);
+      localStorage.setItem('averageRating', avgRating);
     }
   };
 
@@ -630,7 +633,7 @@ function AppContent() {
         />
       )}
       
-            {showAppointmentsList && (
+      {showAppointmentsList && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
             <button onClick={() => setShowAppointmentsList(false)} style={styles.modalClose}><X size={18} /></button>
@@ -640,7 +643,6 @@ function AppContent() {
       )}
       
       <Footer />
-
     </div>
   );
 }
@@ -842,15 +844,26 @@ const styles = {
     overflowX: 'hidden' as const,
   },
   heroSection: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '48px',
-    padding: '60px 24px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '40px',
+    padding: '40px 20px',
     background: 'linear-gradient(135deg, var(--bg-primary), var(--bg-secondary))',
     alignItems: 'center',
+    '@media (min-width: 768px)': {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '48px',
+      padding: '60px 24px',
+    },
   },
   heroContent: {
-    maxWidth: '600px',
+    maxWidth: '100%',
+    textAlign: 'center' as const,
+    '@media (min-width: 768px)': {
+      maxWidth: '600px',
+      textAlign: 'left' as const,
+    },
   },
   heroBadge: {
     display: 'inline-flex',
@@ -860,284 +873,473 @@ const styles = {
     background: 'rgba(59, 130, 246, 0.1)',
     borderRadius: '50px',
     color: '#3b82f6',
-    fontSize: '14px',
-    marginBottom: '24px',
+    fontSize: '13px',
+    marginBottom: '20px',
+    '@media (min-width: 768px)': {
+      fontSize: '14px',
+      marginBottom: '24px',
+    },
   },
   heroTitle: {
-    fontSize: '56px',
+    fontSize: '32px',
     fontWeight: 800,
     color: 'var(--text-primary)',
     lineHeight: 1.2,
-    marginBottom: '20px',
+    marginBottom: '16px',
+    '@media (min-width: 768px)': {
+      fontSize: '48px',
+      marginBottom: '20px',
+    },
+    '@media (min-width: 1024px)': {
+      fontSize: '56px',
+    },
   },
   heroTitleAccent: {
     color: '#3b82f6',
   },
   heroSubtitle: {
-    fontSize: '18px',
+    fontSize: '15px',
     color: 'var(--text-secondary)',
-    lineHeight: 1.6,
-    marginBottom: '32px',
+    lineHeight: 1.5,
+    marginBottom: '24px',
+    '@media (min-width: 768px)': {
+      fontSize: '16px',
+      marginBottom: '32px',
+    },
+    '@media (min-width: 1024px)': {
+      fontSize: '18px',
+    },
   },
   heroButtons: {
     display: 'flex',
-    gap: '16px',
+    flexDirection: 'column' as const,
+    gap: '12px',
+    alignItems: 'center',
+    '@media (min-width: 480px)': {
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+    '@media (min-width: 768px)': {
+      justifyContent: 'flex-start',
+      gap: '16px',
+    },
   },
   primaryButton: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '8px',
-    padding: '14px 28px',
+    padding: '12px 24px',
     background: '#3b82f6',
     color: 'white',
     border: 'none',
     borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: 600,
+    width: '100%',
+    '@media (min-width: 480px)': {
+      width: 'auto',
+    },
+    '@media (min-width: 768px)': {
+      padding: '14px 28px',
+      fontSize: '16px',
+    },
   },
   secondaryButton: {
-    padding: '14px 28px',
+    padding: '12px 24px',
     background: 'transparent',
     border: '1px solid var(--border-color)',
     borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: 500,
     color: 'var(--text-primary)',
+    width: '100%',
+    '@media (min-width: 480px)': {
+      width: 'auto',
+    },
+    '@media (min-width: 768px)': {
+      padding: '14px 28px',
+      fontSize: '16px',
+    },
   },
   heroImage: {
-    position: 'relative' as const,
-    height: '400px',
+    display: 'none',
+    '@media (min-width: 768px)': {
+      display: 'block',
+      position: 'relative' as const,
+      height: '400px',
+    },
   },
   floatingCard1: {
-  position: 'absolute' as const,
-  top: '20%',
-  left: '10%',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  padding: '12px 20px',
-  background: 'var(--bg-card)',
-  borderRadius: '16px',
-  boxShadow: 'var(--card-shadow)',
-  animation: 'float 3s ease-in-out infinite',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-color)',
-},
-floatingCard2: {
-  position: 'absolute' as const,
-  top: '50%',
-  right: '10%',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  padding: '12px 20px',
-  background: 'var(--bg-card)',
-  borderRadius: '16px',
-  boxShadow: 'var(--card-shadow)',
-  animation: 'float 4s ease-in-out infinite',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-color)',
-},
-floatingCard3: {
-  position: 'absolute' as const,
-  bottom: '20%',
-  left: '20%',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  padding: '12px 20px',
-  background: 'var(--bg-card)',
-  borderRadius: '16px',
-  boxShadow: 'var(--card-shadow)',
-  animation: 'float 3.5s ease-in-out infinite',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-color)',
-},
+    position: 'absolute' as const,
+    top: '20%',
+    left: '10%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
+    boxShadow: 'var(--card-shadow)',
+    animation: 'float 3s ease-in-out infinite',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-color)',
+    whiteSpace: 'nowrap' as const,
+    '@media (max-width: 768px)': {
+      display: 'none',
+    },
+  },
+  floatingCard2: {
+    position: 'absolute' as const,
+    top: '50%',
+    right: '10%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
+    boxShadow: 'var(--card-shadow)',
+    animation: 'float 4s ease-in-out infinite',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-color)',
+    whiteSpace: 'nowrap' as const,
+    '@media (max-width: 768px)': {
+      display: 'none',
+    },
+  },
+  floatingCard3: {
+    position: 'absolute' as const,
+    bottom: '20%',
+    left: '20%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
+    boxShadow: 'var(--card-shadow)',
+    animation: 'float 3.5s ease-in-out infinite',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-color)',
+    whiteSpace: 'nowrap' as const,
+    '@media (max-width: 768px)': {
+      display: 'none',
+    },
+  },
   heroCircle: {
     position: 'absolute' as const,
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '300px',
-    height: '300px',
+    width: '250px',
+    height: '250px',
     background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0) 70%)',
     borderRadius: '50%',
+    '@media (min-width: 768px)': {
+      width: '300px',
+      height: '300px',
+    },
   },
   statsSection: {
-    padding: '40px 24px',
+    padding: '40px 16px',
     background: 'var(--bg-card)',
   },
   statsContainer: {
     maxWidth: '1200px',
     margin: '0 auto',
     display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '24px',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '12px',
+    '@media (min-width: 640px)': {
+      gap: '16px',
+    },
+    '@media (min-width: 768px)': {
+      gridTemplateColumns: 'repeat(4, 1fr)',
+      gap: '24px',
+    },
   },
   statCard: {
     textAlign: 'center' as const,
-    padding: '24px',
+    padding: '16px 12px',
     background: 'var(--bg-secondary)',
-    borderRadius: '20px',
+    borderRadius: '16px',
     border: '1px solid var(--border-color)',
+    '@media (min-width: 768px)': {
+      padding: '24px',
+    },
   },
   statIconBg: {
-    width: '56px',
-    height: '56px',
+    width: '40px',
+    height: '40px',
     background: 'rgba(59, 130, 246, 0.1)',
-    borderRadius: '16px',
+    borderRadius: '12px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 16px',
+    margin: '0 auto 12px',
     color: '#3b82f6',
+    '@media (min-width: 768px)': {
+      width: '56px',
+      height: '56px',
+      margin: '0 auto 16px',
+    },
   },
   statNumber: {
-    fontSize: '36px',
+    fontSize: '22px',
     fontWeight: 700,
     color: 'var(--text-primary)',
+    '@media (min-width: 768px)': {
+      fontSize: '32px',
+    },
+    '@media (min-width: 1024px)': {
+      fontSize: '36px',
+    },
   },
   statLabel: {
-    fontSize: '14px',
+    fontSize: '11px',
     color: 'var(--text-secondary)',
-    marginTop: '8px',
+    marginTop: '4px',
+    '@media (min-width: 768px)': {
+      fontSize: '14px',
+      marginTop: '8px',
+    },
   },
   statTrend: {
-    fontSize: '12px',
+    fontSize: '10px',
     color: '#10b981',
-    marginTop: '8px',
+    marginTop: '6px',
+    '@media (min-width: 768px)': {
+      fontSize: '12px',
+      marginTop: '8px',
+    },
   },
   featuresSection: {
-    padding: '60px 24px',
+    padding: '40px 16px',
     maxWidth: '1200px',
     margin: '0 auto',
+    '@media (min-width: 768px)': {
+      padding: '60px 24px',
+    },
   },
   sectionHeader: {
     textAlign: 'center' as const,
-    marginBottom: '48px',
+    marginBottom: '32px',
+    '@media (min-width: 768px)': {
+      marginBottom: '48px',
+    },
   },
   sectionHeaderAccent: {
     color: '#3b82f6',
   },
   featuresGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '32px',
+    gridTemplateColumns: '1fr',
+    gap: '16px',
+    '@media (min-width: 640px)': {
+      gridTemplateColumns: 'repeat(2, 1fr)',
+      gap: '20px',
+    },
+    '@media (min-width: 1024px)': {
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: '24px',
+    },
   },
   featureCard: {
-    padding: '32px',
+    padding: '20px',
     background: 'var(--bg-card)',
-    borderRadius: '24px',
+    borderRadius: '20px',
     border: '1px solid var(--border-color)',
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
     position: 'relative' as const,
     overflow: 'hidden',
+    '@media (min-width: 768px)': {
+      padding: '28px',
+    },
+    '@media (min-width: 1024px)': {
+      padding: '32px',
+    },
   },
   featureIcon: {
-    width: '64px',
-    height: '64px',
+    width: '48px',
+    height: '48px',
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    borderRadius: '20px',
+    borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '24px',
+    marginBottom: '20px',
     color: 'white',
+    '@media (min-width: 768px)': {
+      width: '56px',
+      height: '56px',
+      marginBottom: '24px',
+    },
+    '@media (min-width: 1024px)': {
+      width: '64px',
+      height: '64px',
+    },
   },
   featureTag: {
     position: 'absolute' as const,
-    top: '20px',
-    right: '20px',
-    padding: '4px 12px',
+    top: '16px',
+    right: '16px',
+    padding: '3px 10px',
     background: 'rgba(59, 130, 246, 0.1)',
     borderRadius: '20px',
-    fontSize: '12px',
+    fontSize: '10px',
     color: '#3b82f6',
+    '@media (min-width: 768px)': {
+      padding: '4px 12px',
+      fontSize: '12px',
+    },
   },
   howItWorksSection: {
-    padding: '60px 24px',
+    padding: '40px 16px',
     background: 'var(--bg-secondary)',
+    '@media (min-width: 768px)': {
+      padding: '60px 24px',
+    },
   },
   stepsContainer: {
     maxWidth: '1000px',
     margin: '0 auto',
     display: 'flex',
+    flexDirection: 'column' as const,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: '24px',
+    gap: '16px',
+    '@media (min-width: 640px)': {
+      gap: '20px',
+    },
+    '@media (min-width: 768px)': {
+      flexDirection: 'row',
+      gap: '24px',
+    },
   },
   stepCard: {
     flex: 1,
     textAlign: 'center' as const,
-    padding: '32px',
+    padding: '20px',
     background: 'var(--bg-card)',
-    borderRadius: '24px',
+    borderRadius: '20px',
     position: 'relative' as const,
+    width: '100%',
+    '@media (min-width: 768px)': {
+      padding: '28px',
+    },
+    '@media (min-width: 1024px)': {
+      padding: '32px',
+    },
   },
   stepNumber: {
     position: 'absolute' as const,
-    top: '-12px',
-    left: '20px',
-    fontSize: '48px',
+    top: '-8px',
+    left: '16px',
+    fontSize: '28px',
     fontWeight: 800,
     color: 'rgba(59, 130, 246, 0.1)',
+    '@media (min-width: 768px)': {
+      fontSize: '40px',
+    },
   },
   stepIcon: {
-    fontSize: '48px',
-    marginBottom: '16px',
+    fontSize: '36px',
+    marginBottom: '12px',
+    '@media (min-width: 768px)': {
+      fontSize: '48px',
+      marginBottom: '16px',
+    },
   },
   stepArrow: {
-    fontSize: '32px',
+    display: 'none',
+    fontSize: '28px',
     color: '#3b82f6',
+    '@media (min-width: 768px)': {
+      display: 'block',
+    },
   },
   testimonialsSection: {
-    padding: '60px 24px',
+    padding: '40px 16px',
     maxWidth: '1200px',
     margin: '0 auto',
+    '@media (min-width: 768px)': {
+      padding: '60px 24px',
+    },
   },
   testimonialsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '32px',
+    gridTemplateColumns: '1fr',
+    gap: '16px',
+    '@media (min-width: 640px)': {
+      gap: '20px',
+    },
+    '@media (min-width: 768px)': {
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: '24px',
+    },
   },
   testimonialCard: {
-    padding: '28px',
+    padding: '20px',
     background: 'var(--bg-card)',
-    borderRadius: '24px',
+    borderRadius: '20px',
     border: '1px solid var(--border-color)',
+    '@media (min-width: 768px)': {
+      padding: '24px',
+    },
+    '@media (min-width: 1024px)': {
+      padding: '28px',
+    },
   },
   testimonialStars: {
-    fontSize: '20px',
+    fontSize: '16px',
     color: '#f59e0b',
-    marginBottom: '16px',
+    marginBottom: '12px',
+    '@media (min-width: 768px)': {
+      fontSize: '20px',
+      marginBottom: '16px',
+    },
   },
   testimonialAuthor: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    marginTop: '20px',
+    gap: '10px',
+    marginTop: '16px',
+    '@media (min-width: 768px)': {
+      gap: '12px',
+      marginTop: '20px',
+    },
   },
   testimonialAvatar: {
-    width: '48px',
-    height: '48px',
+    width: '36px',
+    height: '36px',
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '20px',
+    fontSize: '16px',
     fontWeight: 600,
     color: 'white',
+    '@media (min-width: 768px)': {
+      width: '48px',
+      height: '48px',
+      fontSize: '20px',
+    },
   },
   ctaSection: {
-    margin: '40px 24px 60px',
-    padding: '60px',
+    margin: '40px 16px 60px',
+    padding: '32px 20px',
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    borderRadius: '32px',
+    borderRadius: '24px',
     textAlign: 'center' as const,
     color: 'white',
+    '@media (min-width: 768px)': {
+      margin: '60px 24px 80px',
+      padding: '60px 40px',
+      borderRadius: '32px',
+    },
   },
   ctaContent: {
     maxWidth: '600px',
@@ -1146,16 +1348,22 @@ floatingCard3: {
   ctaButton: {
     display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '8px',
-    padding: '14px 32px',
+    padding: '12px 24px',
     background: 'white',
     color: '#3b82f6',
     border: 'none',
     borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: 600,
-    marginTop: '24px',
+    marginTop: '16px',
+    '@media (min-width: 768px)': {
+      padding: '14px 32px',
+      fontSize: '16px',
+      marginTop: '24px',
+    },
   },
   pageContainer: { 
     maxWidth: '1280px', 
