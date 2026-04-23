@@ -323,7 +323,6 @@ function AppContent() {
 
       {currentPage === 'home' && (
         <div style={styles.homeContainer}>
-          {/* Hero Section */}
           <div style={styles.heroSection}>
             <div style={styles.heroContent}>
               <div style={styles.heroBadge}>
@@ -365,7 +364,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* Stats Section */}
           <div style={styles.statsSection}>
             <div style={styles.statsContainer}>
               <div style={styles.statCard}>
@@ -395,7 +393,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* Features Section */}
           <div style={styles.featuresSection}>
             <div style={styles.sectionHeader}>
               <h2>Why Choose <span style={styles.sectionHeaderAccent}>MediVoice AI?</span></h2>
@@ -441,7 +438,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* How It Works Section */}
           <div style={styles.howItWorksSection}>
             <div style={styles.sectionHeader}>
               <h2>How It <span style={styles.sectionHeaderAccent}>Works</span></h2>
@@ -471,7 +467,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* Testimonials Section */}
           <div style={styles.testimonialsSection}>
             <div style={styles.sectionHeader}>
               <h2>What Our <span style={styles.sectionHeaderAccent}>Users Say</span></h2>
@@ -514,7 +509,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* CTA Section */}
           <div style={styles.ctaSection}>
             <div style={styles.ctaContent}>
               <h2>Ready to Experience the Future of Healthcare?</h2>
@@ -567,33 +561,30 @@ function AppContent() {
                 <div style={styles.reportHeader}>
                   <div style={styles.reportIconArea}>{getSpecialistIcon(consultation.specialistType)}</div>
                   <div style={styles.reportInfo}>
-                    <h3 style={styles.reportTitle}>{t('consultation.title')} with {consultation.specialistName}</h3>
+                    <h3 style={styles.reportTitle}>Consultation with {consultation.specialistName}</h3>
                     <p style={styles.reportDate}>{new Date(consultation.startedAt).toLocaleDateString()}</p>
                   </div>
                   <div style={styles.reportStatus}>
                     <CheckCircle size={14} color="#10b981" />
-                    <span>{t('reports.completed')}</span>
+                    <span>Completed</span>
                   </div>
                 </div>
                 <div style={styles.reportContent}>
-                  <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
-                  <p><strong>{t('reports.duration')}:</strong> {consultation.duration} {t('home.avgMinutes')}</p>
+                  <p><strong>Symptoms:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
+                  <p><strong>Duration:</strong> {consultation.duration} minutes</p>
                 </div>
                 <div style={styles.reportActions}>
                   <button onClick={() => handleViewReport(consultation.id)} style={styles.downloadButton}>
                     <Download size={16} />
-                    <span>{t('reports.viewReport')}</span>
+                    <span>View Report</span>
                   </button>
                   <button onClick={() => handleBookAppointment(consultation)} style={styles.bookButton}>
                     <Calendar size={16} />
-                    <span>{t('reports.bookFollowup')}</span>
+                    <span>Book Follow-up</span>
                   </button>
                   <button onClick={() => handleRateConsultation(consultation)} style={styles.ratingButton}>
                     <Star size={16} />
-                    <span>{t('reports.rateConsultation')}</span>
-                  </button>
-                  <button onClick={() => handleVideoConsultation(consultation)} style={styles.videoButton}>
-                    🎥 Video Consultation
+                    <span>Rate Consultation</span>
                   </button>
                 </div>
               </div>
@@ -844,26 +835,15 @@ const styles = {
     overflowX: 'hidden' as const,
   },
   heroSection: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '40px',
-    padding: '40px 20px',
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '48px',
+    padding: '60px 24px',
     background: 'linear-gradient(135deg, var(--bg-primary), var(--bg-secondary))',
     alignItems: 'center',
-    '@media (min-width: 768px)': {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '48px',
-      padding: '60px 24px',
-    },
   },
   heroContent: {
-    maxWidth: '100%',
-    textAlign: 'center' as const,
-    '@media (min-width: 768px)': {
-      maxWidth: '600px',
-      textAlign: 'left' as const,
-    },
+    maxWidth: '600px',
   },
   heroBadge: {
     display: 'inline-flex',
@@ -873,104 +853,55 @@ const styles = {
     background: 'rgba(59, 130, 246, 0.1)',
     borderRadius: '50px',
     color: '#3b82f6',
-    fontSize: '13px',
-    marginBottom: '20px',
-    '@media (min-width: 768px)': {
-      fontSize: '14px',
-      marginBottom: '24px',
-    },
+    fontSize: '14px',
+    marginBottom: '24px',
   },
   heroTitle: {
-    fontSize: '32px',
+    fontSize: '56px',
     fontWeight: 800,
     color: 'var(--text-primary)',
     lineHeight: 1.2,
-    marginBottom: '16px',
-    '@media (min-width: 768px)': {
-      fontSize: '48px',
-      marginBottom: '20px',
-    },
-    '@media (min-width: 1024px)': {
-      fontSize: '56px',
-    },
+    marginBottom: '20px',
   },
   heroTitleAccent: {
     color: '#3b82f6',
   },
   heroSubtitle: {
-    fontSize: '15px',
+    fontSize: '18px',
     color: 'var(--text-secondary)',
-    lineHeight: 1.5,
-    marginBottom: '24px',
-    '@media (min-width: 768px)': {
-      fontSize: '16px',
-      marginBottom: '32px',
-    },
-    '@media (min-width: 1024px)': {
-      fontSize: '18px',
-    },
+    lineHeight: 1.6,
+    marginBottom: '32px',
   },
   heroButtons: {
     display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-    alignItems: 'center',
-    '@media (min-width: 480px)': {
-      flexDirection: 'row',
-      justifyContent: 'center',
-    },
-    '@media (min-width: 768px)': {
-      justifyContent: 'flex-start',
-      gap: '16px',
-    },
+    gap: '16px',
   },
   primaryButton: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: '8px',
-    padding: '12px 24px',
+    padding: '14px 28px',
     background: '#3b82f6',
     color: 'white',
     border: 'none',
     borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '16px',
     fontWeight: 600,
-    width: '100%',
-    '@media (min-width: 480px)': {
-      width: 'auto',
-    },
-    '@media (min-width: 768px)': {
-      padding: '14px 28px',
-      fontSize: '16px',
-    },
   },
   secondaryButton: {
-    padding: '12px 24px',
+    padding: '14px 28px',
     background: 'transparent',
     border: '1px solid var(--border-color)',
     borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '16px',
     fontWeight: 500,
     color: 'var(--text-primary)',
-    width: '100%',
-    '@media (min-width: 480px)': {
-      width: 'auto',
-    },
-    '@media (min-width: 768px)': {
-      padding: '14px 28px',
-      fontSize: '16px',
-    },
   },
   heroImage: {
-    display: 'none',
-    '@media (min-width: 768px)': {
-      display: 'block',
-      position: 'relative' as const,
-      height: '400px',
-    },
+    position: 'relative' as const,
+    height: '400px',
   },
   floatingCard1: {
     position: 'absolute' as const,
@@ -986,10 +917,6 @@ const styles = {
     animation: 'float 3s ease-in-out infinite',
     color: 'var(--text-primary)',
     border: '1px solid var(--border-color)',
-    whiteSpace: 'nowrap' as const,
-    '@media (max-width: 768px)': {
-      display: 'none',
-    },
   },
   floatingCard2: {
     position: 'absolute' as const,
@@ -1005,10 +932,6 @@ const styles = {
     animation: 'float 4s ease-in-out infinite',
     color: 'var(--text-primary)',
     border: '1px solid var(--border-color)',
-    whiteSpace: 'nowrap' as const,
-    '@media (max-width: 768px)': {
-      display: 'none',
-    },
   },
   floatingCard3: {
     position: 'absolute' as const,
@@ -1024,322 +947,190 @@ const styles = {
     animation: 'float 3.5s ease-in-out infinite',
     color: 'var(--text-primary)',
     border: '1px solid var(--border-color)',
-    whiteSpace: 'nowrap' as const,
-    '@media (max-width: 768px)': {
-      display: 'none',
-    },
   },
   heroCircle: {
     position: 'absolute' as const,
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '250px',
-    height: '250px',
+    width: '300px',
+    height: '300px',
     background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0) 70%)',
     borderRadius: '50%',
-    '@media (min-width: 768px)': {
-      width: '300px',
-      height: '300px',
-    },
   },
   statsSection: {
-    padding: '40px 16px',
+    padding: '40px 24px',
     background: 'var(--bg-card)',
   },
   statsContainer: {
     maxWidth: '1200px',
     margin: '0 auto',
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '12px',
-    '@media (min-width: 640px)': {
-      gap: '16px',
-    },
-    '@media (min-width: 768px)': {
-      gridTemplateColumns: 'repeat(4, 1fr)',
-      gap: '24px',
-    },
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '24px',
   },
   statCard: {
     textAlign: 'center' as const,
-    padding: '16px 12px',
+    padding: '24px',
     background: 'var(--bg-secondary)',
-    borderRadius: '16px',
+    borderRadius: '20px',
     border: '1px solid var(--border-color)',
-    '@media (min-width: 768px)': {
-      padding: '24px',
-    },
   },
   statIconBg: {
-    width: '40px',
-    height: '40px',
+    width: '56px',
+    height: '56px',
     background: 'rgba(59, 130, 246, 0.1)',
-    borderRadius: '12px',
+    borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 12px',
+    margin: '0 auto 16px',
     color: '#3b82f6',
-    '@media (min-width: 768px)': {
-      width: '56px',
-      height: '56px',
-      margin: '0 auto 16px',
-    },
   },
   statNumber: {
-    fontSize: '22px',
+    fontSize: '36px',
     fontWeight: 700,
     color: 'var(--text-primary)',
-    '@media (min-width: 768px)': {
-      fontSize: '32px',
-    },
-    '@media (min-width: 1024px)': {
-      fontSize: '36px',
-    },
   },
   statLabel: {
-    fontSize: '11px',
+    fontSize: '14px',
     color: 'var(--text-secondary)',
-    marginTop: '4px',
-    '@media (min-width: 768px)': {
-      fontSize: '14px',
-      marginTop: '8px',
-    },
+    marginTop: '8px',
   },
   statTrend: {
-    fontSize: '10px',
+    fontSize: '12px',
     color: '#10b981',
-    marginTop: '6px',
-    '@media (min-width: 768px)': {
-      fontSize: '12px',
-      marginTop: '8px',
-    },
+    marginTop: '8px',
   },
   featuresSection: {
-    padding: '40px 16px',
+    padding: '60px 24px',
     maxWidth: '1200px',
     margin: '0 auto',
-    '@media (min-width: 768px)': {
-      padding: '60px 24px',
-    },
   },
   sectionHeader: {
     textAlign: 'center' as const,
-    marginBottom: '32px',
-    '@media (min-width: 768px)': {
-      marginBottom: '48px',
-    },
+    marginBottom: '48px',
   },
   sectionHeaderAccent: {
     color: '#3b82f6',
   },
   featuresGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '16px',
-    '@media (min-width: 640px)': {
-      gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '20px',
-    },
-    '@media (min-width: 1024px)': {
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '24px',
-    },
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '32px',
   },
   featureCard: {
-    padding: '20px',
+    padding: '32px',
     background: 'var(--bg-card)',
-    borderRadius: '20px',
+    borderRadius: '24px',
     border: '1px solid var(--border-color)',
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
     position: 'relative' as const,
     overflow: 'hidden',
-    '@media (min-width: 768px)': {
-      padding: '28px',
-    },
-    '@media (min-width: 1024px)': {
-      padding: '32px',
-    },
   },
   featureIcon: {
-    width: '48px',
-    height: '48px',
+    width: '64px',
+    height: '64px',
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    borderRadius: '16px',
+    borderRadius: '20px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '20px',
+    marginBottom: '24px',
     color: 'white',
-    '@media (min-width: 768px)': {
-      width: '56px',
-      height: '56px',
-      marginBottom: '24px',
-    },
-    '@media (min-width: 1024px)': {
-      width: '64px',
-      height: '64px',
-    },
   },
   featureTag: {
     position: 'absolute' as const,
-    top: '16px',
-    right: '16px',
-    padding: '3px 10px',
+    top: '20px',
+    right: '20px',
+    padding: '4px 12px',
     background: 'rgba(59, 130, 246, 0.1)',
     borderRadius: '20px',
-    fontSize: '10px',
+    fontSize: '12px',
     color: '#3b82f6',
-    '@media (min-width: 768px)': {
-      padding: '4px 12px',
-      fontSize: '12px',
-    },
   },
   howItWorksSection: {
-    padding: '40px 16px',
+    padding: '60px 24px',
     background: 'var(--bg-secondary)',
-    '@media (min-width: 768px)': {
-      padding: '60px 24px',
-    },
   },
   stepsContainer: {
     maxWidth: '1000px',
     margin: '0 auto',
     display: 'flex',
-    flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '16px',
-    '@media (min-width: 640px)': {
-      gap: '20px',
-    },
-    '@media (min-width: 768px)': {
-      flexDirection: 'row',
-      gap: '24px',
-    },
+    justifyContent: 'center',
+    gap: '24px',
   },
   stepCard: {
     flex: 1,
     textAlign: 'center' as const,
-    padding: '20px',
+    padding: '32px',
     background: 'var(--bg-card)',
-    borderRadius: '20px',
+    borderRadius: '24px',
     position: 'relative' as const,
-    width: '100%',
-    '@media (min-width: 768px)': {
-      padding: '28px',
-    },
-    '@media (min-width: 1024px)': {
-      padding: '32px',
-    },
   },
   stepNumber: {
     position: 'absolute' as const,
-    top: '-8px',
-    left: '16px',
-    fontSize: '28px',
+    top: '-12px',
+    left: '20px',
+    fontSize: '48px',
     fontWeight: 800,
     color: 'rgba(59, 130, 246, 0.1)',
-    '@media (min-width: 768px)': {
-      fontSize: '40px',
-    },
   },
   stepIcon: {
-    fontSize: '36px',
-    marginBottom: '12px',
-    '@media (min-width: 768px)': {
-      fontSize: '48px',
-      marginBottom: '16px',
-    },
+    fontSize: '48px',
+    marginBottom: '16px',
   },
   stepArrow: {
-    display: 'none',
-    fontSize: '28px',
+    fontSize: '32px',
     color: '#3b82f6',
-    '@media (min-width: 768px)': {
-      display: 'block',
-    },
   },
   testimonialsSection: {
-    padding: '40px 16px',
+    padding: '60px 24px',
     maxWidth: '1200px',
     margin: '0 auto',
-    '@media (min-width: 768px)': {
-      padding: '60px 24px',
-    },
   },
   testimonialsGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '16px',
-    '@media (min-width: 640px)': {
-      gap: '20px',
-    },
-    '@media (min-width: 768px)': {
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '24px',
-    },
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '32px',
   },
   testimonialCard: {
-    padding: '20px',
+    padding: '28px',
     background: 'var(--bg-card)',
-    borderRadius: '20px',
+    borderRadius: '24px',
     border: '1px solid var(--border-color)',
-    '@media (min-width: 768px)': {
-      padding: '24px',
-    },
-    '@media (min-width: 1024px)': {
-      padding: '28px',
-    },
   },
   testimonialStars: {
-    fontSize: '16px',
+    fontSize: '20px',
     color: '#f59e0b',
-    marginBottom: '12px',
-    '@media (min-width: 768px)': {
-      fontSize: '20px',
-      marginBottom: '16px',
-    },
+    marginBottom: '16px',
   },
   testimonialAuthor: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    marginTop: '16px',
-    '@media (min-width: 768px)': {
-      gap: '12px',
-      marginTop: '20px',
-    },
+    gap: '12px',
+    marginTop: '20px',
   },
   testimonialAvatar: {
-    width: '36px',
-    height: '36px',
+    width: '48px',
+    height: '48px',
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '16px',
+    fontSize: '20px',
     fontWeight: 600,
     color: 'white',
-    '@media (min-width: 768px)': {
-      width: '48px',
-      height: '48px',
-      fontSize: '20px',
-    },
   },
   ctaSection: {
-    margin: '40px 16px 60px',
-    padding: '32px 20px',
+    margin: '40px 24px 60px',
+    padding: '60px',
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    borderRadius: '24px',
+    borderRadius: '32px',
     textAlign: 'center' as const,
     color: 'white',
-    '@media (min-width: 768px)': {
-      margin: '60px 24px 80px',
-      padding: '60px 40px',
-      borderRadius: '32px',
-    },
   },
   ctaContent: {
     maxWidth: '600px',
@@ -1348,22 +1139,16 @@ const styles = {
   ctaButton: {
     display: 'inline-flex',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: '8px',
-    padding: '12px 24px',
+    padding: '14px 32px',
     background: 'white',
     color: '#3b82f6',
     border: 'none',
     borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '16px',
     fontWeight: 600,
-    marginTop: '16px',
-    '@media (min-width: 768px)': {
-      padding: '14px 32px',
-      fontSize: '16px',
-      marginTop: '24px',
-    },
+    marginTop: '24px',
   },
   pageContainer: { 
     maxWidth: '1280px', 
@@ -1561,21 +1346,6 @@ const styles = {
     width: '100%',
     padding: '10px',
     background: '#f59e0b',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontWeight: 500,
-    fontSize: '13px',
-  },
-  videoButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    width: '100%',
-    padding: '10px',
-    background: '#8b5cf6',
     color: 'white',
     border: 'none',
     borderRadius: '10px',

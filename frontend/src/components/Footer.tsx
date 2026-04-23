@@ -1,4 +1,4 @@
-import { Heart, Phone, Mail, MapPin, Globe } from 'lucide-react';
+import { Heart, Phone, Mail, MapPin } from 'lucide-react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -42,9 +42,7 @@ export default function Footer() {
   return (
     <footer style={styles.footer}>
       <div style={styles.container}>
-        {/* Main Footer Content */}
         <div style={styles.mainContent}>
-          {/* Brand Column */}
           <div style={styles.brandColumn}>
             <div style={styles.logo}>
               <Heart size={28} color="#3b82f6" />
@@ -70,82 +68,61 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div style={styles.linksColumn}>
             <h3>Quick Links</h3>
             <ul style={styles.linkList}>
               {quickLinks.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} style={styles.link}>
-                    {link.name}
-                  </a>
+                  <a href={link.href} style={styles.link}>{link.name}</a>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Services */}
           <div style={styles.linksColumn}>
             <h3>Our Services</h3>
             <ul style={styles.linkList}>
               {services.map((service, index) => (
                 <li key={index}>
-                  <a href={service.href} style={styles.link}>
-                    {service.name}
-                  </a>
+                  <a href={service.href} style={styles.link}>{service.name}</a>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Legal */}
           <div style={styles.linksColumn}>
             <h3>Legal</h3>
             <ul style={styles.linkList}>
               {legal.map((item, index) => (
                 <li key={index}>
-                  <a href={item.href} style={styles.link}>
-                    {item.name}
-                  </a>
+                  <a href={item.href} style={styles.link}>{item.name}</a>
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
-        {/* Newsletter Section */}
         <div style={styles.newsletterSection}>
           <div style={styles.newsletterContent}>
             <h3>Subscribe to Our Newsletter</h3>
             <p>Get the latest health tips and updates directly in your inbox.</p>
             <div style={styles.newsletterForm}>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                style={styles.newsletterInput}
-              />
+              <input type="email" placeholder="Enter your email" style={styles.newsletterInput} />
               <button style={styles.newsletterButton}>Subscribe</button>
             </div>
           </div>
         </div>
 
-        {/* Social Links */}
         <div style={styles.socialSection}>
           <div style={styles.socialLinks}>
             {socialLinks.map((social, index) => (
-              <a
-                key={index}
-                href={social.href}
-                style={styles.socialLink}
-                aria-label={social.name}
-              >
+              <a key={index} href={social.href} style={styles.socialLink} aria-label={social.name}>
                 <span style={{ fontSize: '20px' }}>{social.icon}</span>
               </a>
             ))}
           </div>
         </div>
 
-        {/* Copyright */}
         <div style={styles.copyright}>
           <p>&copy; {currentYear} MediVoice AI. All rights reserved.</p>
           <p style={styles.disclaimer}>
@@ -162,94 +139,50 @@ const styles = {
   footer: {
     background: 'var(--bg-secondary)',
     borderTop: '1px solid var(--border-color)',
-    marginTop: '40px',
-    padding: '40px 0 20px',
-    '@media (min-width: 768px)': {
-      marginTop: '60px',
-      padding: '60px 0 20px',
-    },
+    marginTop: '60px',
+    padding: '60px 0 20px',
   },
   container: {
     maxWidth: '1280px',
     margin: '0 auto',
-    padding: '0 16px',
-    '@media (min-width: 768px)': {
-      padding: '0 24px',
-    },
+    padding: '0 24px',
   },
   mainContent: {
     display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '32px',
-    marginBottom: '32px',
-    '@media (min-width: 640px)': {
-      gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '32px',
-    },
-    '@media (min-width: 768px)': {
-      gridTemplateColumns: '2fr 1fr 1fr 1fr',
-      gap: '40px',
-      marginBottom: '48px',
-    },
+    gridTemplateColumns: '2fr 1fr 1fr 1fr',
+    gap: '40px',
+    marginBottom: '48px',
   },
   brandColumn: {
-    textAlign: 'center' as const,
-    maxWidth: '100%',
-    '@media (min-width: 768px)': {
-      textAlign: 'left' as const,
-      maxWidth: '300px',
-    },
+    maxWidth: '300px',
   },
   logo: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: '12px',
     marginBottom: '16px',
-    '@media (min-width: 768px)': {
-      justifyContent: 'flex-start',
-    },
   },
   brandDescription: {
-    fontSize: '13px',
+    fontSize: '14px',
     color: 'var(--text-secondary)',
-    lineHeight: 1.5,
-    marginBottom: '16px',
-    '@media (min-width: 768px)': {
-      fontSize: '14px',
-      lineHeight: 1.6,
-      marginBottom: '20px',
-    },
+    lineHeight: 1.6,
+    marginBottom: '20px',
   },
   contactInfo: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px',
-    alignItems: 'center',
-    '@media (min-width: 768px)': {
-      alignItems: 'flex-start',
-      gap: '12px',
-    },
+    gap: '12px',
   },
   contactItem: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    fontSize: '12px',
+    fontSize: '13px',
     color: 'var(--text-secondary)',
-    '@media (min-width: 768px)': {
-      fontSize: '13px',
-    },
   },
   linksColumn: {
     display: 'flex',
     flexDirection: 'column' as const,
-    alignItems: 'center',
-    textAlign: 'center' as const,
-    '@media (min-width: 768px)': {
-      alignItems: 'flex-start',
-      textAlign: 'left' as const,
-    },
   },
   linkList: {
     listStyle: 'none',
@@ -257,98 +190,63 @@ const styles = {
     margin: 0,
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '8px',
-    '@media (min-width: 768px)': {
-      gap: '10px',
-    },
+    gap: '10px',
   },
   link: {
     color: 'var(--text-secondary)',
     textDecoration: 'none',
-    fontSize: '12px',
+    fontSize: '13px',
     transition: 'color 0.2s ease',
     cursor: 'pointer',
-    '@media (min-width: 768px)': {
-      fontSize: '13px',
-    },
   },
   newsletterSection: {
-    padding: '24px 0',
+    padding: '30px 0',
     borderTop: '1px solid var(--border-color)',
     borderBottom: '1px solid var(--border-color)',
-    marginBottom: '24px',
-    '@media (min-width: 768px)': {
-      padding: '30px 0',
-      marginBottom: '30px',
-    },
+    marginBottom: '30px',
   },
   newsletterContent: {
     textAlign: 'center' as const,
     maxWidth: '500px',
     margin: '0 auto',
-    padding: '0 16px',
   },
   newsletterForm: {
     display: 'flex',
-    flexDirection: 'column' as const,
     gap: '12px',
-    marginTop: '16px',
-    '@media (min-width: 480px)': {
-      flexDirection: 'row',
-    },
-    '@media (min-width: 768px)': {
-      gap: '12px',
-      marginTop: '20px',
-    },
+    marginTop: '20px',
   },
   newsletterInput: {
     flex: 1,
-    padding: '10px 14px',
+    padding: '12px 16px',
     background: 'var(--input-bg)',
     border: '1px solid var(--input-border)',
     borderRadius: '10px',
     color: 'var(--text-primary)',
     outline: 'none',
-    fontSize: '13px',
-    '@media (min-width: 768px)': {
-      padding: '12px 16px',
-      fontSize: '14px',
-    },
   },
   newsletterButton: {
-    padding: '10px 20px',
+    padding: '12px 24px',
     background: 'var(--button-primary)',
     color: 'white',
     border: 'none',
     borderRadius: '10px',
     cursor: 'pointer',
     fontWeight: 500,
-    fontSize: '13px',
-    '@media (min-width: 768px)': {
-      padding: '12px 24px',
-      fontSize: '14px',
-    },
   },
   socialSection: {
     display: 'flex',
     justifyContent: 'center',
-    marginBottom: '24px',
-    '@media (min-width: 768px)': {
-      marginBottom: '30px',
-    },
+    marginBottom: '30px',
   },
   socialLinks: {
     display: 'flex',
-    gap: '12px',
+    gap: '16px',
     flexWrap: 'wrap' as const,
     justifyContent: 'center',
-    '@media (min-width: 768px)': {
-      gap: '16px',
-    },
   },
   socialLink: {
-    width: '36px',
-    height: '36px',
+    width: '40px',
+    height: '40px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -357,31 +255,17 @@ const styles = {
     transition: 'transform 0.2s ease, background 0.2s ease',
     cursor: 'pointer',
     textDecoration: 'none',
-    '@media (min-width: 768px)': {
-      width: '40px',
-      height: '40px',
-    },
   },
   copyright: {
     textAlign: 'center' as const,
     paddingTop: '20px',
     borderTop: '1px solid var(--border-color)',
-    fontSize: '11px',
+    fontSize: '12px',
     color: 'var(--text-muted)',
-    '@media (min-width: 768px)': {
-      fontSize: '12px',
-      paddingTop: '20px',
-    },
   },
   disclaimer: {
-    fontSize: '10px',
+    fontSize: '11px',
     marginTop: '8px',
     color: 'var(--text-muted)',
-    padding: '0 16px',
-    '@media (min-width: 768px)': {
-      fontSize: '11px',
-      marginTop: '8px',
-      padding: '0',
-    },
   },
 };
