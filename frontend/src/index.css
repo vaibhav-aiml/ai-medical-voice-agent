@@ -79,6 +79,7 @@
   --gradient-end: #7c3aed;
   --hero-bg: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
   --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    --nav-bg: rgba(30, 41, 59, 0.95);
 }
 
 * {
@@ -415,4 +416,52 @@ button:active {
 
 .modal-body {
   color: var(--text-secondary);
+}
+/* DatePicker dark mode styles */
+.react-datepicker {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+.react-datepicker__header {
+  background-color: var(--badge-bg) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name,
+.react-datepicker__day {
+  color: var(--text-primary) !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: var(--button-primary) !important;
+  color: white !important;
+}
+
+.react-datepicker__day--selected {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--button-primary) !important;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+.appointment-datepicker {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
 }

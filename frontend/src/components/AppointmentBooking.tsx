@@ -91,6 +91,7 @@ export default function AppointmentBooking({ consultationId, specialistType, spe
               maxDate={maxDate}
               dateFormat="MMMM d, yyyy"
               placeholderText="Choose a date"
+              className="appointment-datepicker"
             />
           </div>
 
@@ -156,40 +157,43 @@ const styles = {
     zIndex: 1000,
   },
   modal: {
-    background: 'white',
+    background: 'var(--bg-card)',
     borderRadius: '12px',
     maxWidth: '500px',
     width: '90%',
     maxHeight: '85vh',
     overflow: 'auto' as const,
     boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+    border: '1px solid var(--border-color)',
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border-color)',
   },
   title: {
     margin: 0,
-    color: '#333',
+    color: 'var(--text-primary)',
+    fontSize: '20px',
   },
   closeButton: {
     background: 'transparent',
     border: 'none',
     fontSize: '24px',
     cursor: 'pointer',
-    color: '#999',
+    color: 'var(--text-secondary)',
   },
   content: {
     padding: '20px',
   },
   infoBox: {
-    background: '#e8f5e9',
+    background: 'var(--badge-bg)',
     padding: '15px',
     borderRadius: '8px',
     marginBottom: '20px',
+    border: '1px solid var(--border-color)',
   },
   formGroup: {
     marginBottom: '20px',
@@ -198,45 +202,50 @@ const styles = {
     display: 'block',
     marginBottom: '8px',
     fontWeight: 'bold',
-    color: '#333',
+    color: 'var(--text-primary)',
   },
   select: {
     width: '100%',
     padding: '10px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-color)',
     borderRadius: '8px',
     fontSize: '16px',
-    background: 'white',
+    background: 'var(--input-bg)',
+    color: 'var(--text-primary)',
   },
   textarea: {
     width: '100%',
     padding: '10px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-color)',
     borderRadius: '8px',
     fontSize: '14px',
     fontFamily: 'inherit',
     resize: 'vertical' as const,
+    background: 'var(--input-bg)',
+    color: 'var(--text-primary)',
   },
   reminderBox: {
-    background: '#fff3e0',
+    background: 'rgba(59, 130, 246, 0.1)',
     padding: '15px',
     borderRadius: '8px',
     marginTop: '20px',
     fontSize: '13px',
+    color: 'var(--text-primary)',
   },
   footer: {
     padding: '20px',
-    borderTop: '1px solid #eee',
+    borderTop: '1px solid var(--border-color)',
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '10px',
   },
   cancelButton: {
     padding: '10px 20px',
-    background: '#f0f0f0',
-    border: 'none',
+    background: 'transparent',
+    border: '1px solid var(--border-color)',
     borderRadius: '6px',
     cursor: 'pointer',
+    color: 'var(--text-secondary)',
   },
   bookButton: {
     padding: '10px 20px',

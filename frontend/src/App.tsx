@@ -282,44 +282,46 @@ function AppContent() {
   }
 
   return (
-    <div style={styles.app}>
-      <nav style={styles.nav}>
-        <div style={styles.navContent}>
-          <div onClick={() => setCurrentPage('home')} style={styles.logoContainer}>
-            <div style={styles.logoIcon}><Sparkles size={22} /></div>
-            <h1 style={styles.logo}>MediVoice AI</h1>
+    <div style={{...styles.app, paddingTop: currentPage === 'home' ? '80px' : '0px' }}>
+      {currentPage === 'home' && (
+        <nav style={styles.nav}>
+          <div style={styles.navContent}>
+            <div onClick={() => setCurrentPage('home')} style={styles.logoContainer}>
+              <div style={styles.logoIcon}><Sparkles size={22} /></div>
+              <h1 style={styles.logo}>MediVoice AI</h1>
+            </div>
+            <div style={styles.navLinks}>
+              <button onClick={() => setCurrentPage('home')} style={styles.navButton}><Home size={18} /><span>{t('nav.home')}</span></button>
+              <button onClick={() => { setCurrentPage('dashboard'); setRefreshKey(prev => prev + 1); }} style={styles.navButton}><LayoutDashboard size={18} /><span>{t('nav.dashboard')}</span></button>
+              <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>{t('nav.reports')}</span></button>
+              <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>{t('nav.appointments')}</span></button>
+              <button onClick={() => setShowSymptomChecker(true)} style={styles.symptomButton}>🤖 {t('nav.symptomChecker')}</button>
+              <button onClick={() => setShowHealthTips(true)} style={styles.healthButton}>📚 {t('nav.healthTips')}</button>
+              <button onClick={() => setShowEmergencyContacts(true)} style={styles.emergencyButton}>🚨 {t('nav.emergency')}</button>
+              <button onClick={() => setShowHealthGoals(true)} style={styles.goalsButton}>🎯 {t('nav.healthGoals')}</button>
+              <button onClick={() => setShowVoiceCustomization(true)} style={styles.voiceButton}>🎤 {t('nav.voiceSettings')}</button>
+              <button onClick={() => setShowProgressDashboard(true)} style={styles.progressButton}>📈 {t('nav.progress')}</button>
+              <button onClick={() => setShowDataExport(true)} style={styles.exportDataButton}>📥 Export Data</button>
+              <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>{t('nav.newConsultation')}</span></button>
+              <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
+            </div>
           </div>
-          <div style={styles.navLinks}>
-            <button onClick={() => setCurrentPage('home')} style={styles.navButton}><Home size={18} /><span>{t('nav.home')}</span></button>
-            <button onClick={() => { setCurrentPage('dashboard'); setRefreshKey(prev => prev + 1); }} style={styles.navButton}><LayoutDashboard size={18} /><span>{t('nav.dashboard')}</span></button>
-            <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>{t('nav.reports')}</span></button>
-            <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>{t('nav.appointments')}</span></button>
-            <button onClick={() => setShowSymptomChecker(true)} style={styles.symptomButton}>
-              🤖 {t('nav.symptomChecker')}
-            </button>
-            <button onClick={() => setShowHealthTips(true)} style={styles.healthButton}>
-              📚 {t('nav.healthTips')}
-            </button>
-            <button onClick={() => setShowEmergencyContacts(true)} style={styles.emergencyButton}>
-              🚨 {t('nav.emergency')}
-            </button>
-            <button onClick={() => setShowHealthGoals(true)} style={styles.goalsButton}>
-              🎯 {t('nav.healthGoals')}
-            </button>
-            <button onClick={() => setShowVoiceCustomization(true)} style={styles.voiceButton}>
-              🎤 {t('nav.voiceSettings')}
-            </button>
-            <button onClick={() => setShowProgressDashboard(true)} style={styles.progressButton}>
-              📈 {t('nav.progress')}
-            </button>
-            <button onClick={() => setShowDataExport(true)} style={styles.exportDataButton}>
-              📥 Export Data
-            </button>
-            <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>{t('nav.newConsultation')}</span></button>
-            <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
-          </div>
+        </nav>
+      )}
+
+      {/* Back to Home Button - Shows on all pages except home */}
+      {currentPage !== 'home' && (
+        <div style={styles.pageNav}>
+          <button onClick={() => setCurrentPage('home')} style={styles.pageNavButton}>
+            ← Back to Home
+          </button>
+          <span style={styles.pageNavTitle}>
+            {currentPage === 'dashboard' && 'Dashboard'}
+            {currentPage === 'consultation' && 'AI Medical Consultation'}
+            {currentPage === 'reports' && 'Medical Reports'}
+          </span>
         </div>
-      </nav>
+      )}
 
       {currentPage === 'home' && (
         <div style={styles.homeContainer}>
@@ -668,23 +670,26 @@ const styles = {
     animation: 'spin 1s linear infinite' 
   },
   nav: { 
-    background: 'var(--nav-bg)', 
-    padding: '1rem 0', 
-    boxShadow: 'var(--card-shadow)', 
-    position: 'sticky' as const, 
+    background: 'rgba(255, 255, 255, 0.08)', 
+    padding: '0.5rem 0',
+    boxShadow: 'none',
+    position: 'fixed' as const, 
     top: 0, 
-    zIndex: 100, 
-    borderBottom: '1px solid var(--border-color)' 
+    left: 0,
+    right: 0,
+    zIndex: 1000, 
+    borderBottom: 'none',
+    backdropFilter: 'blur(12px)',
   },
   navContent: { 
     maxWidth: '1280px', 
     margin: '0 auto', 
-    padding: '0 24px', 
+    padding: '0 16px',
     display: 'flex', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
     flexWrap: 'wrap' as const, 
-    gap: '16px' 
+    gap: '6px',
   },
   logoContainer: { 
     display: 'flex', 
@@ -710,126 +715,135 @@ const styles = {
   },
   navLinks: { 
     display: 'flex', 
-    gap: '6px', 
-    flexWrap: 'wrap' as const, 
-    alignItems: 'center' 
+    gap: '4px', 
+    alignItems: 'center', 
+    flexWrap: 'wrap' as const,
+    justifyContent: 'flex-end',
+    maxWidth: '70%',
   },
   navButton: { 
     display: 'flex', 
     alignItems: 'center', 
-    gap: '8px', 
-    padding: '8px 16px', 
+    gap: '4px',
+    padding: '4px 10px',
     background: 'transparent', 
     border: 'none', 
-    borderRadius: '10px', 
+    borderRadius: '8px', 
     cursor: 'pointer', 
     color: 'var(--text-secondary)', 
-    fontSize: '0.875rem', 
-    fontWeight: 500 
+    fontSize: '0.75rem',
+    fontWeight: 500,
   },
   consultButton: { 
     display: 'flex', 
     alignItems: 'center', 
-    gap: '8px', 
-    padding: '8px 20px', 
+    gap: '4px', 
+    padding: '4px 12px',
     background: 'var(--button-primary)', 
     color: 'white', 
     border: 'none', 
-    borderRadius: '10px', 
+    borderRadius: '8px', 
     cursor: 'pointer', 
-    fontSize: '0.875rem', 
-    fontWeight: 500 
+    fontSize: '0.75rem', 
+    fontWeight: 500,
   },
   symptomButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
+    padding: '4px 10px',
     background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
     color: 'white',
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '0.875rem',
+    fontSize: '0.7rem',
     fontWeight: 500,
   },
   healthButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    background: 'linear-gradient(135deg, #10b981, #059669)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  emergencyButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  goalsButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    background: 'linear-gradient(135deg, #10b981, #059669)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  voiceButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
+    padding: '4px 10px',
     background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
     color: 'white',
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '0.875rem',
+    fontSize: '0.7rem',
+    fontWeight: 500,
+  },
+  emergencyButton: {
+    padding: '4px 10px',
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '0.7rem',
+    fontWeight: 500,
+  },
+  goalsButton: {
+    padding: '4px 10px',
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '0.7rem',
+    fontWeight: 500,
+  },
+  voiceButton: {
+    padding: '4px 10px',
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '0.7rem',
     fontWeight: 500,
   },
   progressButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    padding: '4px 10px',
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
     color: 'white',
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '0.875rem',
+    fontSize: '0.7rem',
     fontWeight: 500,
   },
   exportDataButton: {
+    padding: '4px 10px',
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '0.7rem',
+    fontWeight: 500,
+  },
+  pageNav: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+    padding: '12px 24px',
+    background: 'var(--bg-card)',
+    borderBottom: '1px solid var(--border-color)',
+    marginBottom: '20px',
+  },
+  pageNavButton: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     padding: '8px 16px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white',
+    background: 'transparent',
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '0.875rem',
+    color: '#3b82f6',
+    fontSize: '14px',
     fontWeight: 500,
+    transition: 'all 0.2s ease',
+  },
+  pageNavTitle: {
+    fontSize: '18px',
+    fontWeight: 600,
+    color: 'var(--text-primary)',
   },
   homeContainer: {
     overflowX: 'hidden' as const,
@@ -841,9 +855,13 @@ const styles = {
     padding: '60px 24px',
     background: 'linear-gradient(135deg, var(--bg-primary), var(--bg-secondary))',
     alignItems: 'center',
+    position: 'relative' as const,
+    zIndex: 0,
   },
   heroContent: {
     maxWidth: '600px',
+    position: 'relative' as const,
+    zIndex: 1,
   },
   heroBadge: {
     display: 'inline-flex',
@@ -1267,76 +1285,77 @@ const styles = {
     borderBottom: '1px solid var(--border-color)' 
   },
   reportIconArea: { 
-    width: '40px', 
-    height: '40px', 
-    background: 'var(--badge-bg)', 
-    borderRadius: '12px', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    color: 'var(--button-primary)' 
+    width: '40px',
+        height: '40px',
+    background: 'var(--badge-bg)',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'var(--button-primary)',
   },
-  reportInfo: { 
-    flex: 1 
+  reportInfo: {
+    flex: 1,
   },
-  reportTitle: { 
-    fontSize: '15px', 
-    fontWeight: 600, 
-    margin: 0, 
-    color: 'var(--text-primary)' 
+  reportTitle: {
+    fontSize: '15px',
+    fontWeight: 600,
+    margin: 0,
+    color: 'var(--text-primary)',
   },
-  reportDate: { 
-    fontSize: '11px', 
-    color: 'var(--text-secondary)', 
-    margin: '4px 0 0' 
+  reportDate: {
+    fontSize: '11px',
+    color: 'var(--text-secondary)',
+    margin: '4px 0 0',
   },
-  reportStatus: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '6px', 
-    fontSize: '11px', 
-    color: 'var(--status-completed-text)', 
-    background: 'var(--status-completed-bg)', 
-    padding: '4px 10px', 
-    borderRadius: '20px' 
+  reportStatus: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '11px',
+    color: 'var(--status-completed-text)',
+    background: 'var(--status-completed-bg)',
+    padding: '4px 10px',
+    borderRadius: '20px',
   },
-  reportContent: { 
-    marginBottom: '16px' 
+  reportContent: {
+    marginBottom: '16px',
+    color: 'var(--text-secondary)',
   },
   reportActions: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '8px',
   },
-  downloadButton: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    gap: '8px', 
-    width: '100%', 
-    padding: '10px', 
-    background: 'var(--badge-bg)', 
-    color: 'var(--text-secondary)', 
-    border: 'none', 
-    borderRadius: '10px', 
-    cursor: 'pointer', 
-    fontWeight: 500, 
-    fontSize: '13px' 
+  downloadButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    width: '100%',
+    padding: '10px',
+    background: 'var(--badge-bg)',
+    color: 'var(--text-secondary)',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    fontSize: '13px',
   },
-  bookButton: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    gap: '8px', 
-    width: '100%', 
-    padding: '10px', 
-    background: 'var(--badge-bg)', 
-    color: 'var(--button-primary)', 
-    border: 'none', 
-    borderRadius: '10px', 
-    cursor: 'pointer', 
-    fontWeight: 500, 
-    fontSize: '13px' 
+  bookButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    width: '100%',
+    padding: '10px',
+    background: 'var(--badge-bg)',
+    color: 'var(--button-primary)',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    fontSize: '13px',
   },
   ratingButton: {
     display: 'flex',
@@ -1353,48 +1372,48 @@ const styles = {
     fontWeight: 500,
     fontSize: '13px',
   },
-  modalOverlay: { 
-    position: 'fixed' as const, 
-    top: 0, 
-    left: 0, 
-    right: 0, 
-    bottom: 0, 
-    background: 'rgba(0,0,0,0.4)', 
-    backdropFilter: 'blur(4px)', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    zIndex: 1000 
+  modalOverlay: {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.4)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
   },
-  modalContent: { 
-    background: 'var(--bg-card)', 
-    borderRadius: '20px', 
-    maxWidth: '600px', 
-    width: '90%', 
-    maxHeight: '85vh', 
-    overflow: 'auto' as const, 
-    position: 'relative' as const, 
-    padding: '24px' 
+  modalContent: {
+    background: 'var(--bg-card)',
+    borderRadius: '20px',
+    maxWidth: '600px',
+    width: '90%',
+    maxHeight: '85vh',
+    overflow: 'auto' as const,
+    position: 'relative' as const,
+    padding: '24px',
   },
-  modalClose: { 
-    position: 'absolute' as const, 
-    top: '16px', 
-    right: '16px', 
-    background: 'var(--badge-bg)', 
-    border: 'none', 
-    cursor: 'pointer', 
-    color: 'var(--text-secondary)', 
-    width: '32px', 
-    height: '32px', 
-    borderRadius: '8px', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center' 
+  modalClose: {
+    position: 'absolute' as const,
+    top: '16px',
+    right: '16px',
+    background: 'var(--badge-bg)',
+    border: 'none',
+    cursor: 'pointer',
+    color: 'var(--text-secondary)',
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 };
 
 // Add animation CSS
-const styleSheet = document.createElement("style");
+const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes spin {
     0% { transform: rotate(0deg); }
