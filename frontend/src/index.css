@@ -465,3 +465,12 @@ button:active {
   background: var(--input-bg);
   color: var(--text-primary);
 }
+/* Shimmer animation for skeleton loading */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

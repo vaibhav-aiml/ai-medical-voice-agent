@@ -1,3 +1,4 @@
+import SkeletonLoader from './components/SkeletonLoader';
 import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { 
@@ -31,6 +32,7 @@ import { useLanguage } from './context/LanguageContext';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
 
 function AppContent() {
+  const [minLoadingTime, setMinLoadingTime] = useState(true); 
   const { userId } = useAuth();
   const { user } = useUser();
   const { t } = useLanguage();
@@ -68,52 +70,31 @@ function AppContent() {
   });
 
   useEffect(() => {
-    if (userId) {
-      setLoading(true);
-      try {
-        const savedConsultations = localStorage.getItem(`consultations_${userId}`);
-        if (savedConsultations) {
-          const parsed = JSON.parse(savedConsultations);
-          setConsultations(parsed);
-          updateStats(parsed);
-        } else {
-          const mockConsultations: ConsultationSession[] = [
-            {
-              id: '1',
-              specialistType: 'general',
-              specialistName: 'Dr. Sarah Wilson',
-              status: 'completed',
-              startedAt: new Date('2024-03-15T10:30:00'),
-              endedAt: new Date('2024-03-15T10:45:00'),
-              duration: 15,
-              symptoms: 'Headache and fever for 2 days',
-              notes: 'Recommended rest and hydration',
-            },
-            {
-              id: '2',
-              specialistType: 'orthopedic',
-              specialistName: 'Dr. James Chen',
-              status: 'completed',
-              startedAt: new Date('2024-03-10T14:00:00'),
-              endedAt: new Date('2024-03-10T14:20:00'),
-              duration: 20,
-              symptoms: 'Lower back pain when sitting',
-              notes: 'Suggested posture correction exercises',
-            },
-          ];
-          setConsultations(mockConsultations);
-          localStorage.setItem(`consultations_${userId}`, JSON.stringify(mockConsultations));
-          updateStats(mockConsultations);
-        }
-      } catch (error) {
-        console.error('Error loading consultations:', error);
-        setConsultations([]);
-        updateStats([]);
-      } finally {
-        setLoading(false);
+  if (userId) {
+    setLoading(true);
+    try {
+      const savedConsultations = localStorage.getItem(`consultations_${userId}`);
+      if (savedConsultations) {
+        const parsed = JSON.parse(savedConsultations);
+        setConsultations(parsed);
+        updateStats(parsed);
+      } else {
+        const mockConsultations: ConsultationSession[] = [
+          // ... mock data
+        ];
+        setConsultations(mockConsultations);
+        localStorage.setItem(`consultations_${userId}`, JSON.stringify(mockConsultations));
+        updateStats(mockConsultations);
       }
+    } catch (error) {
+      console.error('Error loading consultations:', error);
+      setConsultations([]);
+      updateStats([]);
+    } finally {
+      setLoading(false);
     }
-  }, [userId, refreshKey]);
+  }
+}, [userId, refreshKey]);
 
   const updateStats = (consultList: ConsultationSession[]) => {
     setStats({
@@ -273,13 +254,8 @@ function AppContent() {
   };
 
   if (loading) {
-    return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.loader}></div>
-        <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>{t('common.loading')}</p>
-      </div>
-    );
-  }
+  return <SkeletonLoader />;
+}
 
   return (
     <div style={{...styles.app, paddingTop: currentPage === 'home' ? '80px' : '0px' }}>
