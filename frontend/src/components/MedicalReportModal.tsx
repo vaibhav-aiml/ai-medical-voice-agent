@@ -1,20 +1,25 @@
 import { useState } from 'react';
-import { Download, Mail, X } from 'lucide-react';
+import { Download, Mail, X, MessageCircle } from 'lucide-react';
 import { generateCompletePDFReport, generateMockCompleteReport } from '../utils/pdfGenerator';
 import EmailReportModal from './EmailReportModal';
+import WhatsAppButton from './WhatsAppButton';
+import WhatsAppShareModal from './WhatsAppShareModal';
+import { WhatsAppTemplates } from '../services/whatsapp.service';
 
 interface Props {
   consultationId: string;
   specialistType: string;
   symptoms: string;
+  patientName?: string;
   onClose: () => void;
 }
 
-export default function MedicalReportModal({ consultationId, specialistType, symptoms, onClose }: Props) {
+export default function MedicalReportModal({ consultationId, specialistType, symptoms, patientName = "Patient", onClose }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [generatedPdfData, setGeneratedPdfData] = useState<string>('');
   const [reportData, setReportData] = useState<any>(null);
+  const [showWhatsAppShare, setShowWhatsAppShare] = useState(false); // Only declare once
 
   const handleGeneratePDF = async () => {
     setIsGenerating(true);
@@ -43,6 +48,18 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const specialistName = `${specialistType.charAt(0).toUpperCase() + specialistType.slice(1)} Specialist`;
+
+  const getWhatsAppMessage = () => {
+    return WhatsAppTemplates.consultationSummary(
+      patientName,
+      specialistName,
+      symptoms,
+      new Date(),
+      window.location.href
+    );
   };
 
   return (
@@ -117,6 +134,13 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
               <Mail size={16} />
               <span>{isGenerating ? 'Preparing...' : 'Email Report'}</span>
             </button>
+            <button 
+              onClick={() => setShowWhatsAppShare(true)} 
+              style={styles.whatsappButton}
+            >
+              <MessageCircle size={16} />
+              <span>Share on WhatsApp</span>
+            </button>
           </div>
         </div>
       </div>
@@ -124,15 +148,23 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
       {showEmailModal && reportData && (
         <EmailReportModal
           consultationId={consultationId}
-          patientName="Patient"
+          patientName={patientName}
           specialistType={specialistType}
-          specialistName={`${specialistType.charAt(0).toUpperCase() + specialistType.slice(1)} Specialist`}
+          specialistName={specialistName}
           symptoms={symptoms}
           diagnosis={reportData.diagnosis}
           recommendations={reportData.recommendations}
           medications={reportData.medications}
           pdfData={generatedPdfData}
           onClose={() => setShowEmailModal(false)}
+        />
+      )}
+
+      {showWhatsAppShare && (
+        <WhatsAppShareModal
+          message={getWhatsAppMessage()}
+          title="Share Consultation Summary"
+          onClose={() => setShowWhatsAppShare(false)}
         />
       )}
     </>
@@ -156,7 +188,7 @@ const styles = {
   modal: {
     background: 'var(--bg-card)',
     borderRadius: '20px',
-    maxWidth: '550px',
+    maxWidth: '600px',
     width: '90%',
     maxHeight: '85vh',
     overflow: 'auto' as const,
@@ -292,6 +324,22 @@ const styles = {
     gap: '8px',
     padding: '10px',
     background: 'var(--button-success)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    fontSize: '14px',
+    transition: 'all 0.2s ease',
+  },
+  whatsappButton: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '10px',
+    background: '#25D366',
     color: 'white',
     border: 'none',
     borderRadius: '10px',

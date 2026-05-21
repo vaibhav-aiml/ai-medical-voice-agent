@@ -1,4 +1,3 @@
-import SkeletonLoader from './components/SkeletonLoader';
 import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { 
@@ -28,11 +27,11 @@ import MedicalReportModal from './components/MedicalReportModal';
 import AppointmentBooking from './components/AppointmentBooking';
 import MyAppointments from './components/MyAppointments';
 import Footer from './components/Footer';
+import SkeletonLoader from './components/SkeletonLoader';
 import { useLanguage } from './context/LanguageContext';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
 
 function AppContent() {
-  const [minLoadingTime, setMinLoadingTime] = useState(true); 
   const { userId } = useAuth();
   const { user } = useUser();
   const { t } = useLanguage();
@@ -70,31 +69,52 @@ function AppContent() {
   });
 
   useEffect(() => {
-  if (userId) {
-    setLoading(true);
-    try {
-      const savedConsultations = localStorage.getItem(`consultations_${userId}`);
-      if (savedConsultations) {
-        const parsed = JSON.parse(savedConsultations);
-        setConsultations(parsed);
-        updateStats(parsed);
-      } else {
-        const mockConsultations: ConsultationSession[] = [
-          // ... mock data
-        ];
-        setConsultations(mockConsultations);
-        localStorage.setItem(`consultations_${userId}`, JSON.stringify(mockConsultations));
-        updateStats(mockConsultations);
+    if (userId) {
+      setLoading(true);
+      try {
+        const savedConsultations = localStorage.getItem(`consultations_${userId}`);
+        if (savedConsultations) {
+          const parsed = JSON.parse(savedConsultations);
+          setConsultations(parsed);
+          updateStats(parsed);
+        } else {
+          const mockConsultations: ConsultationSession[] = [
+            {
+              id: '1',
+              specialistType: 'general',
+              specialistName: 'Dr. Sarah Wilson',
+              status: 'completed',
+              startedAt: new Date('2024-03-15T10:30:00'),
+              endedAt: new Date('2024-03-15T10:45:00'),
+              duration: 15,
+              symptoms: 'Headache and fever for 2 days',
+              notes: 'Recommended rest and hydration',
+            },
+            {
+              id: '2',
+              specialistType: 'orthopedic',
+              specialistName: 'Dr. James Chen',
+              status: 'completed',
+              startedAt: new Date('2024-03-10T14:00:00'),
+              endedAt: new Date('2024-03-10T14:20:00'),
+              duration: 20,
+              symptoms: 'Lower back pain when sitting',
+              notes: 'Suggested posture correction exercises',
+            },
+          ];
+          setConsultations(mockConsultations);
+          localStorage.setItem(`consultations_${userId}`, JSON.stringify(mockConsultations));
+          updateStats(mockConsultations);
+        }
+      } catch (error) {
+        console.error('Error loading consultations:', error);
+        setConsultations([]);
+        updateStats([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading consultations:', error);
-      setConsultations([]);
-      updateStats([]);
-    } finally {
-      setLoading(false);
     }
-  }
-}, [userId, refreshKey]);
+  }, [userId, refreshKey]);
 
   const updateStats = (consultList: ConsultationSession[]) => {
     setStats({
@@ -254,8 +274,8 @@ function AppContent() {
   };
 
   if (loading) {
-  return <SkeletonLoader />;
-}
+    return <SkeletonLoader />;
+  }
 
   return (
     <div style={{...styles.app, paddingTop: currentPage === 'home' ? '80px' : '0px' }}>
@@ -301,6 +321,7 @@ function AppContent() {
 
       {currentPage === 'home' && (
         <div style={styles.homeContainer}>
+          {/* Hero Section */}
           <div style={styles.heroSection}>
             <div style={styles.heroContent}>
               <div style={styles.heroBadge}>
@@ -342,6 +363,7 @@ function AppContent() {
             </div>
           </div>
 
+          {/* Stats Section */}
           <div style={styles.statsSection}>
             <div style={styles.statsContainer}>
               <div style={styles.statCard}>
@@ -371,6 +393,7 @@ function AppContent() {
             </div>
           </div>
 
+          {/* Features Section */}
           <div style={styles.featuresSection}>
             <div style={styles.sectionHeader}>
               <h2>Why Choose <span style={styles.sectionHeaderAccent}>MediVoice AI?</span></h2>
@@ -416,6 +439,7 @@ function AppContent() {
             </div>
           </div>
 
+          {/* How It Works Section */}
           <div style={styles.howItWorksSection}>
             <div style={styles.sectionHeader}>
               <h2>How It <span style={styles.sectionHeaderAccent}>Works</span></h2>
@@ -445,6 +469,7 @@ function AppContent() {
             </div>
           </div>
 
+          {/* Testimonials Section */}
           <div style={styles.testimonialsSection}>
             <div style={styles.sectionHeader}>
               <h2>What Our <span style={styles.sectionHeaderAccent}>Users Say</span></h2>
@@ -487,6 +512,7 @@ function AppContent() {
             </div>
           </div>
 
+          {/* CTA Section */}
           <div style={styles.ctaSection}>
             <div style={styles.ctaContent}>
               <h2>Ready to Experience the Future of Healthcare?</h2>
@@ -572,7 +598,7 @@ function AppContent() {
       )}
 
       {showReportModal && selectedConsultation && <MedicalReportModal consultationId={selectedConsultation.id} specialistType={selectedConsultation.specialistType} symptoms={selectedConsultation.symptoms || 'No symptoms recorded'} onClose={() => setShowReportModal(false)} />}
-      {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert('✅ Appointment booked successfully!'); }} />}
+      {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} patientName={getUserName()} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert('✅ Appointment booked successfully!'); }} />}
       {showSymptomChecker && <SymptomChecker onClose={() => setShowSymptomChecker(false)} onStartConsultation={handleSymptomCheckerConsultation} />}
       {showHealthTips && <HealthTips onClose={() => setShowHealthTips(false)} />}
       {showEmergencyContacts && <EmergencyContacts onClose={() => setShowEmergencyContacts(false)} />}
@@ -1336,10 +1362,10 @@ const styles = {
     gap: '24px' 
   },
   reportCard: { 
-    background: 'var(--bg-card)', 
-    borderRadius: '16px', 
-    padding: '20px', 
-    border: '1px solid var(--border-color)' 
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
+    padding: '20px',
+    border: '1px solid var(--border-color)'
   },
   reportHeader: { 
     display: 'flex', 

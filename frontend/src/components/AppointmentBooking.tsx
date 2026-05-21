@@ -1,16 +1,25 @@
 import { useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { sendAppointmentReminder } from '../services/whatsapp.service';
 
 interface Props {
   consultationId: string;
   specialistType: string;
   specialistName: string;
+  patientName?: string;
   onClose: () => void;
   onBooked: (appointment: any) => void;
 }
 
-export default function AppointmentBooking({ consultationId, specialistType, specialistName, onClose, onBooked }: Props) {
+export default function AppointmentBooking({ 
+  consultationId, 
+  specialistType, 
+  specialistName, 
+  patientName = "Patient",
+  onClose, 
+  onBooked 
+}: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState('');
   const [reason, setReason] = useState('');
@@ -54,6 +63,19 @@ export default function AppointmentBooking({ consultationId, specialistType, spe
     const userApps = userAppointments ? JSON.parse(userAppointments) : [];
     userApps.push(appointment);
     localStorage.setItem(`appointments_${userId}`, JSON.stringify(userApps));
+
+    // Send WhatsApp reminder (optional - doesn't block booking)
+    try {
+      sendAppointmentReminder(
+        patientName,
+        specialistName,
+        selectedDate,
+        selectedTime,
+        window.location.href
+      );
+    } catch (error) {
+      console.log('WhatsApp reminder not sent:', error);
+    }
 
     setTimeout(() => {
       setIsSubmitting(false);
@@ -123,6 +145,7 @@ export default function AppointmentBooking({ consultationId, specialistType, spe
           <div style={styles.reminderBox}>
             <p>📧 <strong>Reminder:</strong> You will receive an email reminder 24 hours before your appointment.</p>
             <p>⏰ Please arrive 10 minutes early for your appointment.</p>
+            <p>💚 <strong>WhatsApp:</strong> You'll also receive a reminder on WhatsApp.</p>
           </div>
         </div>
 
