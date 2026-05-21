@@ -5,6 +5,7 @@ import App from './App'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
 import './index.css'
+import { SubscriptionProvider } from './context/SubscriptionContext';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_aGVscGluZy10aWdlci0xMy5jbGVyay5hY2NvdW50cy5kZXYk'
 
@@ -13,7 +14,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
       <ThemeProvider>
         <LanguageProvider>
-          <App />
+          <SubscriptionProvider>
+            <App />
+          </SubscriptionProvider>
         </LanguageProvider>
       </ThemeProvider>
     </ClerkProvider>

@@ -27,14 +27,17 @@ import MedicalReportModal from './components/MedicalReportModal';
 import AppointmentBooking from './components/AppointmentBooking';
 import MyAppointments from './components/MyAppointments';
 import Footer from './components/Footer';
+import PricingPlans from './components/PricingPlans';
 import SkeletonLoader from './components/SkeletonLoader';
 import { useLanguage } from './context/LanguageContext';
+import { useSubscription } from './context/SubscriptionContext';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
 
 function AppContent() {
   const { userId } = useAuth();
   const { user } = useUser();
   const { t } = useLanguage();
+  const { canStartConsultation, getRemainingConsultations, subscription, incrementConsultation } = useSubscription();
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedSpecialist, setSelectedSpecialist] = useState('');
   const [consultationId, setConsultationId] = useState('');
@@ -61,6 +64,8 @@ function AppContent() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [manualSymptoms, setManualSymptoms] = useState('');
   const [loading, setLoading] = useState(true);
+  // ✅ STEP 1 — new state for pricing modal
+  const [showPricing, setShowPricing] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     totalConsultations: 0,
     completedConsultations: 0,
@@ -132,11 +137,25 @@ function AppContent() {
       alert('Please select a specialist first');
       return;
     }
+
+    // Check subscription limits
+    if (!canStartConsultation()) {
+      const remaining = getRemainingConsultations();
+      if (remaining === 0 && subscription.tier === 'free') {
+        alert('You have used all 5 free consultations this month. Please upgrade to Pro or Family plan to continue.');
+        setShowPricing(true);
+        return;
+      }
+    }
+
     const newId = `consult_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     setConsultationId(newId);
     setConsultationStarted(true);
     setMessages([]);
     setManualSymptoms('');
+
+    // Increment consultation count after successful start
+    incrementConsultation();
   };
 
   const handleTranscriptUpdate = (transcript: string) => {
@@ -298,6 +317,8 @@ function AppContent() {
               <button onClick={() => setShowVoiceCustomization(true)} style={styles.voiceButton}>🎤 {t('nav.voiceSettings')}</button>
               <button onClick={() => setShowProgressDashboard(true)} style={styles.progressButton}>📈 {t('nav.progress')}</button>
               <button onClick={() => setShowDataExport(true)} style={styles.exportDataButton}>📥 Export Data</button>
+              {/* ✅ STEP 2 — Upgrade button in navbar */}
+              <button onClick={() => setShowPricing(true)} style={styles.pricingButton}>💎 Upgrade</button>
               <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>{t('nav.newConsultation')}</span></button>
               <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
             </div>
@@ -636,6 +657,9 @@ function AppContent() {
           </div>
         </div>
       )}
+
+      {/* ✅ STEP 3 — PricingPlans modal */}
+      {showPricing && <PricingPlans onClose={() => setShowPricing(false)} />}
       
       <Footer />
     </div>
@@ -736,11 +760,6 @@ const styles = {
     fontSize: '0.75rem',
     fontWeight: 500,
     transition: 'all 0.3s ease',
-    '&:hover': {
-      color: '#3b82f6',
-      textShadow: '0 0 8px rgba(59, 130, 246, 0.5)',
-      transform: 'translateY(-1px)',
-    },
   },
   consultButton: { 
     display: 'flex', 
@@ -756,11 +775,6 @@ const styles = {
     fontWeight: 500,
     transition: 'all 0.3s ease',
     boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 0 15px rgba(59, 130, 246, 0.7), 0 0 20px rgba(59, 130, 246, 0.3)',
-      background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-    },
   },
   symptomButton: {
     padding: '4px 10px',
@@ -773,11 +787,6 @@ const styles = {
     fontWeight: 500,
     transition: 'all 0.3s ease',
     boxShadow: '0 0 8px rgba(139, 92, 246, 0.4)',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 0 15px rgba(139, 92, 246, 0.7), 0 0 20px rgba(139, 92, 246, 0.3)',
-      background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-    },
   },
   healthButton: {
     padding: '4px 10px',
@@ -790,11 +799,6 @@ const styles = {
     fontWeight: 500,
     transition: 'all 0.3s ease',
     boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 0 15px rgba(16, 185, 129, 0.7), 0 0 20px rgba(16, 185, 129, 0.3)',
-      background: 'linear-gradient(135deg, #059669, #047857)',
-    },
   },
   emergencyButton: {
     padding: '4px 10px',
@@ -807,11 +811,6 @@ const styles = {
     fontWeight: 500,
     transition: 'all 0.3s ease',
     boxShadow: '0 0 8px rgba(239, 68, 68, 0.4)',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 0 15px rgba(239, 68, 68, 0.7), 0 0 20px rgba(239, 68, 68, 0.3)',
-      background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
-    },
   },
   goalsButton: {
     padding: '4px 10px',
@@ -824,11 +823,6 @@ const styles = {
     fontWeight: 500,
     transition: 'all 0.3s ease',
     boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 0 15px rgba(16, 185, 129, 0.7), 0 0 20px rgba(16, 185, 129, 0.3)',
-      background: 'linear-gradient(135deg, #059669, #047857)',
-    },
   },
   voiceButton: {
     padding: '4px 10px',
@@ -841,11 +835,6 @@ const styles = {
     fontWeight: 500,
     transition: 'all 0.3s ease',
     boxShadow: '0 0 8px rgba(139, 92, 246, 0.4)',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 0 15px rgba(139, 92, 246, 0.7), 0 0 20px rgba(139, 92, 246, 0.3)',
-      background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-    },
   },
   progressButton: {
     padding: '4px 10px',
@@ -858,11 +847,6 @@ const styles = {
     fontWeight: 500,
     transition: 'all 0.3s ease',
     boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 0 15px rgba(59, 130, 246, 0.7), 0 0 20px rgba(59, 130, 246, 0.3)',
-      background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-    },
   },
   exportDataButton: {
     padding: '4px 10px',
@@ -875,11 +859,19 @@ const styles = {
     fontWeight: 500,
     transition: 'all 0.3s ease',
     boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 0 15px rgba(59, 130, 246, 0.7), 0 0 20px rgba(59, 130, 246, 0.3)',
-      background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-    },
+  },
+  // ✅ STEP 4 — pricingButton style
+  pricingButton: {
+    padding: '4px 12px',
+    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '0.7rem',
+    fontWeight: 500,
+    transition: 'all 0.2s ease',
+    boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
   },
   primaryButton: {
     display: 'flex',
@@ -896,11 +888,6 @@ const styles = {
     fontWeight: 600,
     transition: 'all 0.3s ease',
     boxShadow: '0 0 10px rgba(59, 130, 246, 0.3)',
-    '&:hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 0 20px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.3)',
-      background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-    },
   },
   secondaryButton: {
     padding: '14px 28px',
@@ -912,12 +899,6 @@ const styles = {
     fontWeight: 500,
     color: 'var(--text-primary)',
     transition: 'all 0.3s ease',
-    '&:hover': {
-      borderColor: '#3b82f6',
-      color: '#3b82f6',
-      boxShadow: '0 0 15px rgba(59, 130, 246, 0.3)',
-      transform: 'translateY(-2px)',
-    },
   },
   ctaButton: {
     display: 'inline-flex',
@@ -935,11 +916,6 @@ const styles = {
     marginTop: '24px',
     transition: 'all 0.3s ease',
     boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
-    '&:hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.3)',
-      background: '#f8fafc',
-    },
   },
   pageNav: {
     display: 'flex',
@@ -963,10 +939,6 @@ const styles = {
     fontSize: '14px',
     fontWeight: 500,
     transition: 'all 0.2s ease',
-    '&:hover': {
-      background: 'rgba(59, 130, 246, 0.1)',
-      transform: 'translateX(-2px)',
-    },
   },
   pageNavTitle: {
     fontSize: '18px',
@@ -1433,11 +1405,6 @@ const styles = {
     fontWeight: 500,
     fontSize: '13px',
     transition: 'all 0.2s ease',
-    '&:hover': {
-      background: 'var(--button-primary)',
-      color: 'white',
-      transform: 'translateY(-1px)',
-    },
   },
   bookButton: {
     display: 'flex',
@@ -1454,11 +1421,6 @@ const styles = {
     fontWeight: 500,
     fontSize: '13px',
     transition: 'all 0.2s ease',
-    '&:hover': {
-      background: 'var(--button-primary)',
-      color: 'white',
-      transform: 'translateY(-1px)',
-    },
   },
   ratingButton: {
     display: 'flex',
@@ -1476,11 +1438,6 @@ const styles = {
     fontSize: '13px',
     transition: 'all 0.2s ease',
     boxShadow: '0 0 5px rgba(245, 158, 11, 0.3)',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 0 15px rgba(245, 158, 11, 0.6)',
-      background: '#e67e22',
-    },
   },
   modalOverlay: {
     position: 'fixed' as const,
