@@ -6,7 +6,7 @@ import {
   Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
-import Header from './components/Header';
+import ProfileDropdown from './components/ProfileDropdown';
 import SymptomChecker from './components/SymptomChecker';
 import HealthTips from './components/HealthTips';
 import EmergencyContacts from './components/EmergencyContacts';
@@ -293,22 +293,31 @@ function AppContent() {
 
   return (
     <div style={{...styles.app, paddingTop: currentPage === 'home' ? '80px' : '0px' }}>
-      <Header
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        setShowSymptomChecker={setShowSymptomChecker}
-        setShowHealthTips={setShowHealthTips}
-        setShowEmergencyContacts={setShowEmergencyContacts}
-        setShowHealthGoals={setShowHealthGoals}
-        setShowVoiceCustomization={setShowVoiceCustomization}
-        setShowProgressDashboard={setShowProgressDashboard}
-        setShowDataExport={setShowDataExport}
-        setShowTwoFactorAuth={setShowTwoFactorAuth}
-        setShowAppointmentsList={setShowAppointmentsList}
-        onNewConsultation={handleNewConsultation}
-        onUpgrade={() => setShowPricing(true)}
-        userName={getUserName()}
-      />
+      {/* Glass Header */}
+      <nav style={styles.nav}>
+        <div style={styles.navContent}>
+          <div onClick={() => setCurrentPage('home')} style={styles.logoContainer}>
+            <div style={styles.logoIcon}><Sparkles size={22} /></div>
+            <h1 style={styles.logo}>MediVoice AI</h1>
+          </div>
+          <div style={styles.navLinks}>
+            <button onClick={() => setCurrentPage('home')} style={styles.navButton}><Home size={18} /><span>{t('nav.home')}</span></button>
+            <button onClick={() => { setCurrentPage('dashboard'); setRefreshKey(prev => prev + 1); }} style={styles.navButton}><LayoutDashboard size={18} /><span>{t('nav.dashboard')}</span></button>
+            <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>{t('nav.reports')}</span></button>
+            <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>{t('nav.appointments')}</span></button>
+            <button onClick={() => setShowSymptomChecker(true)} style={styles.symptomButton}>🤖 {t('nav.symptomChecker')}</button>
+            <button onClick={() => setShowHealthTips(true)} style={styles.healthButton}>📚 {t('nav.healthTips')}</button>
+            <button onClick={() => setShowEmergencyContacts(true)} style={styles.emergencyButton}>🚨 {t('nav.emergency')}</button>
+            <button onClick={() => setShowHealthGoals(true)} style={styles.goalsButton}>🎯 {t('nav.healthGoals')}</button>
+            <button onClick={() => setShowVoiceCustomization(true)} style={styles.voiceButton}>🎤 {t('nav.voiceSettings')}</button>
+            <button onClick={() => setShowProgressDashboard(true)} style={styles.progressButton}>📈 {t('nav.progress')}</button>
+            <button onClick={() => setShowDataExport(true)} style={styles.exportDataButton}>📥 Export Data</button>
+            <button onClick={() => setShowPricing(true)} style={styles.pricingButton}>💎 Upgrade</button>
+            <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>{t('nav.newConsultation')}</span></button>
+            <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
+          </div>
+        </div>
+      </nav>
 
       {/* Back to Home Button - Shows on all pages except home */}
       {currentPage !== 'home' && (
@@ -661,6 +670,161 @@ const styles = {
   app: { 
     minHeight: '100vh', 
     background: 'var(--bg-primary)',
+  },
+  nav: {
+    background: 'rgba(255, 255, 255, 0.08)',
+    backdropFilter: 'blur(12px)',
+    padding: '0.5rem 0',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    position: 'sticky' as const,
+    top: 0,
+    zIndex: 100,
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+  },
+  navContent: {
+    maxWidth: '1280px',
+    margin: '0 auto',
+    padding: '0 24px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap' as const,
+    gap: '16px',
+  },
+  logoContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer',
+  },
+  logoIcon: {
+    width: '36px',
+    height: '36px',
+    background: 'linear-gradient(135deg, var(--button-primary), #2563eb)',
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+  },
+  logo: {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    color: 'var(--text-primary)',
+    margin: 0,
+  },
+  navLinks: {
+    display: 'flex',
+    gap: '6px',
+    flexWrap: 'wrap' as const,
+    alignItems: 'center',
+  },
+  navButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 14px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    transition: 'all 0.2s ease',
+  },
+  symptomButton: {
+    padding: '8px 14px',
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  healthButton: {
+    padding: '8px 14px',
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  emergencyButton: {
+    padding: '8px 14px',
+    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  goalsButton: {
+    padding: '8px 14px',
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  voiceButton: {
+    padding: '8px 14px',
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  progressButton: {
+    padding: '8px 14px',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  exportDataButton: {
+    padding: '8px 14px',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  pricingButton: {
+    padding: '8px 14px',
+    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  consultButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 18px',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: 500,
   },
   pageNav: {
     display: 'flex',
