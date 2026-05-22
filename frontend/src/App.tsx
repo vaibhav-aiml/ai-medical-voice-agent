@@ -6,7 +6,7 @@ import {
   Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
-import LanguageSelector from './components/LanguageSelector';
+import Header from './components/Header';
 import SymptomChecker from './components/SymptomChecker';
 import HealthTips from './components/HealthTips';
 import EmergencyContacts from './components/EmergencyContacts';
@@ -18,7 +18,6 @@ import TwoFactorAuth from './components/TwoFactorAuth';
 import DataExport from './components/DataExport';
 import VideoConsultation from './components/VideoConsultation';
 import EnhancedDashboard from './components/EnhancedDashboard';
-import ProfileDropdown from './components/ProfileDropdown';
 import SpecialistSelector from './components/SpecialistSelector';
 import VoiceRecorder from './components/VoiceRecorder';
 import ChatMessages from './components/ChatMessages';
@@ -64,7 +63,6 @@ function AppContent() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [manualSymptoms, setManualSymptoms] = useState('');
   const [loading, setLoading] = useState(true);
-  // ✅ STEP 1 — new state for pricing modal
   const [showPricing, setShowPricing] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     totalConsultations: 0,
@@ -138,7 +136,6 @@ function AppContent() {
       return;
     }
 
-    // Check subscription limits
     if (!canStartConsultation()) {
       const remaining = getRemainingConsultations();
       if (remaining === 0 && subscription.tier === 'free') {
@@ -153,8 +150,6 @@ function AppContent() {
     setConsultationStarted(true);
     setMessages([]);
     setManualSymptoms('');
-
-    // Increment consultation count after successful start
     incrementConsultation();
   };
 
@@ -298,33 +293,22 @@ function AppContent() {
 
   return (
     <div style={{...styles.app, paddingTop: currentPage === 'home' ? '80px' : '0px' }}>
-      {currentPage === 'home' && (
-        <nav style={styles.nav}>
-          <div style={styles.navContent}>
-            <div onClick={() => setCurrentPage('home')} style={styles.logoContainer}>
-              <div style={styles.logoIcon}><Sparkles size={22} /></div>
-              <h1 style={styles.logo}>MediVoice AI</h1>
-            </div>
-            <div style={styles.navLinks}>
-              <button onClick={() => setCurrentPage('home')} style={styles.navButton}><Home size={18} /><span>{t('nav.home')}</span></button>
-              <button onClick={() => { setCurrentPage('dashboard'); setRefreshKey(prev => prev + 1); }} style={styles.navButton}><LayoutDashboard size={18} /><span>{t('nav.dashboard')}</span></button>
-              <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>{t('nav.reports')}</span></button>
-              <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>{t('nav.appointments')}</span></button>
-              <button onClick={() => setShowSymptomChecker(true)} style={styles.symptomButton}>🤖 {t('nav.symptomChecker')}</button>
-              <button onClick={() => setShowHealthTips(true)} style={styles.healthButton}>📚 {t('nav.healthTips')}</button>
-              <button onClick={() => setShowEmergencyContacts(true)} style={styles.emergencyButton}>🚨 {t('nav.emergency')}</button>
-              <button onClick={() => setShowHealthGoals(true)} style={styles.goalsButton}>🎯 {t('nav.healthGoals')}</button>
-              <button onClick={() => setShowVoiceCustomization(true)} style={styles.voiceButton}>🎤 {t('nav.voiceSettings')}</button>
-              <button onClick={() => setShowProgressDashboard(true)} style={styles.progressButton}>📈 {t('nav.progress')}</button>
-              <button onClick={() => setShowDataExport(true)} style={styles.exportDataButton}>📥 Export Data</button>
-              {/* ✅ STEP 2 — Upgrade button in navbar */}
-              <button onClick={() => setShowPricing(true)} style={styles.pricingButton}>💎 Upgrade</button>
-              <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>{t('nav.newConsultation')}</span></button>
-              <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
-            </div>
-          </div>
-        </nav>
-      )}
+      <Header
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        setShowSymptomChecker={setShowSymptomChecker}
+        setShowHealthTips={setShowHealthTips}
+        setShowEmergencyContacts={setShowEmergencyContacts}
+        setShowHealthGoals={setShowHealthGoals}
+        setShowVoiceCustomization={setShowVoiceCustomization}
+        setShowProgressDashboard={setShowProgressDashboard}
+        setShowDataExport={setShowDataExport}
+        setShowTwoFactorAuth={setShowTwoFactorAuth}
+        setShowAppointmentsList={setShowAppointmentsList}
+        onNewConsultation={handleNewConsultation}
+        onUpgrade={() => setShowPricing(true)}
+        userName={getUserName()}
+      />
 
       {/* Back to Home Button - Shows on all pages except home */}
       {currentPage !== 'home' && (
@@ -658,7 +642,6 @@ function AppContent() {
         </div>
       )}
 
-      {/* ✅ STEP 3 — PricingPlans modal */}
       {showPricing && <PricingPlans onClose={() => setShowPricing(false)} />}
       
       <Footer />
@@ -678,244 +661,6 @@ const styles = {
   app: { 
     minHeight: '100vh', 
     background: 'var(--bg-primary)',
-  },
-  loadingContainer: { 
-    display: 'flex', 
-    flexDirection: 'column' as const, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh', 
-    background: 'var(--bg-primary)',
-  },
-  loader: { 
-    width: '50px', 
-    height: '50px', 
-    border: '3px solid var(--border-color)', 
-    borderTop: '3px solid var(--button-primary)', 
-    borderRadius: '50%', 
-    animation: 'spin 1s linear infinite' 
-  },
-  nav: { 
-    background: 'rgba(255, 255, 255, 0.08)', 
-    padding: '0.5rem 0',
-    boxShadow: 'none',
-    position: 'fixed' as const, 
-    top: 0, 
-    left: 0,
-    right: 0,
-    zIndex: 1000, 
-    borderBottom: 'none',
-    backdropFilter: 'blur(12px)',
-  },
-  navContent: { 
-    maxWidth: '1280px', 
-    margin: '0 auto', 
-    padding: '0 16px',
-    display: 'flex', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    flexWrap: 'wrap' as const, 
-    gap: '6px',
-  },
-  logoContainer: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '10px', 
-    cursor: 'pointer' 
-  },
-  logoIcon: { 
-    width: '36px', 
-    height: '36px', 
-    background: 'linear-gradient(135deg, var(--button-primary), #2563eb)', 
-    borderRadius: '10px', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    color: 'white' 
-  },
-  logo: { 
-    fontSize: '1.25rem', 
-    fontWeight: 700, 
-    color: 'var(--text-primary)', 
-    margin: 0 
-  },
-  navLinks: { 
-    display: 'flex', 
-    gap: '4px', 
-    alignItems: 'center', 
-    flexWrap: 'wrap' as const,
-    justifyContent: 'flex-end',
-    maxWidth: '70%',
-  },
-  navButton: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '4px',
-    padding: '4px 10px',
-    background: 'transparent', 
-    border: 'none', 
-    borderRadius: '8px', 
-    cursor: 'pointer', 
-    color: 'var(--text-secondary)', 
-    fontSize: '0.75rem',
-    fontWeight: 500,
-    transition: 'all 0.3s ease',
-  },
-  consultButton: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '4px', 
-    padding: '4px 12px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white', 
-    border: 'none', 
-    borderRadius: '8px', 
-    cursor: 'pointer', 
-    fontSize: '0.75rem', 
-    fontWeight: 500,
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
-  },
-  symptomButton: {
-    padding: '4px 10px',
-    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.7rem',
-    fontWeight: 500,
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 8px rgba(139, 92, 246, 0.4)',
-  },
-  healthButton: {
-    padding: '4px 10px',
-    background: 'linear-gradient(135deg, #10b981, #059669)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.7rem',
-    fontWeight: 500,
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)',
-  },
-  emergencyButton: {
-    padding: '4px 10px',
-    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.7rem',
-    fontWeight: 500,
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 8px rgba(239, 68, 68, 0.4)',
-  },
-  goalsButton: {
-    padding: '4px 10px',
-    background: 'linear-gradient(135deg, #10b981, #059669)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.7rem',
-    fontWeight: 500,
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)',
-  },
-  voiceButton: {
-    padding: '4px 10px',
-    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.7rem',
-    fontWeight: 500,
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 8px rgba(139, 92, 246, 0.4)',
-  },
-  progressButton: {
-    padding: '4px 10px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.7rem',
-    fontWeight: 500,
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
-  },
-  exportDataButton: {
-    padding: '4px 10px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.7rem',
-    fontWeight: 500,
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
-  },
-  // ✅ STEP 4 — pricingButton style
-  pricingButton: {
-    padding: '4px 12px',
-    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.7rem',
-    fontWeight: 500,
-    transition: 'all 0.2s ease',
-    boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
-  },
-  primaryButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    padding: '14px 28px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    fontWeight: 600,
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 10px rgba(59, 130, 246, 0.3)',
-  },
-  secondaryButton: {
-    padding: '14px 28px',
-    background: 'transparent',
-    border: '1px solid var(--border-color)',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    fontWeight: 500,
-    color: 'var(--text-primary)',
-    transition: 'all 0.3s ease',
-  },
-  ctaButton: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    padding: '14px 32px',
-    background: 'white',
-    color: '#3b82f6',
-    border: 'none',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    fontWeight: 600,
-    marginTop: '24px',
-    transition: 'all 0.3s ease',
-    boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
   },
   pageNav: {
     display: 'flex',
@@ -938,7 +683,6 @@ const styles = {
     color: '#3b82f6',
     fontSize: '14px',
     fontWeight: 500,
-    transition: 'all 0.2s ease',
   },
   pageNavTitle: {
     fontSize: '18px',
@@ -955,13 +699,9 @@ const styles = {
     padding: '60px 24px',
     background: 'linear-gradient(135deg, var(--bg-primary), var(--bg-secondary))',
     alignItems: 'center',
-    position: 'relative' as const,
-    zIndex: 0,
   },
   heroContent: {
     maxWidth: '600px',
-    position: 'relative' as const,
-    zIndex: 1,
   },
   heroBadge: {
     display: 'inline-flex',
@@ -994,6 +734,29 @@ const styles = {
     display: 'flex',
     gap: '16px',
   },
+  primaryButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '14px 28px',
+    background: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 600,
+  },
+  secondaryButton: {
+    padding: '14px 28px',
+    background: 'transparent',
+    border: '1px solid var(--border-color)',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 500,
+    color: 'var(--text-primary)',
+  },
   heroImage: {
     position: 'relative' as const,
     height: '400px',
@@ -1010,7 +773,6 @@ const styles = {
     borderRadius: '16px',
     boxShadow: 'var(--card-shadow)',
     animation: 'float 3s ease-in-out infinite',
-    color: 'var(--text-primary)',
     border: '1px solid var(--border-color)',
   },
   floatingCard2: {
@@ -1025,7 +787,6 @@ const styles = {
     borderRadius: '16px',
     boxShadow: 'var(--card-shadow)',
     animation: 'float 4s ease-in-out infinite',
-    color: 'var(--text-primary)',
     border: '1px solid var(--border-color)',
   },
   floatingCard3: {
@@ -1040,7 +801,6 @@ const styles = {
     borderRadius: '16px',
     boxShadow: 'var(--card-shadow)',
     animation: 'float 3.5s ease-in-out infinite',
-    color: 'var(--text-primary)',
     border: '1px solid var(--border-color)',
   },
   heroCircle: {
@@ -1119,9 +879,7 @@ const styles = {
     background: 'var(--bg-card)',
     borderRadius: '24px',
     border: '1px solid var(--border-color)',
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
     position: 'relative' as const,
-    overflow: 'hidden',
   },
   featureIcon: {
     width: '64px',
@@ -1230,6 +988,20 @@ const styles = {
   ctaContent: {
     maxWidth: '600px',
     margin: '0 auto',
+  },
+  ctaButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '14px 32px',
+    background: 'white',
+    color: '#3b82f6',
+    border: 'none',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 600,
+    marginTop: '24px',
   },
   pageContainer: { 
     maxWidth: '1280px', 
@@ -1404,7 +1176,6 @@ const styles = {
     cursor: 'pointer',
     fontWeight: 500,
     fontSize: '13px',
-    transition: 'all 0.2s ease',
   },
   bookButton: {
     display: 'flex',
@@ -1420,7 +1191,6 @@ const styles = {
     cursor: 'pointer',
     fontWeight: 500,
     fontSize: '13px',
-    transition: 'all 0.2s ease',
   },
   ratingButton: {
     display: 'flex',
@@ -1436,8 +1206,6 @@ const styles = {
     cursor: 'pointer',
     fontWeight: 500,
     fontSize: '13px',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 0 5px rgba(245, 158, 11, 0.3)',
   },
   modalOverlay: {
     position: 'fixed' as const,
