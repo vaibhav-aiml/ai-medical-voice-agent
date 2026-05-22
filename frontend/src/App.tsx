@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { 
   Home, LayoutDashboard, FileText, Calendar, Plus, Mic, Stethoscope,
   ClipboardList, ArrowRight, Download, X, Activity, Brain, Heart, Bone, Baby,
-  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield
+  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Menu, ChevronDown, CreditCard, Settings, TrendingUp, Target
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
 import ProfileDropdown from './components/ProfileDropdown';
@@ -64,12 +64,24 @@ function AppContent() {
   const [manualSymptoms, setManualSymptoms] = useState('');
   const [loading, setLoading] = useState(true);
   const [showPricing, setShowPricing] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalConsultations: 0,
     completedConsultations: 0,
     averageDuration: 0,
     pendingFollowUps: 0,
   });
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (userId) {
@@ -287,13 +299,33 @@ function AppContent() {
     }
   };
 
+  // Essential buttons (always visible)
+  const essentialButtons = [
+    { icon: <Home size={18} />, label: t('nav.home'), onClick: () => setCurrentPage('home'), active: currentPage === 'home' },
+    { icon: <LayoutDashboard size={18} />, label: t('nav.dashboard'), onClick: () => setCurrentPage('dashboard'), active: currentPage === 'dashboard' },
+    { icon: <FileText size={18} />, label: t('nav.reports'), onClick: () => setCurrentPage('reports'), active: currentPage === 'reports' },
+    { icon: <Calendar size={18} />, label: t('nav.appointments'), onClick: () => setShowAppointmentsList(true), active: false },
+  ];
+
+  // Dropdown menu items
+  const dropdownItems = [
+    { icon: <Activity size={18} />, label: 'Symptom Checker', onClick: () => setShowSymptomChecker(true) },
+    { icon: <Heart size={18} />, label: 'Health Tips', onClick: () => setShowHealthTips(true) },
+    { icon: <Shield size={18} />, label: 'Emergency', onClick: () => setShowEmergencyContacts(true) },
+    { icon: <Target size={18} />, label: 'Health Goals', onClick: () => setShowHealthGoals(true) },
+    { icon: <Settings size={18} />, label: 'Voice Settings', onClick: () => setShowVoiceCustomization(true) },
+    { icon: <TrendingUp size={18} />, label: 'Progress', onClick: () => setShowProgressDashboard(true) },
+    { icon: <Download size={18} />, label: 'Export Data', onClick: () => setShowDataExport(true) },
+    { icon: <Shield size={18} />, label: '2FA', onClick: () => setShowTwoFactorAuth(true) },
+  ];
+
   if (loading) {
     return <SkeletonLoader />;
   }
 
   return (
-    <div style={{...styles.app, paddingTop: currentPage === 'home' ? '80px' : '0px' }}>
-      {/* Glass Header */}
+    <div style={styles.app}>
+      {/* Glass Header with Dropdown */}
       <nav style={styles.nav}>
         <div style={styles.navContent}>
           <div onClick={() => setCurrentPage('home')} style={styles.logoContainer}>
@@ -301,19 +333,57 @@ function AppContent() {
             <h1 style={styles.logo}>MediVoice AI</h1>
           </div>
           <div style={styles.navLinks}>
-            <button onClick={() => setCurrentPage('home')} style={styles.navButton}><Home size={18} /><span>{t('nav.home')}</span></button>
-            <button onClick={() => { setCurrentPage('dashboard'); setRefreshKey(prev => prev + 1); }} style={styles.navButton}><LayoutDashboard size={18} /><span>{t('nav.dashboard')}</span></button>
-            <button onClick={() => setCurrentPage('reports')} style={styles.navButton}><FileText size={18} /><span>{t('nav.reports')}</span></button>
-            <button onClick={() => setShowAppointmentsList(true)} style={styles.navButton}><Calendar size={18} /><span>{t('nav.appointments')}</span></button>
-            <button onClick={() => setShowSymptomChecker(true)} style={styles.symptomButton}>🤖 {t('nav.symptomChecker')}</button>
-            <button onClick={() => setShowHealthTips(true)} style={styles.healthButton}>📚 {t('nav.healthTips')}</button>
-            <button onClick={() => setShowEmergencyContacts(true)} style={styles.emergencyButton}>🚨 {t('nav.emergency')}</button>
-            <button onClick={() => setShowHealthGoals(true)} style={styles.goalsButton}>🎯 {t('nav.healthGoals')}</button>
-            <button onClick={() => setShowVoiceCustomization(true)} style={styles.voiceButton}>🎤 {t('nav.voiceSettings')}</button>
-            <button onClick={() => setShowProgressDashboard(true)} style={styles.progressButton}>📈 {t('nav.progress')}</button>
-            <button onClick={() => setShowDataExport(true)} style={styles.exportDataButton}>📥 Export Data</button>
-            <button onClick={() => setShowPricing(true)} style={styles.pricingButton}>💎 Upgrade</button>
-            <button onClick={() => { setCurrentPage('consultation'); setConsultationStarted(false); setMessages([]); setManualSymptoms(''); }} style={styles.consultButton}><Plus size={18} /><span>{t('nav.newConsultation')}</span></button>
+            {essentialButtons.map((btn, idx) => (
+              <button
+                key={idx}
+                onClick={btn.onClick}
+                style={{
+                  ...styles.navButton,
+                  ...(btn.active ? styles.navButtonActive : {}),
+                }}
+              >
+                {btn.icon}
+                <span>{btn.label}</span>
+              </button>
+            ))}
+
+            <button onClick={() => setShowPricing(true)} style={styles.pricingButton}>
+              <CreditCard size={18} />
+              <span>Upgrade</span>
+            </button>
+
+            <button onClick={handleNewConsultation} style={styles.consultButton}>
+              <Plus size={18} />
+              <span>New Consultation</span>
+            </button>
+
+            {/* More Dropdown */}
+            <div ref={dropdownRef} style={styles.dropdownContainer}>
+              <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} style={styles.dropdownButton}>
+                <Menu size={18} />
+                <span>More</span>
+                <ChevronDown size={14} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+
+              {isDropdownOpen && (
+                <div style={styles.dropdownMenu}>
+                  {dropdownItems.map((item, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        item.onClick();
+                        setIsDropdownOpen(false);
+                      }}
+                      style={styles.dropdownItem}
+                    >
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
           </div>
         </div>
@@ -674,8 +744,7 @@ const styles = {
   nav: {
     background: 'rgba(255, 255, 255, 0.08)',
     backdropFilter: 'blur(12px)',
-    padding: '0.5rem 0',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    padding: '0.75rem 0',
     position: 'sticky' as const,
     top: 0,
     zIndex: 100,
@@ -689,7 +758,7 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap' as const,
-    gap: '16px',
+    gap: '12px',
   },
   logoContainer: {
     display: 'flex',
@@ -700,7 +769,7 @@ const styles = {
   logoIcon: {
     width: '36px',
     height: '36px',
-    background: 'linear-gradient(135deg, var(--button-primary), #2563eb)',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     borderRadius: '10px',
     display: 'flex',
     alignItems: 'center',
@@ -710,12 +779,12 @@ const styles = {
   logo: {
     fontSize: '1.25rem',
     fontWeight: 700,
-    color: 'var(--text-primary)',
+    color: 'white',
     margin: 0,
   },
   navLinks: {
     display: 'flex',
-    gap: '6px',
+    gap: '8px',
     flexWrap: 'wrap' as const,
     alignItems: 'center',
   },
@@ -733,77 +802,14 @@ const styles = {
     fontWeight: 500,
     transition: 'all 0.2s ease',
   },
-  symptomButton: {
-    padding: '8px 14px',
-    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+  navButtonActive: {
+    background: 'rgba(255,255,255,0.15)',
     color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  healthButton: {
-    padding: '8px 14px',
-    background: 'linear-gradient(135deg, #10b981, #059669)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  emergencyButton: {
-    padding: '8px 14px',
-    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  goalsButton: {
-    padding: '8px 14px',
-    background: 'linear-gradient(135deg, #10b981, #059669)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  voiceButton: {
-    padding: '8px 14px',
-    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  progressButton: {
-    padding: '8px 14px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  exportDataButton: {
-    padding: '8px 14px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
   },
   pricingButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
     padding: '8px 14px',
     background: 'linear-gradient(135deg, #f59e0b, #d97706)',
     color: 'white',
@@ -825,6 +831,49 @@ const styles = {
     cursor: 'pointer',
     fontSize: '0.875rem',
     fontWeight: 500,
+  },
+  dropdownContainer: {
+    position: 'relative' as const,
+  },
+  dropdownButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 14px',
+    background: 'transparent',
+    border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+  },
+  dropdownMenu: {
+    position: 'absolute' as const,
+    top: 'calc(100% + 8px)',
+    right: 0,
+    width: '220px',
+    background: 'rgba(30, 41, 59, 0.95)',
+    backdropFilter: 'blur(12px)',
+    borderRadius: '12px',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    zIndex: 1000,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    width: '100%',
+    padding: '12px 16px',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'left' as const,
+    transition: 'background 0.2s ease',
   },
   pageNav: {
     display: 'flex',
@@ -1421,6 +1470,10 @@ styleSheet.textContent = `
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
+  }
+  
+  .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
 `;
 document.head.appendChild(styleSheet);
