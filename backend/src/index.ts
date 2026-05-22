@@ -18,45 +18,75 @@ dotenv.config({ path: '.env' });
 const app = express();
 const httpServer = createServer(app);
 
-// Allowed origins for CORS
+// Comprehensive allowed origins
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost:5174',
   'https://ai-medical-voice-agent.netlify.app',
   'https://ai-medical-frontend.onrender.com',
+  'https://medivoice-ai.netlify.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
+// Also allow any netlify subdomain during development
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is allowed
+    if (allowedOrigins.includes(origin) || origin.includes('netlify.app')) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
 console.log('✅ Allowed CORS origins:', allowedOrigins);
 
-// Configure Socket.IO with CORS
+// Configure Socket.IO with dynamic CORS
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || origin.includes('netlify.app')) {
+        callback(null, true);
+      } else {
+        console.log('❌ Socket.IO CORS blocked origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST']
   },
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
+  allowEIO3: true
 });
 
-// Middleware
+// Middleware - CORS first
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "unsafe-none" }
 }));
-
-// CORS middleware
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
-
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log(`📝 ${req.method} ${req.path}`);
+  console.log(`📝 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'unknown'}`);
   next();
 });
 
@@ -129,7 +159,7 @@ httpServer.listen(PORT, () => {
 ║  Database: ✅ Connected                               ║
 ║  WebSocket: ✅ Ready for voice                        ║
 ║  API Routes: ✅ /api/consultations, /api/email        ║
-║  CORS Origins: ${allowedOrigins.length} domains       ║
+║  CORS: ✅ Enabled for Netlify domains                 ║
 ╚══════════════════════════════════════════════════════╝
   `);
 });
