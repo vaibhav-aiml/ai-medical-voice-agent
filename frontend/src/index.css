@@ -417,3 +417,21 @@ button:active {
 .modal-body {
   color: var(--text-secondary);
 }
+/* Responsive visibility classes */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .desktop-only {
+    display: flex !important;
+  }
+  .mobile-only {
+    display: none !important;
+  }
+}
