@@ -34,7 +34,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     utterance.pitch = voiceSettings.pitch;
     utterance.volume = voiceSettings.volume;
     
-    // Try to set voice based on selection
     if (voiceSettings.voice !== 'default') {
       const voices = window.speechSynthesis.getVoices();
       const voiceMap: Record<string, string> = {
@@ -134,16 +133,18 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     }
   };
 
-  // WebSocket connection
+  // WebSocket connection - HARDCODED URL
   useEffect(() => {
-    console.log('🔌 Connecting to WebSocket server...');
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    console.log('Connecting to:', API_URL);
+    // HARDCODED - Replace this with your actual Render backend URL
+    const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
+    
+    console.log('🔌 Connecting to WebSocket server at:', API_URL);
     
     socketRef.current = io(API_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      timeout: 10000
     });
     
     socketRef.current.on('connect', () => {
@@ -153,7 +154,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     });
     
     socketRef.current.on('connect_error', (error: any) => {
-      console.error('❌ WebSocket connection error:', error);
+      console.error('❌ WebSocket connection error:', error.message);
       setConnectionStatus('Connection failed');
     });
     
