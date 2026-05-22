@@ -5,8 +5,8 @@ export default function SkeletonLoader() {
       <div style={styles.heroSection}>
         <div style={styles.heroContent}>
           <div style={styles.skeletonBadge}></div>
-          <div style={styles.skeletonTitle}></div>
-          <div style={styles.skeletonSubtitle}></div>
+          <div style={styles.skeletonHeroTitle}></div>
+          <div style={styles.skeletonHeroSubtitle}></div>
           <div style={styles.skeletonButtons}>
             <div style={styles.skeletonButton}></div>
             <div style={styles.skeletonButtonOutline}></div>
@@ -73,7 +73,7 @@ export default function SkeletonLoader() {
                 <div style={styles.skeletonAvatar}></div>
                 <div style={styles.skeletonAuthorInfo}>
                   <div style={styles.skeletonName}></div>
-                  <div style={styles.skeletonTitle}></div>
+                  <div style={styles.skeletonAuthorTitle}></div>
                 </div>
               </div>
             </div>
@@ -102,11 +102,6 @@ const styles = {
     padding: '60px 24px',
     background: 'linear-gradient(135deg, var(--bg-primary), var(--bg-secondary))',
     alignItems: 'center',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: '1fr',
-      gap: '24px',
-      padding: '40px 20px',
-    },
   },
   heroContent: {
     maxWidth: '600px',
@@ -117,9 +112,6 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    '@media (max-width: 768px)': {
-      display: 'none',
-    },
   },
   skeletonBadge: {
     width: '150px',
@@ -130,7 +122,7 @@ const styles = {
     borderRadius: '20px',
     marginBottom: '20px',
   },
-  skeletonTitle: {
+  skeletonHeroTitle: {
     width: '80%',
     height: '60px',
     background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
@@ -139,7 +131,7 @@ const styles = {
     borderRadius: '8px',
     marginBottom: '16px',
   },
-  skeletonSubtitle: {
+  skeletonHeroSubtitle: {
     width: '100%',
     height: '80px',
     background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
@@ -187,10 +179,6 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '24px',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '16px',
-    },
   },
   statCard: {
     textAlign: 'center' as const,
@@ -244,10 +232,6 @@ const styles = {
     gridTemplateColumns: 'repeat(3, 1fr)',
     gap: '32px',
     marginTop: '48px',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: '1fr',
-      gap: '20px',
-    },
   },
   featureCard: {
     padding: '32px',
@@ -293,10 +277,6 @@ const styles = {
     justifyContent: 'center',
     gap: '24px',
     marginTop: '48px',
-    '@media (max-width: 768px)': {
-      flexDirection: 'column',
-      gap: '20px',
-    },
   },
   stepCard: {
     flex: 1,
@@ -354,10 +334,6 @@ const styles = {
     gridTemplateColumns: 'repeat(3, 1fr)',
     gap: '32px',
     marginTop: '48px',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: '1fr',
-      gap: '20px',
-    },
   },
   testimonialCard: {
     padding: '28px',
@@ -408,7 +384,7 @@ const styles = {
     borderRadius: '4px',
     marginBottom: '6px',
   },
-  skeletonTitle: {
+  skeletonAuthorTitle: {
     width: '60px',
     height: '12px',
     background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
@@ -422,10 +398,6 @@ const styles = {
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     borderRadius: '32px',
     textAlign: 'center' as const,
-    '@media (max-width: 768px)': {
-      margin: '40px 16px 60px',
-      padding: '40px 20px',
-    },
   },
   skeletonCtaTitle: {
     width: '300px',
