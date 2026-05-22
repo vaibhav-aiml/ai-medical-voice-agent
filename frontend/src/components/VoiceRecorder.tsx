@@ -135,7 +135,8 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
 
   useEffect(() => {
     console.log('🔌 Connecting to WebSocket server...');
-    socketRef.current = io('http://localhost:3000', {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  socketRef.current = io(API_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5
