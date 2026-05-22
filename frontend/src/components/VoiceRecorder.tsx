@@ -121,8 +121,10 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
           specialistType
         });
       } else {
+        console.log('WebSocket not connected, using fallback');
+        // Fallback to mock response
         setTimeout(() => {
-          const mockResponse = getMockResponse(text, specialistType);
+          const mockResponse = getFallbackResponse(text, specialistType);
           onAIResponse(mockResponse);
           if (voiceSettings.autoSpeak && voiceSettings.enabled) {
             speakResponse(mockResponse);
@@ -133,22 +135,22 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     }
   };
 
-  // WebSocket connection - HARDCODED URL
+  // WebSocket connection - Real backend URL
   useEffect(() => {
-    // HARDCODED - Replace this with your actual Render backend URL
-    const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
+    const BACKEND_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
     
-    console.log('🔌 Connecting to WebSocket server at:', API_URL);
+    console.log('🔌 Connecting to WebSocket at:', BACKEND_URL);
     
-    socketRef.current = io(API_URL, {
+    socketRef.current = io(BACKEND_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
-      timeout: 10000
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      timeout: 20000
     });
     
     socketRef.current.on('connect', () => {
-      console.log('✅ Connected to voice server');
+      console.log('✅ WebSocket connected successfully!');
       setConnectionStatus('Connected');
       socketRef.current.emit('join-consultation', consultationId);
     });
@@ -159,7 +161,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     });
     
     socketRef.current.on('ai-response', (data: any) => {
-      console.log('🤖 AI Response received:', data);
+      console.log('🤖 AI Response from Groq:', data);
       if (data.response) {
         onAIResponse(data.response);
         if (voiceSettings.autoSpeak && voiceSettings.enabled) {
@@ -207,7 +209,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     }
   };
 
-  const getMockResponse = (symptoms: string, specialist: string) => {
+  const getFallbackResponse = (symptoms: string, specialist: string) => {
     const responses: Record<string, string> = {
       general: `Thank you for sharing: "${symptoms}". As your General Physician, I recommend: 
 1️⃣ Get plenty of rest (7-8 hours)
