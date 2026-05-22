@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
 
 interface Props {
@@ -26,7 +26,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   });
 
   // Speak function using voice settings
-  const speakResponse = (text: string) => {
+  const speakResponse = useCallback((text: string) => {
     if (!voiceSettings.enabled || !window.speechSynthesis) return;
     
     const utterance = new SpeechSynthesisUtterance(text);
@@ -53,7 +53,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
-  };
+  }, [voiceSettings.enabled, voiceSettings.rate, voiceSettings.pitch, voiceSettings.volume, voiceSettings.voice]);
 
   // Listen for voice settings changes
   useEffect(() => {
@@ -65,6 +65,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // Initialize speech recognition
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
@@ -133,10 +134,13 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     }
   };
 
+  // WebSocket connection
   useEffect(() => {
     console.log('🔌 Connecting to WebSocket server...');
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-  socketRef.current = io(API_URL, {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    console.log('Connecting to:', API_URL);
+    
+    socketRef.current = io(API_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5
@@ -169,7 +173,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         socketRef.current.disconnect();
       }
     };
-  }, [consultationId]);
+  }, [consultationId, voiceSettings.autoSpeak, voiceSettings.enabled, speakResponse]);
 
   const startVoiceRecording = () => {
     if (recognition) {
