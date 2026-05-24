@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { 
   Menu, ChevronDown, Home, LayoutDashboard, FileText, Calendar, Plus, 
   Sparkles, Activity, Heart, Shield, Download, CreditCard, Settings, 
-  TrendingUp, Target
+  TrendingUp, Target, Bell, User 
 } from 'lucide-react';
 import ProfileDropdown from './ProfileDropdown';
 
@@ -40,17 +40,12 @@ export default function Header({
   userName
 }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
-      }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
-        setIsMobileMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -58,9 +53,7 @@ export default function Header({
   }, []);
 
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
-  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
-  // Essential features (always visible on desktop)
   const essentialButtons = [
     { icon: <Home size={18} />, label: 'Home', onClick: () => setCurrentPage('home'), active: currentPage === 'home' },
     { icon: <LayoutDashboard size={18} />, label: 'Dashboard', onClick: () => setCurrentPage('dashboard'), active: currentPage === 'dashboard' },
@@ -68,268 +61,209 @@ export default function Header({
     { icon: <Calendar size={18} />, label: 'Appointments', onClick: () => setShowAppointmentsList(true), active: false },
   ];
 
-  // Dropdown menu items
   const dropdownItems = [
     { icon: <Activity size={18} />, label: 'Symptom Checker', onClick: () => setShowSymptomChecker(true) },
     { icon: <Heart size={18} />, label: 'Health Tips', onClick: () => setShowHealthTips(true) },
-    { icon: <Shield size={18} />, label: 'Emergency', onClick: () => setShowEmergencyContacts(true) },
+    { icon: <Shield size={18} />, label: 'Emergency Contacts', onClick: () => setShowEmergencyContacts(true) },
     { icon: <Target size={18} />, label: 'Health Goals', onClick: () => setShowHealthGoals(true) },
     { icon: <Settings size={18} />, label: 'Voice Settings', onClick: () => setShowVoiceCustomization(true) },
-    { icon: <TrendingUp size={18} />, label: 'Progress', onClick: () => setShowProgressDashboard(true) },
+    { icon: <TrendingUp size={18} />, label: 'Progress Dashboard', onClick: () => setShowProgressDashboard(true) },
     { icon: <Download size={18} />, label: 'Export Data', onClick: () => setShowDataExport(true) },
-    { icon: <Shield size={18} />, label: '2FA', onClick: () => setShowTwoFactorAuth(true) },
-  ];
-
-  // Mobile menu items (all features without active property)
-  const mobileMenuItems = [
-    { icon: <Home size={18} />, label: 'Home', onClick: () => setCurrentPage('home') },
-    { icon: <LayoutDashboard size={18} />, label: 'Dashboard', onClick: () => setCurrentPage('dashboard') },
-    { icon: <FileText size={18} />, label: 'Reports', onClick: () => setCurrentPage('reports') },
-    { icon: <Calendar size={18} />, label: 'Appointments', onClick: () => setShowAppointmentsList(true) },
-    { icon: <Activity size={18} />, label: 'Symptom Checker', onClick: () => setShowSymptomChecker(true) },
-    { icon: <Heart size={18} />, label: 'Health Tips', onClick: () => setShowHealthTips(true) },
-    { icon: <Shield size={18} />, label: 'Emergency', onClick: () => setShowEmergencyContacts(true) },
-    { icon: <Target size={18} />, label: 'Health Goals', onClick: () => setShowHealthGoals(true) },
-    { icon: <Settings size={18} />, label: 'Voice Settings', onClick: () => setShowVoiceCustomization(true) },
-    { icon: <TrendingUp size={18} />, label: 'Progress', onClick: () => setShowProgressDashboard(true) },
-    { icon: <Download size={18} />, label: 'Export Data', onClick: () => setShowDataExport(true) },
-    { icon: <Shield size={18} />, label: '2FA', onClick: () => setShowTwoFactorAuth(true) },
-    { icon: <CreditCard size={18} />, label: 'Upgrade', onClick: onUpgrade },
-    { icon: <Plus size={18} />, label: 'New Consultation', onClick: onNewConsultation },
+    { icon: <Shield size={18} />, label: '2FA Settings', onClick: () => setShowTwoFactorAuth(true) },
   ];
 
   return (
-    <>
-      <nav style={styles.nav}>
-        <div style={styles.navContent}>
-          {/* Logo */}
-          <div onClick={() => setCurrentPage('home')} style={styles.logoContainer}>
-            <div style={styles.logoIcon}>
-              <Sparkles size={20} />
-            </div>
-            <h1 style={styles.logo}>MediVoice AI</h1>
+    <nav style={styles.nav}>
+      <div style={styles.navContent}>
+        <div onClick={() => setCurrentPage('home')} style={styles.logoContainer}>
+          <div style={styles.logoIcon}>
+            <Sparkles size={22} />
           </div>
+          <h1 style={styles.logo}>MediVoice AI</h1>
+        </div>
 
-          {/* Desktop Navigation - Hidden on mobile */}
-          <div style={styles.desktopNav}>
-            <div style={styles.navLinks}>
-              {essentialButtons.map((btn, idx) => (
-                <button
-                  key={idx}
-                  onClick={btn.onClick}
-                  style={{
-                    ...styles.navButton,
-                    ...(btn.active ? styles.navButtonActive : {}),
-                  }}
-                >
-                  {btn.icon}
-                  <span>{btn.label}</span>
-                </button>
-              ))}
+        <div style={styles.navLinks}>
+          {essentialButtons.map((btn, idx) => (
+            <button
+              key={idx}
+              onClick={btn.onClick}
+              style={{
+                ...styles.navButton,
+                ...(btn.active ? styles.navButtonActive : {}),
+              }}
+            >
+              {btn.icon}
+              <span>{btn.label}</span>
+            </button>
+          ))}
 
-              <button onClick={onUpgrade} style={styles.upgradeButton}>
-                <CreditCard size={16} />
-                <span>Upgrade</span>
-              </button>
-
-              <button onClick={onNewConsultation} style={styles.consultButton}>
-                <Plus size={16} />
-                <span>New Consultation</span>
-              </button>
-
-              {/* More Dropdown */}
-              <div ref={dropdownRef} style={styles.dropdownContainer}>
-                <button onClick={toggleDropdown} style={styles.dropdownButton}>
-                  <Menu size={16} />
-                  <span>More</span>
-                  <ChevronDown size={12} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                </button>
-
-                {isDropdownOpen && (
-                  <div style={styles.dropdownMenu}>
-                    {dropdownItems.map((item, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          item.onClick();
-                          setIsDropdownOpen(false);
-                        }}
-                        style={styles.dropdownItem}
-                      >
-                        {item.icon}
-                        <span>{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
-            </div>
-          </div>
-
-          {/* Mobile Menu Button - Visible only on mobile */}
-          <button onClick={toggleMobileMenu} style={styles.mobileMenuButton}>
-            <Menu size={24} />
+          <button onClick={onUpgrade} style={styles.upgradeButton}>
+            <CreditCard size={18} />
+            <span>Upgrade</span>
           </button>
-        </div>
-      </nav>
 
-      {/* Mobile Menu Drawer */}
-      {isMobileMenuOpen && (
-        <div style={styles.mobileMenuOverlay} onClick={() => setIsMobileMenuOpen(false)}>
-          <div style={styles.mobileMenuDrawer} ref={mobileMenuRef} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.mobileMenuHeader}>
-              <div style={styles.mobileMenuLogo}>
-                <Sparkles size={20} />
-                <span>MediVoice AI</span>
+          <button onClick={onNewConsultation} style={styles.consultButton}>
+            <Plus size={18} />
+            <span>New Consultation</span>
+          </button>
+
+          <div ref={dropdownRef} style={styles.dropdownContainer}>
+            <button onClick={toggleDropdown} style={styles.dropdownButton}>
+              <Menu size={18} />
+              <span>More</span>
+              <ChevronDown size={14} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            </button>
+
+            {isDropdownOpen && (
+              <div style={styles.dropdownMenu}>
+                {dropdownItems.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      item.onClick();
+                      setIsDropdownOpen(false);
+                    }}
+                    style={styles.dropdownItem}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
               </div>
-              <button onClick={() => setIsMobileMenuOpen(false)} style={styles.mobileMenuClose}>✕</button>
-            </div>
-            <div style={styles.mobileMenuItems}>
-              {mobileMenuItems.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    item.onClick();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  style={styles.mobileMenuItem}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </div>
-            <div style={styles.mobileMenuFooter}>
-              <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
-            </div>
+            )}
           </div>
+
+          <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
         </div>
-      )}
-    </>
+      </div>
+    </nav>
   );
 }
 
-const styles: { [key: string]: React.CSSProperties } = {
+const styles = {
   nav: {
-    background: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(10px)',
-    padding: '12px 16px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    position: 'sticky',
+    background: 'rgba(255, 255, 255, 0.08)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    padding: '0.5rem 0',
+    boxShadow: 'none',
+    position: 'sticky' as const,
     top: 0,
     left: 0,
     right: 0,
     zIndex: 1000,
-    borderBottom: '1px solid var(--border-color)',
+    borderBottom: 'none',
   },
   navContent: {
     maxWidth: '1280px',
     margin: '0 auto',
+    padding: '0 16px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap' as const,
+    gap: '6px',
   },
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: '10px',
     cursor: 'pointer',
   },
   logoIcon: {
-    width: '32px',
-    height: '32px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    borderRadius: '8px',
+    width: '36px',
+    height: '36px',
+    background: 'linear-gradient(135deg, var(--button-primary), #2563eb)',
+    borderRadius: '10px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     color: 'white',
   },
   logo: {
-    fontSize: '1.1rem',
+    fontSize: '1.25rem',
     fontWeight: 700,
     color: 'var(--text-primary)',
     margin: 0,
   },
-  desktopNav: {
-    display: 'flex',
-  },
   navLinks: {
     display: 'flex',
-    gap: '6px',
+    gap: '4px',
     alignItems: 'center',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap' as const,
+    justifyContent: 'flex-end',
+    maxWidth: '70%',
   },
   navButton: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: '8px 14px',
+    gap: '4px',
+    padding: '4px 10px',
     background: 'transparent',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
     color: 'var(--text-secondary)',
-    fontSize: '0.85rem',
+    fontSize: '0.75rem',
     fontWeight: 500,
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
   },
   navButtonActive: {
-    background: 'rgba(59, 130, 246, 0.1)',
-    color: '#3b82f6',
+    background: 'var(--badge-bg)',
+    color: 'var(--button-primary)',
   },
   upgradeButton: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: '8px 14px',
+    gap: '4px',
+    padding: '4px 12px',
     background: 'linear-gradient(135deg, #f59e0b, #d97706)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '0.85rem',
+    fontSize: '0.75rem',
     fontWeight: 500,
     transition: 'all 0.2s ease',
+    boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
   },
   consultButton: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: '8px 14px',
+    gap: '4px',
+    padding: '4px 12px',
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '0.85rem',
+    fontSize: '0.75rem',
     fontWeight: 500,
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
   },
   dropdownContainer: {
-    position: 'relative',
+    position: 'relative' as const,
   },
   dropdownButton: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: '8px 14px',
+    gap: '4px',
+    padding: '4px 10px',
     background: 'transparent',
     border: '1px solid var(--border-color)',
     borderRadius: '8px',
     cursor: 'pointer',
     color: 'var(--text-secondary)',
-    fontSize: '0.85rem',
+    fontSize: '0.75rem',
     fontWeight: 500,
     transition: 'all 0.2s ease',
   },
   dropdownMenu: {
-    position: 'absolute',
+    position: 'absolute' as const,
     top: 'calc(100% + 8px)',
     right: 0,
-    width: '220px',
+    width: '210px',
     background: 'var(--bg-card)',
     borderRadius: '12px',
     boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
@@ -340,131 +274,15 @@ const styles: { [key: string]: React.CSSProperties } = {
   dropdownItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    width: '100%',
-    padding: '12px 16px',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '14px',
-    color: 'var(--text-primary)',
-    textAlign: 'left',
-    transition: 'background 0.2s ease',
-  },
-  mobileMenuButton: {
-    display: 'none',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    color: 'var(--text-primary)',
-    padding: '8px',
-    borderRadius: '8px',
-  },
-  mobileMenuOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0,0,0,0.5)',
-    zIndex: 1001,
-    display: 'flex',
-    justifyContent: 'flex-end',
-  },
-  mobileMenuDrawer: {
-    width: '280px',
-    height: '100%',
-    background: 'var(--bg-card)',
-    boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'auto',
-  },
-  mobileMenuHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px',
-    borderBottom: '1px solid var(--border-color)',
-  },
-  mobileMenuLogo: {
-    display: 'flex',
-    alignItems: 'center',
     gap: '10px',
-    fontSize: '18px',
-    fontWeight: 600,
-    color: 'var(--text-primary)',
-  },
-  mobileMenuClose: {
-    background: 'transparent',
-    border: 'none',
-    fontSize: '24px',
-    cursor: 'pointer',
-    color: 'var(--text-secondary)',
-  },
-  mobileMenuItems: {
-    flex: 1,
-    padding: '16px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    overflowY: 'auto',
-  },
-  mobileMenuItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
     width: '100%',
-    padding: '12px 16px',
+    padding: '10px 14px',
     background: 'transparent',
     border: 'none',
-    borderRadius: '10px',
     cursor: 'pointer',
-    fontSize: '15px',
+    fontSize: '13px',
     color: 'var(--text-primary)',
-    textAlign: 'left',
+    textAlign: 'left' as const,
     transition: 'background 0.2s ease',
-  },
-  mobileMenuFooter: {
-    padding: '16px',
-    borderTop: '1px solid var(--border-color)',
   },
 };
-
-// Add animation and responsive styles
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-  
-  .mobile-menu-drawer {
-    animation: slideIn 0.3s ease;
-  }
-  
-  @media (max-width: 768px) {
-    .desktop-nav {
-      display: none !important;
-    }
-    
-    .mobile-menu-button {
-      display: flex !important;
-    }
-  }
-  
-  @media (min-width: 769px) {
-    .mobile-menu-button {
-      display: none !important;
-    }
-    
-    .mobile-menu-overlay {
-      display: none !important;
-    }
-  }
-`;
-document.head.appendChild(styleSheet);

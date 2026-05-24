@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { 
   Home, LayoutDashboard, FileText, Calendar, Plus, Mic, Stethoscope,
   ClipboardList, ArrowRight, Download, X, Activity, Brain, Heart, Bone, Baby,
-  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Menu, ChevronDown, CreditCard, Settings, TrendingUp, Target
+  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
-import ProfileDropdown from './components/ProfileDropdown';
+import Header from './components/Header';
 import SymptomChecker from './components/SymptomChecker';
 import HealthTips from './components/HealthTips';
 import EmergencyContacts from './components/EmergencyContacts';
@@ -28,9 +28,16 @@ import MyAppointments from './components/MyAppointments';
 import Footer from './components/Footer';
 import PricingPlans from './components/PricingPlans';
 import SkeletonLoader from './components/SkeletonLoader';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
+import TermsConditions from './pages/TermsConditions';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import VoiceConsultationPage from './pages/VoiceConsultation';
 import { useLanguage } from './context/LanguageContext';
 import { useSubscription } from './context/SubscriptionContext';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
+import HIPAACompliance from './pages/HIPAACompliance';
+import CookiePolicy from './pages/CookiePolicy';
 
 function AppContent() {
   const { userId } = useAuth();
@@ -64,24 +71,16 @@ function AppContent() {
   const [manualSymptoms, setManualSymptoms] = useState('');
   const [loading, setLoading] = useState(true);
   const [showPricing, setShowPricing] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [selectedStep, setSelectedStep] = useState<number | null>(null);
+  // Legal and Service Pages State
+  const [currentLegalPage, setCurrentLegalPage] = useState<string | null>(null);
+  const [currentServicePage, setCurrentServicePage] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalConsultations: 0,
     completedConsultations: 0,
     averageDuration: 0,
     pendingFollowUps: 0,
   });
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   useEffect(() => {
     if (userId) {
@@ -299,95 +298,55 @@ function AppContent() {
     }
   };
 
-  // Essential buttons (always visible)
-  const essentialButtons = [
-    { icon: <Home size={18} />, label: t('nav.home'), onClick: () => setCurrentPage('home'), active: currentPage === 'home' },
-    { icon: <LayoutDashboard size={18} />, label: t('nav.dashboard'), onClick: () => setCurrentPage('dashboard'), active: currentPage === 'dashboard' },
-    { icon: <FileText size={18} />, label: t('nav.reports'), onClick: () => setCurrentPage('reports'), active: currentPage === 'reports' },
-    { icon: <Calendar size={18} />, label: t('nav.appointments'), onClick: () => setShowAppointmentsList(true), active: false },
-  ];
-
-  // Dropdown menu items
-  const dropdownItems = [
-    { icon: <Activity size={18} />, label: 'Symptom Checker', onClick: () => setShowSymptomChecker(true) },
-    { icon: <Heart size={18} />, label: 'Health Tips', onClick: () => setShowHealthTips(true) },
-    { icon: <Shield size={18} />, label: 'Emergency', onClick: () => setShowEmergencyContacts(true) },
-    { icon: <Target size={18} />, label: 'Health Goals', onClick: () => setShowHealthGoals(true) },
-    { icon: <Settings size={18} />, label: 'Voice Settings', onClick: () => setShowVoiceCustomization(true) },
-    { icon: <TrendingUp size={18} />, label: 'Progress', onClick: () => setShowProgressDashboard(true) },
-    { icon: <Download size={18} />, label: 'Export Data', onClick: () => setShowDataExport(true) },
-    { icon: <Shield size={18} />, label: '2FA', onClick: () => setShowTwoFactorAuth(true) },
-  ];
+  // Handle navigation from Footer
+  const handleFooterNavigation = (page: string) => {
+    setCurrentLegalPage(null);
+    setCurrentServicePage(null);
+    setCurrentPage('');
+    if (page === 'about') setCurrentLegalPage('about');
+    else if (page === 'contact') setCurrentLegalPage('contact');
+    else if (page === 'terms') setCurrentLegalPage('terms');
+    else if (page === 'privacy') setCurrentLegalPage('privacy');
+    else if (page === 'hipaa') setCurrentLegalPage('hipaa');
+    else if (page === 'cookies') setCurrentLegalPage('cookies');
+    else if (page === 'consultation') setCurrentPage('consultation');
+    else if (page === 'dashboard') setCurrentPage('dashboard');
+    else if (page === 'reports') setCurrentPage('reports');
+    else if (page === 'home') setCurrentPage('home');
+    window.scrollTo(0, 0);
+  };
 
   if (loading) {
     return <SkeletonLoader />;
   }
 
+  // Render legal/service pages
+  if (currentLegalPage === 'about') return <AboutUs />;
+  if (currentLegalPage === 'contact') return <ContactUs />;
+  if (currentLegalPage === 'terms') return <TermsConditions />;
+  if (currentLegalPage === 'privacy') return <PrivacyPolicy />;
+  if (currentServicePage === 'voice-consultation') return <VoiceConsultationPage />;
+  if (currentLegalPage === 'hipaa') return <HIPAACompliance />;
+  if (currentLegalPage === 'cookies') return <CookiePolicy />;
+
   return (
-    <div style={styles.app}>
-      {/* Glass Header with Dropdown */}
-      <nav style={styles.nav}>
-        <div style={styles.navContent}>
-          <div onClick={() => setCurrentPage('home')} style={styles.logoContainer}>
-            <div style={styles.logoIcon}><Sparkles size={22} /></div>
-            <h1 style={styles.logo}>MediVoice AI</h1>
-          </div>
-          <div style={styles.navLinks}>
-            {essentialButtons.map((btn, idx) => (
-              <button
-                key={idx}
-                onClick={btn.onClick}
-                style={{
-                  ...styles.navButton,
-                  ...(btn.active ? styles.navButtonActive : {}),
-                }}
-              >
-                {btn.icon}
-                <span>{btn.label}</span>
-              </button>
-            ))}
-
-            <button onClick={() => setShowPricing(true)} style={styles.pricingButton}>
-              <CreditCard size={18} />
-              <span>Upgrade</span>
-            </button>
-
-            <button onClick={handleNewConsultation} style={styles.consultButton}>
-              <Plus size={18} />
-              <span>New Consultation</span>
-            </button>
-
-            {/* More Dropdown */}
-            <div ref={dropdownRef} style={styles.dropdownContainer}>
-              <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} style={styles.dropdownButton}>
-                <Menu size={18} />
-                <span>More</span>
-                <ChevronDown size={14} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-              </button>
-
-              {isDropdownOpen && (
-                <div style={styles.dropdownMenu}>
-                  {dropdownItems.map((item, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        item.onClick();
-                        setIsDropdownOpen(false);
-                      }}
-                      style={styles.dropdownItem}
-                    >
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
-          </div>
-        </div>
-      </nav>
+    <div style={{...styles.app, paddingTop: '0px' }}>
+      <Header
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        setShowSymptomChecker={setShowSymptomChecker}
+        setShowHealthTips={setShowHealthTips}
+        setShowEmergencyContacts={setShowEmergencyContacts}
+        setShowHealthGoals={setShowHealthGoals}
+        setShowVoiceCustomization={setShowVoiceCustomization}
+        setShowProgressDashboard={setShowProgressDashboard}
+        setShowDataExport={setShowDataExport}
+        setShowTwoFactorAuth={setShowTwoFactorAuth}
+        setShowAppointmentsList={setShowAppointmentsList}
+        onNewConsultation={handleNewConsultation}
+        onUpgrade={() => setShowPricing(true)}
+        userName={getUserName()}
+      />
 
       {/* Back to Home Button - Shows on all pages except home */}
       {currentPage !== 'home' && (
@@ -523,32 +482,77 @@ function AppContent() {
             </div>
           </div>
 
-          {/* How It Works Section */}
+          {/* How It Works Section - Interactive */}
           <div style={styles.howItWorksSection}>
             <div style={styles.sectionHeader}>
               <h2>How It <span style={styles.sectionHeaderAccent}>Works</span></h2>
-              <p>Get started in three simple steps</p>
+              <p>Click on any step to learn more</p>
             </div>
             <div style={styles.stepsContainer}>
-              <div style={styles.stepCard}>
+              <div 
+                onClick={() => setSelectedStep(selectedStep === 1 ? null : 1)}
+                style={{
+                  ...styles.stepCard,
+                  ...(selectedStep === 1 ? styles.stepCardExpanded : {}),
+                  cursor: 'pointer',
+                }}
+              >
                 <div style={styles.stepNumber}>01</div>
                 <div style={styles.stepIcon}>🎤</div>
-                <h3>Speak Your Symptoms</h3>
-                <p>Simply speak or type your symptoms naturally</p>
+                <h3 style={styles.stepTitle}>Speak Your Symptoms</h3>
+                <p style={styles.stepDescription}>Simply speak or type your symptoms naturally</p>
+                {selectedStep === 1 && (
+                  <div style={styles.stepDetails}>
+                    <div style={styles.stepDetailItem}>🎙️ No typing needed - just speak naturally</div>
+                    <div style={styles.stepDetailItem}>🌐 Works in multiple languages</div>
+                    <div style={styles.stepDetailItem}>⚡ Real-time transcription</div>
+                    <div style={styles.stepDetailItem}>⌨️ Text input also available</div>
+                  </div>
+                )}
               </div>
               <div style={styles.stepArrow}>→</div>
-              <div style={styles.stepCard}>
+              <div 
+                onClick={() => setSelectedStep(selectedStep === 2 ? null : 2)}
+                style={{
+                  ...styles.stepCard,
+                  ...(selectedStep === 2 ? styles.stepCardExpanded : {}),
+                  cursor: 'pointer',
+                }}
+              >
                 <div style={styles.stepNumber}>02</div>
                 <div style={styles.stepIcon}>🤖</div>
-                <h3>AI Doctor Analysis</h3>
-                <p>Our AI analyzes your symptoms and provides advice</p>
+                <h3 style={styles.stepTitle}>AI Doctor Analysis</h3>
+                <p style={styles.stepDescription}>Our AI analyzes your symptoms and provides advice</p>
+                {selectedStep === 2 && (
+                  <div style={styles.stepDetails}>
+                    <div style={styles.stepDetailItem}>🧠 Powered by advanced AI (Groq/OpenAI)</div>
+                    <div style={styles.stepDetailItem}>👨‍⚕️ 5+ medical specialists available</div>
+                    <div style={styles.stepDetailItem}>💭 Remembers conversation history</div>
+                    <div style={styles.stepDetailItem}>📝 Provides personalized recommendations</div>
+                  </div>
+                )}
               </div>
               <div style={styles.stepArrow}>→</div>
-              <div style={styles.stepCard}>
+              <div 
+                onClick={() => setSelectedStep(selectedStep === 3 ? null : 3)}
+                style={{
+                  ...styles.stepCard,
+                  ...(selectedStep === 3 ? styles.stepCardExpanded : {}),
+                  cursor: 'pointer',
+                }}
+              >
                 <div style={styles.stepNumber}>03</div>
                 <div style={styles.stepIcon}>📋</div>
-                <h3>Get Report & Follow-up</h3>
-                <p>Download report and schedule follow-up if needed</p>
+                <h3 style={styles.stepTitle}>Get Report & Follow-up</h3>
+                <p style={styles.stepDescription}>Download report and schedule follow-up if needed</p>
+                {selectedStep === 3 && (
+                  <div style={styles.stepDetails}>
+                    <div style={styles.stepDetailItem}>📄 Download detailed PDF reports</div>
+                    <div style={styles.stepDetailItem}>📧 Email reports to yourself or doctor</div>
+                    <div style={styles.stepDetailItem}>📅 Book follow-up appointments</div>
+                    <div style={styles.stepDetailItem}>📊 Track consultation history</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -723,7 +727,14 @@ function AppContent() {
 
       {showPricing && <PricingPlans onClose={() => setShowPricing(false)} />}
       
-      <Footer />
+      <Footer 
+        setCurrentPage={handleFooterNavigation}
+        setShowSymptomChecker={setShowSymptomChecker}
+        setShowHealthTips={setShowHealthTips}
+        setShowEmergencyContacts={setShowEmergencyContacts}
+        setShowHealthGoals={setShowHealthGoals}
+        setShowAppointmentsList={setShowAppointmentsList}
+      />
     </div>
   );
 }
@@ -740,140 +751,6 @@ const styles = {
   app: { 
     minHeight: '100vh', 
     background: 'var(--bg-primary)',
-  },
-  nav: {
-    background: 'rgba(255, 255, 255, 0.08)',
-    backdropFilter: 'blur(12px)',
-    padding: '0.75rem 0',
-    position: 'sticky' as const,
-    top: 0,
-    zIndex: 100,
-    borderBottom: '1px solid rgba(255,255,255,0.1)',
-  },
-  navContent: {
-    maxWidth: '1280px',
-    margin: '0 auto',
-    padding: '0 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap' as const,
-    gap: '12px',
-  },
-  logoContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    cursor: 'pointer',
-  },
-  logoIcon: {
-    width: '36px',
-    height: '36px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-  },
-  logo: {
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    color: 'white',
-    margin: 0,
-  },
-  navLinks: {
-    display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap' as const,
-    alignItems: 'center',
-  },
-  navButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '8px 14px',
-    background: 'transparent',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    transition: 'all 0.2s ease',
-  },
-  navButtonActive: {
-    background: 'rgba(255,255,255,0.15)',
-    color: 'white',
-  },
-  pricingButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '8px 14px',
-    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  consultButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '8px 18px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  dropdownContainer: {
-    position: 'relative' as const,
-  },
-  dropdownButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '8px 14px',
-    background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.2)',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  dropdownMenu: {
-    position: 'absolute' as const,
-    top: 'calc(100% + 8px)',
-    right: 0,
-    width: '220px',
-    background: 'rgba(30, 41, 59, 0.95)',
-    backdropFilter: 'blur(12px)',
-    borderRadius: '12px',
-    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    zIndex: 1000,
-    overflow: 'hidden',
-  },
-  dropdownItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    width: '100%',
-    padding: '12px 16px',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '14px',
-    color: 'rgba(255,255,255,0.8)',
-    textAlign: 'left' as const,
-    transition: 'background 0.2s ease',
   },
   pageNav: {
     display: 'flex',
@@ -1130,10 +1007,19 @@ const styles = {
   stepCard: {
     flex: 1,
     textAlign: 'center' as const,
-    padding: '32px',
+    padding: '32px 24px',
     background: 'var(--bg-card)',
     borderRadius: '24px',
     position: 'relative' as const,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    border: '1px solid var(--border-color)',
+    cursor: 'pointer',
+    boxShadow: 'var(--card-shadow)',
+  },
+  stepCardExpanded: {
+    transform: 'scale(1.02)',
+    boxShadow: '0 0 0 3px #3b82f6, 0 20px 40px -10px rgba(0,0,0,0.25)',
+    borderColor: '#3b82f6',
   },
   stepNumber: {
     position: 'absolute' as const,
@@ -1141,15 +1027,49 @@ const styles = {
     left: '20px',
     fontSize: '48px',
     fontWeight: 800,
-    color: 'rgba(59, 130, 246, 0.1)',
+    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    color: 'transparent',
+    opacity: 0.3,
   },
   stepIcon: {
     fontSize: '48px',
     marginBottom: '16px',
   },
+  stepTitle: {
+    fontSize: '18px',
+    fontWeight: 600,
+    marginBottom: '8px',
+    color: 'var(--text-primary)',
+  },
+  stepDescription: {
+    fontSize: '14px',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.5,
+  },
   stepArrow: {
     fontSize: '32px',
     color: '#3b82f6',
+    opacity: 0.7,
+  },
+  stepDetails: {
+    marginTop: '20px',
+    paddingTop: '16px',
+    borderTop: '1px solid var(--border-color)',
+    animation: 'fadeInUp 0.3s ease-out',
+    background: 'var(--badge-bg)',
+    borderRadius: '12px',
+    padding: '16px',
+  },
+  stepDetailItem: {
+    padding: '8px 0',
+    fontSize: '13px',
+    color: 'var(--text-secondary)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    borderBottom: '1px dashed var(--border-light)',
   },
   testimonialsSection: {
     padding: '60px 24px',
@@ -1471,9 +1391,15 @@ styleSheet.textContent = `
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
   }
-  
-  .dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 `;
 document.head.appendChild(styleSheet);

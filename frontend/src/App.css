@@ -12,3 +12,39 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
+.back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #667eea;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  text-decoration: none;
+}
+
+.back-button:hover {
+  background: #667eea;
+  color: white;
+  transform: translateX(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 768px) {
+  .back-button {
+    top: 10px;
+    left: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+} 

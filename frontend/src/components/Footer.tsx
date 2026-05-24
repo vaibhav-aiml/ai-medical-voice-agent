@@ -1,48 +1,83 @@
 import { Heart, Phone, Mail, MapPin } from 'lucide-react';
 
-export default function Footer() {
+interface FooterProps {
+  onNavigate?: (page: string) => void;
+  onOpenModal?: (modal: string) => void;
+  setCurrentPage?: (page: string) => void;
+  setShowSymptomChecker?: (show: boolean) => void;
+  setShowHealthTips?: (show: boolean) => void;
+  setShowEmergencyContacts?: (show: boolean) => void;
+  setShowHealthGoals?: (show: boolean) => void;
+  setShowAppointmentsList?: (show: boolean) => void;
+}
+
+export default function Footer({ 
+  onNavigate, 
+  setCurrentPage, 
+  setShowSymptomChecker, 
+  setShowHealthTips, 
+  setShowEmergencyContacts, 
+  setShowHealthGoals,
+  setShowAppointmentsList 
+}: FooterProps) {
   const currentYear = new Date().getFullYear();
 
+  const handleNavigation = (page: string) => {
+    if (setCurrentPage) {
+      setCurrentPage(page);
+    }
+    window.scrollTo(0, 0);
+  };
+
+  const handleServiceClick = (service: string) => {
+    if (service === 'Voice Consultation') handleNavigation('consultation');
+    else if (service === 'AI Specialists') handleNavigation('consultation');
+    else if (service === 'Medical Reports') handleNavigation('reports');
+    else if (service === 'Appointment Booking' && setShowAppointmentsList) setShowAppointmentsList(true);
+    else if (service === 'Emergency Contacts' && setShowEmergencyContacts) setShowEmergencyContacts(true);
+    else if (service === 'Health Goals' && setShowHealthGoals) setShowHealthGoals(true);
+  };
+
   const quickLinks = [
-    { name: 'Home', href: '#' },
-    { name: 'Dashboard', href: '#' },
-    { name: 'Reports', href: '#' },
-    { name: 'Appointments', href: '#' },
-    { name: 'Symptom Checker', href: '#' },
-    { name: 'Health Tips', href: '#' },
+    { name: 'Home', onClick: () => handleNavigation('home') },
+    { name: 'Dashboard', onClick: () => handleNavigation('dashboard') },
+    { name: 'Reports', onClick: () => handleNavigation('reports') },
+    { name: 'Appointments', onClick: () => setShowAppointmentsList && setShowAppointmentsList(true) },
+    { name: 'Symptom Checker', onClick: () => setShowSymptomChecker && setShowSymptomChecker(true) },
+    { name: 'Health Tips', onClick: () => setShowHealthTips && setShowHealthTips(true) },
   ];
 
   const services = [
-    { name: 'Voice Consultation', href: '#' },
-    { name: 'AI Specialists', href: '#' },
-    { name: 'Medical Reports', href: '#' },
-    { name: 'Appointment Booking', href: '#' },
-    { name: 'Emergency Contacts', href: '#' },
-    { name: 'Health Goals', href: '#' },
+    { name: 'Voice Consultation', onClick: () => handleServiceClick('Voice Consultation') },
+    { name: 'AI Specialists', onClick: () => handleServiceClick('AI Specialists') },
+    { name: 'Medical Reports', onClick: () => handleServiceClick('Medical Reports') },
+    { name: 'Appointment Booking', onClick: () => handleServiceClick('Appointment Booking') },
+    { name: 'Emergency Contacts', onClick: () => handleServiceClick('Emergency Contacts') },
+    { name: 'Health Goals', onClick: () => handleServiceClick('Health Goals') },
   ];
 
   const legal = [
-    { name: 'About Us', href: '#' },
-    { name: 'Contact Us', href: '#' },
-    { name: 'Terms & Conditions', href: '#' },
-    { name: 'Privacy Policy', href: '#' },
-    { name: 'HIPAA Compliance', href: '#' },
-    { name: 'Cookie Policy', href: '#' },
+    { name: 'About Us', onClick: () => handleNavigation('about') },
+    { name: 'Contact Us', onClick: () => handleNavigation('contact') },
+    { name: 'Terms & Conditions', onClick: () => handleNavigation('terms') },
+    { name: 'Privacy Policy', onClick: () => handleNavigation('privacy') },
+    { name: 'HIPAA Compliance', onClick: () => handleNavigation('hipaa') },
+    { name: 'Cookie Policy', onClick: () => handleNavigation('cookies') },
   ];
 
-  const socialLinks = [
-    { name: 'Facebook', icon: '📘', color: '#1877f2', href: '#' },
-    { name: 'Twitter', icon: '🐦', color: '#1da1f2', href: '#' },
-    { name: 'LinkedIn', icon: '🔗', color: '#0a66c2', href: '#' },
-    { name: 'GitHub', icon: '🐙', color: '#333', href: 'https://github.com/vaibhav-aiml/ai-medical-voice-agent' },
-    { name: 'Instagram', icon: '📸', color: '#e4405f', href: '#' },
-    { name: 'YouTube', icon: '📺', color: '#ff0000', href: '#' },
+  const socialIcons = [
+    { icon: '📘', name: 'Facebook', color: '#1877f2', href: '#' },
+    { icon: '🐦', name: 'Twitter', color: '#1da1f2', href: '#' },
+    { icon: '🔗', name: 'LinkedIn', color: '#0a66c2', href: '#' },
+    { icon: '🐙', name: 'GitHub', color: '#333', href: 'https://github.com/vaibhav-aiml/ai-medical-voice-agent' },
+    { icon: '📸', name: 'Instagram', color: '#e4405f', href: '#' },
   ];
 
   return (
     <footer style={styles.footer}>
       <div style={styles.container}>
         <div style={styles.mainContent}>
+          {/* Brand Column */}
           <div style={styles.brandColumn}>
             <div style={styles.logo}>
               <Heart size={28} color="#3b82f6" />
@@ -55,7 +90,7 @@ export default function Footer() {
             <div style={styles.contactInfo}>
               <div style={styles.contactItem}>
                 <Phone size={16} />
-                <span>+1 (888) 123-4567</span>
+                <span>+91 98765 43210</span>
               </div>
               <div style={styles.contactItem}>
                 <Mail size={16} />
@@ -63,66 +98,87 @@ export default function Footer() {
               </div>
               <div style={styles.contactItem}>
                 <MapPin size={16} />
-                <span>Healthcare District, NY 10001, USA</span>
+                <span>DLF Cyber City, Gurugram, Haryana - 122002</span>
               </div>
             </div>
           </div>
 
+          {/* Quick Links */}
           <div style={styles.linksColumn}>
             <h3>Quick Links</h3>
             <ul style={styles.linkList}>
               {quickLinks.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} style={styles.link}>{link.name}</a>
+                  <button onClick={link.onClick} style={styles.linkButton}>
+                    {link.name}
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* Our Services */}
           <div style={styles.linksColumn}>
             <h3>Our Services</h3>
             <ul style={styles.linkList}>
               {services.map((service, index) => (
                 <li key={index}>
-                  <a href={service.href} style={styles.link}>{service.name}</a>
+                  <button onClick={service.onClick} style={styles.linkButton}>
+                    {service.name}
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* Legal */}
           <div style={styles.linksColumn}>
             <h3>Legal</h3>
             <ul style={styles.linkList}>
               {legal.map((item, index) => (
                 <li key={index}>
-                  <a href={item.href} style={styles.link}>{item.name}</a>
+                  <button onClick={item.onClick} style={styles.linkButton}>
+                    {item.name}
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
+        {/* Newsletter Section */}
         <div style={styles.newsletterSection}>
           <div style={styles.newsletterContent}>
             <h3>Subscribe to Our Newsletter</h3>
             <p>Get the latest health tips and updates directly in your inbox.</p>
             <div style={styles.newsletterForm}>
-              <input type="email" placeholder="Enter your email" style={styles.newsletterInput} />
+              <input
+                type="email"
+                placeholder="Enter your email"
+                style={styles.newsletterInput}
+              />
               <button style={styles.newsletterButton}>Subscribe</button>
             </div>
           </div>
         </div>
 
+        {/* Social Links */}
         <div style={styles.socialSection}>
           <div style={styles.socialLinks}>
-            {socialLinks.map((social, index) => (
-              <a key={index} href={social.href} style={styles.socialLink} aria-label={social.name}>
+            {socialIcons.map((social, index) => (
+              <a
+                key={index}
+                href={social.href}
+                style={styles.socialLink}
+                aria-label={social.name}
+              >
                 <span style={{ fontSize: '20px' }}>{social.icon}</span>
               </a>
             ))}
           </div>
         </div>
 
+        {/* Copyright */}
         <div style={styles.copyright}>
           <p>&copy; {currentYear} MediVoice AI. All rights reserved.</p>
           <p style={styles.disclaimer}>
@@ -192,12 +248,15 @@ const styles = {
     flexDirection: 'column' as const,
     gap: '10px',
   },
-  link: {
+  linkButton: {
     color: 'var(--text-secondary)',
     textDecoration: 'none',
     fontSize: '13px',
     transition: 'color 0.2s ease',
     cursor: 'pointer',
+    background: 'none',
+    border: 'none',
+    textAlign: 'left' as const,
   },
   newsletterSection: {
     padding: '30px 0',
@@ -245,8 +304,8 @@ const styles = {
     justifyContent: 'center',
   },
   socialLink: {
-    width: '40px',
-    height: '40px',
+    width: '38px',
+    height: '38px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
