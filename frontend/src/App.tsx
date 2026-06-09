@@ -72,7 +72,6 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [showPricing, setShowPricing] = useState(false);
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
-  // Legal and Service Pages State
   const [currentLegalPage, setCurrentLegalPage] = useState<string | null>(null);
   const [currentServicePage, setCurrentServicePage] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
@@ -81,6 +80,21 @@ function AppContent() {
     averageDuration: 0,
     pendingFollowUps: 0,
   });
+  const [triageResult, setTriageResult] = useState<any>(null);
+  
+  // Streaming states
+  const [streamingMessage, setStreamingMessage] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  // Get current session ID
+  const getCurrentSessionId = () => {
+    return consultationId || `session_${Date.now()}`;
+  };
+
+  // Get current user ID from Clerk
+  const getCurrentUserId = () => {
+    return userId || user?.id || `user_${Date.now()}`;
+  };
 
   useEffect(() => {
     if (userId) {
@@ -161,6 +175,9 @@ function AppContent() {
     setConsultationStarted(true);
     setMessages([]);
     setManualSymptoms('');
+    setTriageResult(null);
+    setStreamingMessage('');
+    setIsStreaming(false);
     incrementConsultation();
   };
 
@@ -175,14 +192,28 @@ function AppContent() {
     setMessages(prev => [...prev, userMessage]);
   };
 
-  const handleAIResponse = (response: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      type: 'ai',
-      content: response,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, newMessage]);
+  // Updated handleAIResponse for streaming
+  const handleAIResponse = (response: string, isComplete?: boolean) => {
+    if (isComplete) {
+      // This is the complete response - add to chat
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: response,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, newMessage]);
+      setStreamingMessage('');
+      setIsStreaming(false);
+    } else {
+      // This is a streaming chunk - update preview only
+      setStreamingMessage(prev => prev + response);
+      setIsStreaming(true);
+    }
+  };
+
+  const addMessage = (message: Message) => {
+    setMessages(prev => [...prev, message]);
   };
 
   const endConsultation = () => {
@@ -215,6 +246,9 @@ function AppContent() {
     setCurrentPage('dashboard');
     setMessages([]);
     setManualSymptoms('');
+    setTriageResult(null);
+    setStreamingMessage('');
+    setIsStreaming(false);
     setRefreshKey(prev => prev + 1);
     
     alert('✅ Consultation ended! Your report has been saved.');
@@ -239,6 +273,9 @@ function AppContent() {
     setSelectedSpecialist('');
     setMessages([]);
     setManualSymptoms('');
+    setTriageResult(null);
+    setStreamingMessage('');
+    setIsStreaming(false);
   };
 
   const handleSymptomCheckerConsultation = (specialistType: string, symptoms: string) => {
@@ -247,6 +284,9 @@ function AppContent() {
     setCurrentPage('consultation');
     setConsultationStarted(true);
     setMessages([]);
+    setTriageResult(null);
+    setStreamingMessage('');
+    setIsStreaming(false);
   };
 
   const handleRateConsultation = (consultation: ConsultationSession) => {
@@ -298,7 +338,6 @@ function AppContent() {
     }
   };
 
-  // Handle navigation from Footer
   const handleFooterNavigation = (page: string) => {
     setCurrentLegalPage(null);
     setCurrentServicePage(null);
@@ -320,7 +359,6 @@ function AppContent() {
     return <SkeletonLoader />;
   }
 
-  // Render legal/service pages
   if (currentLegalPage === 'about') return <AboutUs />;
   if (currentLegalPage === 'contact') return <ContactUs />;
   if (currentLegalPage === 'terms') return <TermsConditions />;
@@ -348,7 +386,6 @@ function AppContent() {
         userName={getUserName()}
       />
 
-      {/* Back to Home Button - Shows on all pages except home */}
       {currentPage !== 'home' && (
         <div style={styles.pageNav}>
           <button onClick={() => setCurrentPage('home')} style={styles.pageNavButton}>
@@ -364,7 +401,6 @@ function AppContent() {
 
       {currentPage === 'home' && (
         <div style={styles.homeContainer}>
-          {/* Hero Section */}
           <div style={styles.heroSection}>
             <div style={styles.heroContent}>
               <div style={styles.heroBadge}>
@@ -406,7 +442,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* Stats Section */}
           <div style={styles.statsSection}>
             <div style={styles.statsContainer}>
               <div style={styles.statCard}>
@@ -436,7 +471,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* Features Section */}
           <div style={styles.featuresSection}>
             <div style={styles.sectionHeader}>
               <h2>Why Choose <span style={styles.sectionHeaderAccent}>MediVoice AI?</span></h2>
@@ -482,7 +516,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* How It Works Section - Interactive */}
           <div style={styles.howItWorksSection}>
             <div style={styles.sectionHeader}>
               <h2>How It <span style={styles.sectionHeaderAccent}>Works</span></h2>
@@ -557,7 +590,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* Testimonials Section */}
           <div style={styles.testimonialsSection}>
             <div style={styles.sectionHeader}>
               <h2>What Our <span style={styles.sectionHeaderAccent}>Users Say</span></h2>
@@ -600,7 +632,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* CTA Section */}
           <div style={styles.ctaSection}>
             <div style={styles.ctaContent}>
               <h2>Ready to Experience the Future of Healthcare?</h2>
@@ -637,8 +668,24 @@ function AppContent() {
                 <div style={styles.specialistBadge}>{getSpecialistIcon(selectedSpecialist)}<span>{selectedSpecialist} {t('consultation.specialist') || 'Specialist'}</span></div>
                 <button onClick={endConsultation} style={styles.endButton}>{t('consultation.endConsultation')}</button>
               </div>
-              <VoiceRecorder consultationId={consultationId} specialistType={selectedSpecialist} onTranscriptUpdate={handleTranscriptUpdate} onAIResponse={handleAIResponse} />
-              <ChatMessages messages={messages} />
+              <VoiceRecorder 
+                consultationId={consultationId} 
+                specialistType={selectedSpecialist} 
+                onTranscriptUpdate={handleTranscriptUpdate} 
+                onAIResponse={handleAIResponse}
+                onTriageResult={setTriageResult}
+                userId={getCurrentUserId()}
+              />
+              
+              <ChatMessages 
+                messages={messages}
+                onAddMessage={addMessage}
+                sessionId={getCurrentSessionId()}
+                userId={getCurrentUserId()}
+                triageResult={triageResult}
+                streamingMessage={streamingMessage}
+                isStreaming={isStreaming}
+              />
             </div>
           )}
         </div>
@@ -1380,7 +1427,6 @@ const styles = {
   },
 };
 
-// Add animation CSS
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes spin {

@@ -5,15 +5,33 @@ import compression from 'compression';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import path from 'path';
 import { setupVoiceSocket } from './sockets/voiceSocket';
 import consultationRoutes from './routes/consultation.routes';
 import consultationDbRoutes from './routes/consultations.db.routes';
 import voiceRoutes from './routes/voice.routes';
 import reportRoutes from './routes/report.routes';
 import emailRoutes from './routes/email.routes';
+import auditRoutes from './routes/audit';
+import hipaaRoutes from './routes/hipaa';
+import triageRoutes from './routes/triage.routes';
+import ragRoutes from './routes/rag.routes';
+import conversationRoutes from './routes/conversation.routes';
 
-// Load environment variables
-dotenv.config({ path: '.env' });
+// Load environment variables - FIXED VERSION
+const envPath = path.resolve(process.cwd(), '.env');
+console.log(`📁 Loading .env from: ${envPath}`);
+
+const result = dotenv.config({ path: envPath });
+if (result.error) {
+  console.error('❌ Error loading .env file:', result.error.message);
+  console.log('⚠️ Using system environment variables only');
+} else {
+  console.log('✅ .env file loaded successfully');
+  console.log('📋 GROQ_API_KEY:', process.env.GROQ_API_KEY ? `✅ Present (${process.env.GROQ_API_KEY.substring(0, 10)}...)` : '❌ MISSING');
+  console.log('📋 EMAIL_USER:', process.env.EMAIL_USER || '❌ MISSING');
+  console.log('📋 DATABASE_URL:', process.env.DATABASE_URL ? '✅ Set' : '❌ Not set');
+}
 
 const app = express();
 const httpServer = createServer(app);
@@ -23,6 +41,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:5174',
+  'http://localhost:5175',
   'https://ai-medical-voice-agent.netlify.app',
   'https://ai-medical-frontend.onrender.com',
   'https://medivoice-ai.netlify.app',
@@ -62,12 +81,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes - make sure these files exist and export correctly
+// Routes
 app.use('/api/consultations', consultationRoutes);
 app.use('/api/consultations', consultationDbRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/hipaa', hipaaRoutes);
+app.use('/api/triage', triageRoutes);
+app.use('/api/rag', ragRoutes);
+app.use('/api/conversation', conversationRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -76,7 +100,12 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     message: 'AI Medical Voice Agent API is running',
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    services: {
+      groq: !!process.env.GROQ_API_KEY,
+      email: !!process.env.EMAIL_USER,
+      database: true
+    }
   });
 });
 
@@ -91,7 +120,12 @@ app.get('/', (req, res) => {
       consultations: 'GET/POST /api/consultations',
       voice: 'POST /api/voice',
       reports: 'GET /api/reports',
-      email: 'POST /api/email/send-report'
+      email: 'POST /api/email/send-report',
+      audit: 'POST /api/audit/log, GET /api/audit/logs',
+      hipaa: 'POST /api/hipaa/log, GET /api/hipaa/logs',
+      triage: 'POST /api/triage/analyze, GET /api/triage/guidelines',
+      rag: 'POST /api/rag/search, POST /api/rag/enhance',
+      conversation: 'GET /api/conversation/history/:userId, POST /api/conversation/session'
     }
   });
 });
@@ -108,7 +142,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// 404 handler - FIXED: removed the problematic '*' route
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     error: 'Endpoint not found',
@@ -130,13 +164,27 @@ httpServer.listen(PORT, () => {
 ║  Status: ✅ Running                                   ║
 ║  Database: ✅ Connected                               ║
 ║  WebSocket: ✅ Ready for voice                        ║
+║  AI Service: ${process.env.GROQ_API_KEY ? '✅ Groq Ready' : '⚠️ Fallback Mode'}     
 ║  API Routes: ✅ /api/consultations, /api/email        ║
+║  Audit Routes: ✅ /api/audit/log, /api/audit/logs     ║
+║  HIPAA Routes: ✅ /api/hipaa/log, /api/hipaa/logs     ║
+║  Triage Routes: ✅ /api/triage/analyze                ║
+║  RAG Routes: ✅ /api/rag/search, /api/rag/enhance     ║
+║  Conversation Routes: ✅ /api/conversation/history    ║
 ╚══════════════════════════════════════════════════════╝
   `);
 });
 
 // Graceful shutdown
 process.on('SIGINT', () => {
+  console.log('\n🛑 Shutting down server...');
+  io.close(() => {
+    console.log('✅ WebSocket closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGTERM', () => {
   console.log('\n🛑 Shutting down server...');
   io.close(() => {
     console.log('✅ WebSocket closed');
