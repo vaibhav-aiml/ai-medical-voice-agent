@@ -48,7 +48,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'year'>('month');
 
   // ✅ CORRECT - Just the URL, no extra text
-  const API_URL = import.meta.env.VITE_API_URL || 'https://ai-medical-voice-agent-ygc5.onrender.com';
+  const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
 
   useEffect(() => {
     fetchAnalytics();

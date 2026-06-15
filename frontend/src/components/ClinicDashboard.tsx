@@ -57,7 +57,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Get API URL from environment variable
-  const API_URL = import.meta.env.VITE_API_URL || 'https://ai-medical-voice-agent-ygc5.onrender.com';
+  const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
 
   // Load data from API with localStorage fallback
   useEffect(() => {

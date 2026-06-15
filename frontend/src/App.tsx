@@ -132,24 +132,25 @@ function AppContent() {
         return;
       }
 
-      const response = await fetch('/api/clinic/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `${getUserName()}'s Clinic`,
-          subdomain: `${getUserName().toLowerCase()}clinic`,
-          primaryColor: '#3b82f6',
-          secondaryColor: '#10b981',
-          accentColor: '#8b5cf6',
-          contactEmail: user?.emailAddresses[0]?.emailAddress || 'clinic@example.com',
-          contactPhone: '9876543210',
-          address: 'Clinic Address',
-          city: 'Your City',
-          state: 'Your State',
-          pincode: '123456',
-          subscriptionTier: 'enterprise'
-        }),
-      });
+      const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
+const response = await fetch(`${API_URL}/api/clinic/create`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: `${getUserName()}'s Clinic`,
+    subdomain: `${getUserName().toLowerCase()}clinic`,
+    primaryColor: '#3b82f6',
+    secondaryColor: '#10b981',
+    accentColor: '#8b5cf6',
+    contactEmail: user?.emailAddresses[0]?.emailAddress || 'clinic@example.com',
+    contactPhone: '9876543210',
+    address: 'Clinic Address',
+    city: 'Your City',
+    state: 'Your State',
+    pincode: '123456',
+    subscriptionTier: 'enterprise'
+  }),
+});
       const data = await response.json();
       
       if (data.success) {
