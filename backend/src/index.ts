@@ -41,7 +41,7 @@ if (result.error) {
 const app = express();
 const httpServer = createServer(app);
 
-// Allowed origins for CORS
+// Allowed origins for CORS - UPDATED with your Netlify URL
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -50,6 +50,8 @@ const allowedOrigins = [
   'https://ai-medical-voice-agent.netlify.app',
   'https://ai-medical-frontend.onrender.com',
   'https://medivoice-ai.netlify.app',
+  'https://majestic-speculoos-f73a91.netlify.app',  // Your current Netlify URL
+  /\.netlify\.app$/,  // Allow all Netlify subdomains
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -70,10 +72,30 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// CORS middleware
+// CORS middleware - Updated to handle regex patterns
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return allowed === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(compression());
