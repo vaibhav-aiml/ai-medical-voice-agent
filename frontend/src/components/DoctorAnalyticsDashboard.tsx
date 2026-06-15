@@ -47,7 +47,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
   const [activeTab, setActiveTab] = useState<'overview' | 'symptoms' | 'specialists' | 'patients'>('overview');
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'year'>('month');
 
-  // Get API URL from environment variable
+  // ✅ CORRECT - Just the URL, no extra text
   const API_URL = import.meta.env.VITE_API_URL || 'https://ai-medical-voice-agent-ygc5.onrender.com';
 
   useEffect(() => {
@@ -58,9 +58,10 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
     setLoading(true);
     setError(null);
     try {
-      console.log('Fetching analytics from:', `${API_URL}/api/analytics/dashboard`);
+      const url = `${API_URL}/api/analytics/dashboard`;
+      console.log('Fetching analytics from:', url);
       
-      const response = await fetch(`${API_URL}/api/analytics/dashboard`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
