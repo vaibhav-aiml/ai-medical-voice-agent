@@ -55,96 +55,184 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch all data
+  // Load data from localStorage only - NO API CALLS
   useEffect(() => {
-    fetchData();
+    loadLocalData();
   }, [clinicId]);
 
-  const fetchData = async () => {
+  const loadLocalData = () => {
     setLoading(true);
     try {
-      const doctorsRes = await fetch(`http://localhost:3000/api/clinic/${clinicId}/doctors`);
-      const doctorsData = await doctorsRes.json();
-      setDoctors(doctorsData.data || []);
+      // Load doctors from localStorage
+      const storedDoctors = localStorage.getItem(`clinic_${clinicId}_doctors`);
+      if (storedDoctors) {
+        setDoctors(JSON.parse(storedDoctors));
+      } else {
+        // Initialize with mock doctors
+        const mockDoctors: Doctor[] = [
+          {
+            id: 'doc_1',
+            name: 'Dr. Sarah Wilson',
+            specialization: 'General Physician',
+            experience: 8,
+            consultationFee: 500,
+            isAvailable: true,
+            phone: '+91 98765 43210',
+            email: 'sarah.wilson@clinic.com'
+          },
+          {
+            id: 'doc_2',
+            name: 'Dr. James Chen',
+            specialization: 'Orthopedic',
+            experience: 12,
+            consultationFee: 800,
+            isAvailable: true,
+            phone: '+91 98765 43211',
+            email: 'james.chen@clinic.com'
+          },
+          {
+            id: 'doc_3',
+            name: 'Dr. Priya Sharma',
+            specialization: 'Cardiologist',
+            experience: 15,
+            consultationFee: 1200,
+            isAvailable: false,
+            phone: '+91 98765 43212',
+            email: 'priya.sharma@clinic.com'
+          }
+        ];
+        setDoctors(mockDoctors);
+        localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(mockDoctors));
+      }
 
-      const appointmentsRes = await fetch(`http://localhost:3000/api/clinic/${clinicId}/appointments`);
-      const appointmentsData = await appointmentsRes.json();
-      setAppointments(appointmentsData.data || []);
+      // Load patients from localStorage
+      const storedPatients = localStorage.getItem(`clinic_${clinicId}_patients`);
+      if (storedPatients) {
+        setPatients(JSON.parse(storedPatients));
+      } else {
+        // Initialize with mock patients
+        const mockPatients: Patient[] = [
+          {
+            id: 'pat_1',
+            name: 'Rajesh Kumar',
+            phone: '+91 99887 66554',
+            email: 'rajesh.kumar@email.com',
+            age: 35,
+            gender: 'Male',
+            clinicId: clinicId
+          },
+          {
+            id: 'pat_2',
+            name: 'Priya Singh',
+            phone: '+91 98765 12345',
+            email: 'priya.singh@email.com',
+            age: 28,
+            gender: 'Female',
+            clinicId: clinicId
+          },
+          {
+            id: 'pat_3',
+            name: 'Amit Patel',
+            phone: '+91 87654 32109',
+            email: 'amit.patel@email.com',
+            age: 42,
+            gender: 'Male',
+            clinicId: clinicId
+          }
+        ];
+        setPatients(mockPatients);
+        localStorage.setItem(`clinic_${clinicId}_patients`, JSON.stringify(mockPatients));
+      }
 
-      const storedPatients = localStorage.getItem('apollo_patients');
-      setPatients(storedPatients ? JSON.parse(storedPatients) : []);
+      // Load appointments from localStorage
+      const storedAppointments = localStorage.getItem(`clinic_${clinicId}_appointments`);
+      if (storedAppointments) {
+        setAppointments(JSON.parse(storedAppointments));
+      } else {
+        // Initialize with mock appointments
+        const mockAppointments: Appointment[] = [
+          {
+            id: 'apt_1',
+            doctorId: 'doc_1',
+            patientId: 'pat_1',
+            patientName: 'Rajesh Kumar',
+            doctorName: 'Dr. Sarah Wilson',
+            date: new Date().toISOString().split('T')[0],
+            time: '10:00 AM',
+            status: 'confirmed'
+          },
+          {
+            id: 'apt_2',
+            doctorId: 'doc_2',
+            patientId: 'pat_2',
+            patientName: 'Priya Singh',
+            doctorName: 'Dr. James Chen',
+            date: new Date().toISOString().split('T')[0],
+            time: '11:30 AM',
+            status: 'pending'
+          }
+        ];
+        setAppointments(mockAppointments);
+        localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(mockAppointments));
+      }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const addDoctor = async (doctor: Omit<Doctor, 'id'>) => {
-    try {
-      const response = await fetch(`http://localhost:3000/api/clinic/${clinicId}/doctors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(doctor)
-      });
-      const result = await response.json();
-      if (result.success) {
-        await fetchData();
-        setShowAddDoctor(false);
-        alert('Doctor added successfully!');
-      }
-    } catch (error) {
-      console.error('Error adding doctor:', error);
-      alert('Error adding doctor');
-    }
+  const saveDoctors = (newDoctors: Doctor[]) => {
+    setDoctors(newDoctors);
+    localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(newDoctors));
   };
 
-  const updateDoctor = async (id: string, doctor: Partial<Doctor>) => {
-    try {
-      const response = await fetch(`http://localhost:3000/api/clinic/${clinicId}/doctors/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(doctor)
-      });
-      const result = await response.json();
-      if (result.success) {
-        await fetchData();
-        setEditingDoctor(null);
-        alert('Doctor updated successfully!');
-      }
-    } catch (error) {
-      console.error('Error updating doctor:', error);
-      alert('Error updating doctor');
-    }
+  const savePatients = (newPatients: Patient[]) => {
+    setPatients(newPatients);
+    localStorage.setItem(`clinic_${clinicId}_patients`, JSON.stringify(newPatients));
   };
 
-  const deleteDoctor = async (id: string) => {
+  const saveAppointments = (newAppointments: Appointment[]) => {
+    setAppointments(newAppointments);
+    localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(newAppointments));
+  };
+
+  const addDoctor = (doctor: Omit<Doctor, 'id'>) => {
+    const newDoctor = {
+      ...doctor,
+      id: 'doc_' + Date.now(),
+    };
+    const updatedDoctors = [...doctors, newDoctor];
+    saveDoctors(updatedDoctors);
+    setShowAddDoctor(false);
+    alert('Doctor added successfully!');
+  };
+
+  const updateDoctor = (id: string, doctorData: Partial<Doctor>) => {
+    const updatedDoctors = doctors.map(d => 
+      d.id === id ? { ...d, ...doctorData } : d
+    );
+    saveDoctors(updatedDoctors);
+    setEditingDoctor(null);
+    alert('Doctor updated successfully!');
+  };
+
+  const deleteDoctor = (id: string) => {
     if (confirm('Are you sure you want to delete this doctor?')) {
-      try {
-        const response = await fetch(`http://localhost:3000/api/clinic/${clinicId}/doctors/${id}`, {
-          method: 'DELETE'
-        });
-        const result = await response.json();
-        if (result.success) {
-          await fetchData();
-          alert('Doctor deleted successfully!');
-        }
-      } catch (error) {
-        console.error('Error deleting doctor:', error);
-        alert('Error deleting doctor');
-      }
+      const updatedDoctors = doctors.filter(d => d.id !== id);
+      saveDoctors(updatedDoctors);
+      alert('Doctor deleted successfully!');
     }
   };
 
-  const addPatient = (patient: Omit<Patient, 'id'>) => {
+  const addPatient = (patient: Omit<Patient, 'id' | 'clinicId'>) => {
     const newPatient = {
-      id: 'pat_' + Date.now(),
       ...patient,
-      clinicId
+      id: 'pat_' + Date.now(),
+      clinicId: clinicId
     };
     const updatedPatients = [...patients, newPatient];
-    setPatients(updatedPatients);
-    localStorage.setItem('apollo_patients', JSON.stringify(updatedPatients));
+    savePatients(updatedPatients);
     setShowAddPatient(false);
     alert('Patient added successfully!');
   };
@@ -153,8 +241,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     const updatedPatients = patients.map(p => 
       p.id === id ? { ...p, ...patientData } : p
     );
-    setPatients(updatedPatients);
-    localStorage.setItem('apollo_patients', JSON.stringify(updatedPatients));
+    savePatients(updatedPatients);
     setEditingPatient(null);
     alert('Patient updated successfully!');
   };
@@ -162,28 +249,17 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const deletePatient = (id: string) => {
     if (confirm('Are you sure you want to delete this patient?')) {
       const updatedPatients = patients.filter(p => p.id !== id);
-      setPatients(updatedPatients);
-      localStorage.setItem('apollo_patients', JSON.stringify(updatedPatients));
+      savePatients(updatedPatients);
       alert('Patient deleted successfully!');
     }
   };
 
-  const updateAppointmentStatus = async (id: string, status: string) => {
-    try {
-      const response = await fetch(`http://localhost:3000/api/clinic/${clinicId}/appointments/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
-      const result = await response.json();
-      if (result.success) {
-        await fetchData();
-        alert(`Appointment ${status}!`);
-      }
-    } catch (error) {
-      console.error('Error updating appointment:', error);
-      alert('Error updating appointment');
-    }
+  const updateAppointmentStatus = (id: string, status: string) => {
+    const updatedAppointments = appointments.map(apt =>
+      apt.id === id ? { ...apt, status } : apt
+    );
+    saveAppointments(updatedAppointments);
+    alert(`Appointment ${status}!`);
   };
 
   const todayAppointments = appointments.filter(apt => {
@@ -214,8 +290,8 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   if (loading) {
     return (
       <div style={styles.loadingContainer}>
-        <div className="spinner"></div>
-        <p>Loading clinic data...</p>
+        <div style={styles.spinner}></div>
+        <p>Loading clinic dashboard...</p>
       </div>
     );
   }
@@ -336,7 +412,13 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
                         <strong>{apt.patientName}</strong>
                         <span>with {apt.doctorName}</span>
                       </div>
-                      <span className="status-badge status-completed">
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        background: apt.status === 'confirmed' ? '#d1fae5' : '#fef3c7',
+                        color: apt.status === 'confirmed' ? '#065f46' : '#92400e'
+                      }}>
                         {apt.status}
                       </span>
                     </div>
@@ -389,13 +471,17 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
                       <h4>{doctor.name}</h4>
                       <p>{doctor.specialization}</p>
                     </div>
-                    <span style={{...styles.availabilityBadge, ...(doctor.isAvailable ? styles.available : styles.unavailable)}}>
+                    <span style={{
+                      ...styles.availabilityBadge,
+                      ...(doctor.isAvailable ? styles.available : styles.unavailable)
+                    }}>
                       {doctor.isAvailable ? 'Available' : 'Unavailable'}
                     </span>
                   </div>
                   <div style={styles.doctorDetails}>
                     <p><strong>Experience:</strong> {doctor.experience} years</p>
                     <p><strong>Fee:</strong> ₹{doctor.consultationFee}</p>
+                    {doctor.phone && <p><strong>Phone:</strong> {doctor.phone}</p>}
                   </div>
                   <div style={styles.doctorActions}>
                     <button onClick={() => setEditingDoctor(doctor)} style={styles.editButton}>
@@ -411,7 +497,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
           </div>
         )}
 
-        {/* Patients Tab - FIXED VERSION */}
+        {/* Patients Tab */}
         {activeTab === 'patients' && (
           <div>
             <div style={styles.searchBar}>
@@ -505,13 +591,13 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
                           <option value="completed">Completed</option>
                           <option value="cancelled">Cancelled</option>
                         </select>
-                       </td>
+                      </td>
                       <td>
                         <button onClick={() => updateAppointmentStatus(apt.id, 'cancelled')} style={styles.cancelButton}>
                           Cancel
                         </button>
-                       </td>
-                     </tr>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -537,14 +623,16 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   );
 };
 
-// Modal Components (same as before, keep them)
+// Modal Components
 const AddDoctorModal = ({ onClose, onSave }: any) => {
   const [formData, setFormData] = useState({
     name: '',
     specialization: '',
     experience: 0,
     consultationFee: 0,
-    isAvailable: true
+    isAvailable: true,
+    phone: '',
+    email: ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -564,6 +652,8 @@ const AddDoctorModal = ({ onClose, onSave }: any) => {
           <input type="text" placeholder="Specialization" value={formData.specialization} onChange={(e) => setFormData({...formData, specialization: e.target.value})} style={styles.modalInput} required />
           <input type="number" placeholder="Experience (years)" value={formData.experience} onChange={(e) => setFormData({...formData, experience: parseInt(e.target.value)})} style={styles.modalInput} required />
           <input type="number" placeholder="Consultation Fee (₹)" value={formData.consultationFee} onChange={(e) => setFormData({...formData, consultationFee: parseInt(e.target.value)})} style={styles.modalInput} required />
+          <input type="text" placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={styles.modalInput} />
+          <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} style={styles.modalInput} />
           <label style={styles.checkboxLabel}>
             <input type="checkbox" checked={formData.isAvailable} onChange={(e) => setFormData({...formData, isAvailable: e.target.checked})} />
             Available for consultations
@@ -971,6 +1061,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     justifyContent: 'center',
     height: '100vh',
+    gap: '16px',
+  },
+  spinner: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid rgba(16, 185, 129, 0.2)',
+    borderTopColor: '#10b981',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
   },
   emptyState: {
     textAlign: 'center' as const,
@@ -1041,7 +1140,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '14px',
     fontWeight: 500,
   },
-  // NEW STYLES FOR PATIENTS SECTION (Fixed)
   patientsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
@@ -1054,7 +1152,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '20px',
     border: '1px solid var(--border-color)',
     transition: 'all 0.3s ease',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
   },
   patientHeaderFixed: {
     display: 'flex',
@@ -1086,9 +1183,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: '600',
     color: 'var(--text-primary)',
     margin: '0 0 8px 0',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
   },
   patientBadges: {
     display: 'flex',
@@ -1130,5 +1224,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderTop: '1px solid var(--border-color)',
   },
 };
+
+// Add spin animation
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(styleSheet);
 
 export default ClinicDashboard;
