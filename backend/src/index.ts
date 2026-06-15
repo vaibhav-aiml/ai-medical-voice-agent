@@ -102,6 +102,7 @@ app.use('/api/enhanced-report', enhancedReportRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/clinic', clinicRoutes);
 app.use('/api/enhanced-symptom', enhancedSymptomRoutes);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
@@ -113,7 +114,9 @@ app.get('/health', (req, res) => {
     services: {
       groq: !!process.env.GROQ_API_KEY,
       email: !!process.env.EMAIL_USER,
-      database: true
+      database: true,
+      analytics: true,
+      clinic: true
     }
   });
 });
@@ -134,7 +137,10 @@ app.get('/', (req, res) => {
       hipaa: 'POST /api/hipaa/log, GET /api/hipaa/logs',
       triage: 'POST /api/triage/analyze, GET /api/triage/guidelines',
       rag: 'POST /api/rag/search, POST /api/rag/enhance',
-      conversation: 'GET /api/conversation/history/:userId, POST /api/conversation/session'
+      conversation: 'GET /api/conversation/history/:userId, POST /api/conversation/session',
+      analytics: 'POST /api/analytics/dashboard, POST /api/analytics/trends, POST /api/analytics/symptoms',
+      clinic: 'POST /api/clinic/create, GET/POST /api/clinic/:clinicId/doctors, GET/POST /api/clinic/:clinicId/patients, GET/POST /api/clinic/:clinicId/appointments',
+      'enhanced-symptom': 'POST /api/enhanced-symptom/check'
     }
   });
 });
@@ -163,24 +169,34 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   console.log(`
-╔══════════════════════════════════════════════════════╗
-║     🚀 AI MEDICAL VOICE AGENT BACKEND                ║
-╠══════════════════════════════════════════════════════╣
-║  Server: http://localhost:${PORT}                      ║
-║  WebSocket: ws://localhost:${PORT}                     ║
-║  Health: http://localhost:${PORT}/health               ║
-╠══════════════════════════════════════════════════════╣
-║  Status: ✅ Running                                   ║
-║  Database: ✅ Connected                               ║
-║  WebSocket: ✅ Ready for voice                        ║
-║  AI Service: ${process.env.GROQ_API_KEY ? '✅ Groq Ready' : '⚠️ Fallback Mode'}     
-║  API Routes: ✅ /api/consultations, /api/email        ║
-║  Audit Routes: ✅ /api/audit/log, /api/audit/logs     ║
-║  HIPAA Routes: ✅ /api/hipaa/log, /api/hipaa/logs     ║
-║  Triage Routes: ✅ /api/triage/analyze                ║
-║  RAG Routes: ✅ /api/rag/search, /api/rag/enhance     ║
-║  Conversation Routes: ✅ /api/conversation/history    ║
-╚══════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════╗
+║     🚀 AI MEDICAL VOICE AGENT BACKEND                                ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  Server: http://localhost:${PORT}                                      ║
+║  WebSocket: ws://localhost:${PORT}                                     ║
+║  Health: http://localhost:${PORT}/health                               ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  Status: ✅ Running                                                   ║
+║  Database: ✅ Connected                                               ║
+║  WebSocket: ✅ Ready for voice                                        ║
+║  AI Service: ${process.env.GROQ_API_KEY ? '✅ Groq Ready' : '⚠️ Fallback Mode'}                       
+╠══════════════════════════════════════════════════════════════════════╣
+║  📋 API ROUTES:                                                       ║
+║     ✅ /api/consultations - Consultation management                   ║
+║     ✅ /api/voice - Voice consultation                                ║
+║     ✅ /api/reports - Medical reports                                 ║
+║     ✅ /api/email - Email notifications                               ║
+║     ✅ /api/audit - Audit logs                                        ║
+║     ✅ /api/hipaa - HIPAA compliance                                  ║
+║     ✅ /api/triage - Symptom triage                                   ║
+║     ✅ /api/rag - RAG search                                          ║
+║     ✅ /api/conversation - Chat history                               ║
+║     ✅ /api/reminder - Medication reminders                           ║
+║     ✅ /api/enhanced-report - Enhanced reports                        ║
+║     ✅ /api/analytics - Analytics dashboard                           ║
+║     ✅ /api/clinic - Clinic management                                ║
+║     ✅ /api/enhanced-symptom - Enhanced symptom checker               ║
+╚══════════════════════════════════════════════════════════════════════╝
   `);
 });
 
