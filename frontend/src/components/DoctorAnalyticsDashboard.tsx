@@ -1,9 +1,38 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TrendingUp, Users, Calendar, Star, Activity, BarChart3,
   Clock, Stethoscope, Heart, Brain, Bone, Baby,
-  Download, RefreshCw, X
+  Download, RefreshCw
 } from 'lucide-react';
+
+interface AnalyticsData {
+  totalPatients: number;
+  totalConsultations: number;
+  averageRating: number;
+  patientSatisfaction: number;
+  consultationTrends: {
+    daily: { date: string; count: number }[];
+    weekly: { week: string; count: number }[];
+    monthly: { month: string; count: number }[];
+  };
+  commonSymptoms: { symptom: string; count: number; percentage: number }[];
+  specialistDistribution: { specialist: string; count: number; percentage: number }[];
+  patientDemographics: {
+    ageGroups: { group: string; count: number; percentage: number }[];
+    genderDistribution: { gender: string; count: number; percentage: number }[];
+  };
+  recentConsultations: {
+    id: string;
+    patientName: string;
+    specialistType: string;
+    date: Date;
+    symptoms: string;
+    duration: number;
+    rating?: number;
+  }[];
+  peakHours: { hour: number; count: number }[];
+  topDoctors: { name: string; consultations: number; rating: number }[];
+}
 
 interface Props {
   consultations: any[];
@@ -12,144 +41,50 @@ interface Props {
 }
 
 const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onClose }) => {
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'symptoms' | 'specialists' | 'patients'>('overview');
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'year'>('month');
 
-  // Calculate analytics locally - NO API CALL
-  const analytics = useMemo(() => {
-    const totalConsultations = consultations?.length || 0;
-    
-    // Calculate average rating
-    let averageRating = 0;
-    if (ratings) {
-      const ratingValues = Object.values(ratings).map((r: any) => r.rating);
-      if (ratingValues.length > 0) {
-        averageRating = ratingValues.reduce((a: number, b: number) => a + b, 0) / ratingValues.length;
-      }
-    }
-    
-    // Calculate satisfaction
-    let patientSatisfaction = 85;
-    if (ratings) {
-      const ratingValues = Object.values(ratings).map((r: any) => r.rating);
-      if (ratingValues.length > 0) {
-        patientSatisfaction = (ratingValues.filter(r => r >= 4).length / ratingValues.length) * 100;
-      }
-    }
-    
-    // Process daily trends
-    const dailyMap = new Map<string, number>();
-    consultations?.forEach((consultation: any) => {
-      const date = new Date(consultation.startedAt || consultation.date || Date.now());
-      const dateStr = date.toISOString().split('T')[0];
-      dailyMap.set(dateStr, (dailyMap.get(dateStr) || 0) + 1);
-    });
-    
-    const daily = Array.from(dailyMap.entries())
-      .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-30);
-    
-    const monthly = Array.from(dailyMap.entries())
-      .map(([date, count]) => ({ month: date.slice(0, 7), count }))
-      .reduce((acc: any[], curr) => {
-        const existing = acc.find(a => a.month === curr.month);
-        if (existing) existing.count += curr.count;
-        else acc.push(curr);
-        return acc;
-      }, []);
-    
-    // Process common symptoms
-    const symptomMap = new Map<string, number>();
-    const symptomKeywords = ['headache', 'fever', 'cough', 'pain', 'fatigue', 'nausea', 'dizziness', 'cold', 'sore throat'];
-    
-    consultations?.forEach((consultation: any) => {
-      const symptoms = (consultation.symptoms || '').toLowerCase();
-      symptomKeywords.forEach(keyword => {
-        if (symptoms.includes(keyword)) {
-          symptomMap.set(keyword, (symptomMap.get(keyword) || 0) + 1);
-        }
-      });
-    });
-    
-    const commonSymptoms = Array.from(symptomMap.entries())
-      .map(([symptom, count]) => ({ 
-        symptom, 
-        count, 
-        percentage: totalConsultations > 0 ? (count / totalConsultations) * 100 : 0 
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-    
-    // Process specialist distribution
-    const specialistMap = new Map<string, number>();
-    consultations?.forEach((consultation: any) => {
-      const type = consultation.specialistType || 'general';
-      specialistMap.set(type, (specialistMap.get(type) || 0) + 1);
-    });
-    
-    const specialistDistribution = Array.from(specialistMap.entries())
-      .map(([specialist, count]) => ({ 
-        specialist, 
-        count, 
-        percentage: totalConsultations > 0 ? (count / totalConsultations) * 100 : 0 
-      }));
-    
-    // Recent consultations
-    const recentConsultations = (consultations || [])
-      .map((c: any) => ({
-        id: c.id,
-        patientName: c.patientName || 'Anonymous',
-        specialistType: c.specialistType || 'general',
-        date: new Date(c.startedAt || c.date || Date.now()),
-        symptoms: c.symptoms || 'No symptoms recorded',
-        duration: c.duration || 0,
-        rating: ratings?.[c.id]?.rating,
-      }))
-      .sort((a: any, b: any) => b.date.getTime() - a.date.getTime())
-      .slice(0, 10);
-    
-    // Peak hours mock data
-    const peakHours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(hour => ({
-      hour,
-      count: Math.floor(Math.random() * 25) + 5,
-    }));
-    
-    // Top doctors
-    const topDoctors = specialistDistribution.map((spec, idx) => ({
-      name: getSpecialistTypeName(spec.specialist),
-      consultations: spec.count,
-      rating: 4.2 + Math.random() * 0.7,
-    })).slice(0, 5);
-    
-    // Demographics mock
-    const ageGroups = [
-      { group: '18-25', count: 15, percentage: 15 },
-      { group: '26-35', count: 35, percentage: 35 },
-      { group: '36-50', count: 30, percentage: 30 },
-      { group: '51+', count: 20, percentage: 20 },
-    ];
-    
-    const genderDistribution = [
-      { gender: 'Male', count: 55, percentage: 55 },
-      { gender: 'Female', count: 42, percentage: 42 },
-      { gender: 'Other', count: 3, percentage: 3 },
-    ];
-    
-    return {
-      totalPatients: Math.max(5, Math.floor(totalConsultations * 0.8)),
-      totalConsultations,
-      averageRating,
-      patientSatisfaction,
-      consultationTrends: { daily, weekly: daily.slice(-7), monthly },
-      commonSymptoms,
-      specialistDistribution,
-      patientDemographics: { ageGroups, genderDistribution },
-      recentConsultations,
-      peakHours,
-      topDoctors,
-    };
+  // Get API URL from environment variable
+  const API_URL = import.meta.env.VITE_API_URL || 'https://ai-medical-voice-agent-ygc5.onrender.com';
+
+  useEffect(() => {
+    fetchAnalytics();
   }, [consultations, ratings]);
+
+  const fetchAnalytics = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('Fetching analytics from:', `${API_URL}/api/analytics/dashboard`);
+      
+      const response = await fetch(`${API_URL}/api/analytics/dashboard`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ consultations, ratings }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.success) {
+        setAnalytics(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch analytics');
+      }
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load analytics');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getSpecialistIcon = (type: string) => {
     switch(type) {
@@ -173,6 +108,37 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
     return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
   };
 
+  if (loading) {
+    return (
+      <div style={styles.overlay}>
+        <div style={styles.modal}>
+          <div style={styles.loadingContainer}>
+            <div style={styles.spinner}></div>
+            <p>Loading analytics dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.overlay}>
+        <div style={styles.modal}>
+          <div style={styles.errorContainer}>
+            <p style={{ color: '#ef4444' }}>Error: {error}</p>
+            <button onClick={fetchAnalytics} style={styles.retryButton}>
+              <RefreshCw size={16} /> Retry
+            </button>
+            {onClose && <button onClick={onClose} style={styles.closeButton}>Close</button>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analytics) return null;
+
   const getTrendData = () => {
     switch(dateRange) {
       case 'week': return analytics.consultationTrends.daily.slice(-7);
@@ -181,7 +147,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
     }
   };
 
-  const maxCount = Math.max(...getTrendData().map((d: any) => d.count), 1);
+  const maxCount = Math.max(...getTrendData().map(d => d.count), 1);
 
   return (
     <div style={styles.overlay}>
@@ -195,11 +161,14 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
             </div>
           </div>
           <div style={styles.headerRight}>
+            <button onClick={fetchAnalytics} style={styles.refreshBtn}>
+              <RefreshCw size={16} /> Refresh
+            </button>
             <button style={styles.exportBtn}>
               <Download size={16} /> Export
             </button>
             {onClose && (
-              <button onClick={onClose} style={styles.closeBtn}>✕</button>
+              <button onClick={onClose} style={styles.closeBtn}>×</button>
             )}
           </div>
         </div>
@@ -236,19 +205,18 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
         </div>
 
         <div style={styles.tabs}>
-          {['overview', 'symptoms', 'specialists', 'patients'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              style={{ ...styles.tab, ...(activeTab === tab ? styles.activeTab : {}) }}
-            >
-              {tab === 'overview' && <BarChart3 size={16} />}
-              {tab === 'symptoms' && <Activity size={16} />}
-              {tab === 'specialists' && <Stethoscope size={16} />}
-              {tab === 'patients' && <Users size={16} />}
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+          <button onClick={() => setActiveTab('overview')} style={{ ...styles.tab, ...(activeTab === 'overview' ? styles.activeTab : {}) }}>
+            <BarChart3 size={16} /> Overview
+          </button>
+          <button onClick={() => setActiveTab('symptoms')} style={{ ...styles.tab, ...(activeTab === 'symptoms' ? styles.activeTab : {}) }}>
+            <Activity size={16} /> Common Symptoms
+          </button>
+          <button onClick={() => setActiveTab('specialists')} style={{ ...styles.tab, ...(activeTab === 'specialists' ? styles.activeTab : {}) }}>
+            <Stethoscope size={16} /> Specialists
+          </button>
+          <button onClick={() => setActiveTab('patients')} style={{ ...styles.tab, ...(activeTab === 'patients' ? styles.activeTab : {}) }}>
+            <Users size={16} /> Patient Demographics
+          </button>
         </div>
 
         <div style={styles.content}>
@@ -290,7 +258,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
                 </div>
 
                 <div style={styles.infoCard}>
-                  <h3 style={styles.infoTitle}><Star size={16} /> Top Specialists</h3>
+                  <h3 style={styles.infoTitle}><Star size={16} /> Top Performing Specialists</h3>
                   {analytics.topDoctors.map((doctor: any, idx: number) => (
                     <div key={idx} style={styles.topDoctorItem}>
                       <div style={styles.topDoctorRank}>{idx + 1}</div>
@@ -381,7 +349,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
             <div key={c.id} style={styles.recentRow}>
               <div><span style={{ fontWeight: 600 }}>{c.patientName}</span><br /><span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{new Date(c.date).toLocaleDateString()}</span></div>
               <div><span style={{ color: '#00C2FF' }}>{getSpecialistTypeName(c.specialistType)}</span><br /><span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{c.duration} min</span></div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{c.symptoms.substring(0, 40)}...</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{c.symptoms?.substring(0, 40)}...</div>
               <div>{c.rating ? `⭐ ${c.rating}` : 'Not rated'}</div>
             </div>
           ))}
@@ -444,6 +412,18 @@ const styles: { [key: string]: React.CSSProperties } = {
   headerRight: {
     display: 'flex',
     gap: '12px',
+  },
+  refreshBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 16px',
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(0,180,255,0.2)',
+    borderRadius: '8px',
+    color: '#00C2FF',
+    cursor: 'pointer',
+    fontSize: '12px',
   },
   exportBtn: {
     display: 'flex',
@@ -696,6 +676,57 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '13px',
     color: 'rgba(255,255,255,0.7)',
   },
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '60px',
+    gap: '16px',
+  },
+  spinner: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid rgba(0,180,255,0.2)',
+    borderTopColor: '#00C2FF',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+  errorContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '60px',
+    gap: '16px',
+  },
+  retryButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 20px',
+    background: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+  },
+  closeButton: {
+    padding: '10px 20px',
+    background: '#ef4444',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+  },
 };
+
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(styleSheet);
 
 export default DoctorAnalyticsDashboard;

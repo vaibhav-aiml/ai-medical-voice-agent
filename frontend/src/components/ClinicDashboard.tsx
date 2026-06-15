@@ -49,142 +49,193 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showAddDoctor, setShowAddDoctor] = useState(false);
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load data from localStorage only - NO API CALLS
+  // Get API URL from environment variable
+  const API_URL = import.meta.env.VITE_API_URL || 'https://ai-medical-voice-agent-ygc5.onrender.com';
+
+  // Load data from API with localStorage fallback
   useEffect(() => {
-    loadLocalData();
+    fetchData();
   }, [clinicId]);
 
-  const loadLocalData = () => {
+  const fetchData = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
-      // Load doctors from localStorage
-      const storedDoctors = localStorage.getItem(`clinic_${clinicId}_doctors`);
-      if (storedDoctors) {
-        setDoctors(JSON.parse(storedDoctors));
+      // Try to fetch from API first
+      const [doctorsRes, appointmentsRes] = await Promise.all([
+        fetch(`${API_URL}/api/clinic/${clinicId}/doctors`).catch(() => null),
+        fetch(`${API_URL}/api/clinic/${clinicId}/appointments`).catch(() => null)
+      ]);
+
+      if (doctorsRes && doctorsRes.ok) {
+        const doctorsData = await doctorsRes.json();
+        setDoctors(doctorsData.data || []);
+        localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(doctorsData.data || []));
       } else {
-        // Initialize with mock doctors
-        const mockDoctors: Doctor[] = [
-          {
-            id: 'doc_1',
-            name: 'Dr. Sarah Wilson',
-            specialization: 'General Physician',
-            experience: 8,
-            consultationFee: 500,
-            isAvailable: true,
-            phone: '+91 98765 43210',
-            email: 'sarah.wilson@clinic.com'
-          },
-          {
-            id: 'doc_2',
-            name: 'Dr. James Chen',
-            specialization: 'Orthopedic',
-            experience: 12,
-            consultationFee: 800,
-            isAvailable: true,
-            phone: '+91 98765 43211',
-            email: 'james.chen@clinic.com'
-          },
-          {
-            id: 'doc_3',
-            name: 'Dr. Priya Sharma',
-            specialization: 'Cardiologist',
-            experience: 15,
-            consultationFee: 1200,
-            isAvailable: false,
-            phone: '+91 98765 43212',
-            email: 'priya.sharma@clinic.com'
-          }
-        ];
-        setDoctors(mockDoctors);
-        localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(mockDoctors));
+        // Fallback to localStorage
+        loadLocalData();
       }
 
-      // Load patients from localStorage
-      const storedPatients = localStorage.getItem(`clinic_${clinicId}_patients`);
-      if (storedPatients) {
-        setPatients(JSON.parse(storedPatients));
+      if (appointmentsRes && appointmentsRes.ok) {
+        const appointmentsData = await appointmentsRes.json();
+        setAppointments(appointmentsData.data || []);
+        localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(appointmentsData.data || []));
       } else {
-        // Initialize with mock patients
-        const mockPatients: Patient[] = [
-          {
-            id: 'pat_1',
-            name: 'Rajesh Kumar',
-            phone: '+91 99887 66554',
-            email: 'rajesh.kumar@email.com',
-            age: 35,
-            gender: 'Male',
-            clinicId: clinicId
-          },
-          {
-            id: 'pat_2',
-            name: 'Priya Singh',
-            phone: '+91 98765 12345',
-            email: 'priya.singh@email.com',
-            age: 28,
-            gender: 'Female',
-            clinicId: clinicId
-          },
-          {
-            id: 'pat_3',
-            name: 'Amit Patel',
-            phone: '+91 87654 32109',
-            email: 'amit.patel@email.com',
-            age: 42,
-            gender: 'Male',
-            clinicId: clinicId
-          }
-        ];
-        setPatients(mockPatients);
-        localStorage.setItem(`clinic_${clinicId}_patients`, JSON.stringify(mockPatients));
+        // Fallback to localStorage
+        loadLocalData();
       }
 
-      // Load appointments from localStorage
-      const storedAppointments = localStorage.getItem(`clinic_${clinicId}_appointments`);
-      if (storedAppointments) {
-        setAppointments(JSON.parse(storedAppointments));
-      } else {
-        // Initialize with mock appointments
-        const mockAppointments: Appointment[] = [
-          {
-            id: 'apt_1',
-            doctorId: 'doc_1',
-            patientId: 'pat_1',
-            patientName: 'Rajesh Kumar',
-            doctorName: 'Dr. Sarah Wilson',
-            date: new Date().toISOString().split('T')[0],
-            time: '10:00 AM',
-            status: 'confirmed'
-          },
-          {
-            id: 'apt_2',
-            doctorId: 'doc_2',
-            patientId: 'pat_2',
-            patientName: 'Priya Singh',
-            doctorName: 'Dr. James Chen',
-            date: new Date().toISOString().split('T')[0],
-            time: '11:30 AM',
-            status: 'pending'
-          }
-        ];
-        setAppointments(mockAppointments);
-        localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(mockAppointments));
-      }
+      // Load patients from localStorage (since no API endpoint)
+      loadLocalPatients();
+      
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error fetching from API, using localStorage:', error);
+      loadLocalData();
     } finally {
       setLoading(false);
     }
   };
 
-  const saveDoctors = (newDoctors: Doctor[]) => {
+  const loadLocalData = () => {
+    // Load doctors from localStorage
+    const storedDoctors = localStorage.getItem(`clinic_${clinicId}_doctors`);
+    if (storedDoctors) {
+      setDoctors(JSON.parse(storedDoctors));
+    } else {
+      // Initialize with mock doctors
+      const mockDoctors: Doctor[] = [
+        {
+          id: 'doc_1',
+          name: 'Dr. Sarah Wilson',
+          specialization: 'General Physician',
+          experience: 8,
+          consultationFee: 500,
+          isAvailable: true,
+          phone: '+91 98765 43210',
+          email: 'sarah.wilson@clinic.com'
+        },
+        {
+          id: 'doc_2',
+          name: 'Dr. James Chen',
+          specialization: 'Orthopedic',
+          experience: 12,
+          consultationFee: 800,
+          isAvailable: true,
+          phone: '+91 98765 43211',
+          email: 'james.chen@clinic.com'
+        },
+        {
+          id: 'doc_3',
+          name: 'Dr. Priya Sharma',
+          specialization: 'Cardiologist',
+          experience: 15,
+          consultationFee: 1200,
+          isAvailable: false,
+          phone: '+91 98765 43212',
+          email: 'priya.sharma@clinic.com'
+        }
+      ];
+      setDoctors(mockDoctors);
+      localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(mockDoctors));
+    }
+
+    // Load appointments from localStorage
+    const storedAppointments = localStorage.getItem(`clinic_${clinicId}_appointments`);
+    if (storedAppointments) {
+      setAppointments(JSON.parse(storedAppointments));
+    } else {
+      // Initialize with mock appointments
+      const mockAppointments: Appointment[] = [
+        {
+          id: 'apt_1',
+          doctorId: 'doc_1',
+          patientId: 'pat_1',
+          patientName: 'Rajesh Kumar',
+          doctorName: 'Dr. Sarah Wilson',
+          date: new Date().toISOString().split('T')[0],
+          time: '10:00 AM',
+          status: 'confirmed'
+        },
+        {
+          id: 'apt_2',
+          doctorId: 'doc_2',
+          patientId: 'pat_2',
+          patientName: 'Priya Singh',
+          doctorName: 'Dr. James Chen',
+          date: new Date().toISOString().split('T')[0],
+          time: '11:30 AM',
+          status: 'pending'
+        }
+      ];
+      setAppointments(mockAppointments);
+      localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(mockAppointments));
+    }
+
+    loadLocalPatients();
+  };
+
+  const loadLocalPatients = () => {
+    const storedPatients = localStorage.getItem(`clinic_${clinicId}_patients`);
+    if (storedPatients) {
+      setPatients(JSON.parse(storedPatients));
+    } else {
+      // Initialize with mock patients
+      const mockPatients: Patient[] = [
+        {
+          id: 'pat_1',
+          name: 'Rajesh Kumar',
+          phone: '+91 99887 66554',
+          email: 'rajesh.kumar@email.com',
+          age: 35,
+          gender: 'Male',
+          clinicId: clinicId
+        },
+        {
+          id: 'pat_2',
+          name: 'Priya Singh',
+          phone: '+91 98765 12345',
+          email: 'priya.singh@email.com',
+          age: 28,
+          gender: 'Female',
+          clinicId: clinicId
+        },
+        {
+          id: 'pat_3',
+          name: 'Amit Patel',
+          phone: '+91 87654 32109',
+          email: 'amit.patel@email.com',
+          age: 42,
+          gender: 'Male',
+          clinicId: clinicId
+        }
+      ];
+      setPatients(mockPatients);
+      localStorage.setItem(`clinic_${clinicId}_patients`, JSON.stringify(mockPatients));
+    }
+  };
+
+  const saveDoctors = async (newDoctors: Doctor[]) => {
     setDoctors(newDoctors);
     localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(newDoctors));
+    
+    // Try to sync with API
+    try {
+      await fetch(`${API_URL}/api/clinic/${clinicId}/doctors/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ doctors: newDoctors })
+      });
+    } catch (error) {
+      console.error('Error syncing doctors to API:', error);
+    }
   };
 
   const savePatients = (newPatients: Patient[]) => {
@@ -192,37 +243,103 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     localStorage.setItem(`clinic_${clinicId}_patients`, JSON.stringify(newPatients));
   };
 
-  const saveAppointments = (newAppointments: Appointment[]) => {
+  const saveAppointments = async (newAppointments: Appointment[]) => {
     setAppointments(newAppointments);
     localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(newAppointments));
+    
+    // Try to sync with API
+    try {
+      await fetch(`${API_URL}/api/clinic/${clinicId}/appointments/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointments: newAppointments })
+      });
+    } catch (error) {
+      console.error('Error syncing appointments to API:', error);
+    }
   };
 
-  const addDoctor = (doctor: Omit<Doctor, 'id'>) => {
+  const addDoctor = async (doctor: Omit<Doctor, 'id'>) => {
     const newDoctor = {
       ...doctor,
       id: 'doc_' + Date.now(),
     };
     const updatedDoctors = [...doctors, newDoctor];
+    
+    // Try API first
+    try {
+      const response = await fetch(`${API_URL}/api/clinic/${clinicId}/doctors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newDoctor)
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          await fetchData();
+          setShowAddDoctor(false);
+          alert('Doctor added successfully!');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('API error, saving to localStorage:', error);
+    }
+    
+    // Fallback to localStorage
     saveDoctors(updatedDoctors);
     setShowAddDoctor(false);
-    alert('Doctor added successfully!');
+    alert('Doctor added successfully (offline mode)!');
   };
 
-  const updateDoctor = (id: string, doctorData: Partial<Doctor>) => {
+  const updateDoctor = async (id: string, doctorData: Partial<Doctor>) => {
+    // Try API first
+    try {
+      const response = await fetch(`${API_URL}/api/clinic/${clinicId}/doctors/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(doctorData)
+      });
+      if (response.ok) {
+        await fetchData();
+        setEditingDoctor(null);
+        alert('Doctor updated successfully!');
+        return;
+      }
+    } catch (error) {
+      console.error('API error, updating in localStorage:', error);
+    }
+    
+    // Fallback to localStorage
     const updatedDoctors = doctors.map(d => 
       d.id === id ? { ...d, ...doctorData } : d
     );
     saveDoctors(updatedDoctors);
     setEditingDoctor(null);
-    alert('Doctor updated successfully!');
+    alert('Doctor updated successfully (offline mode)!');
   };
 
-  const deleteDoctor = (id: string) => {
-    if (confirm('Are you sure you want to delete this doctor?')) {
-      const updatedDoctors = doctors.filter(d => d.id !== id);
-      saveDoctors(updatedDoctors);
-      alert('Doctor deleted successfully!');
+  const deleteDoctor = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this doctor?')) return;
+    
+    // Try API first
+    try {
+      const response = await fetch(`${API_URL}/api/clinic/${clinicId}/doctors/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        await fetchData();
+        alert('Doctor deleted successfully!');
+        return;
+      }
+    } catch (error) {
+      console.error('API error, deleting from localStorage:', error);
     }
+    
+    // Fallback to localStorage
+    const updatedDoctors = doctors.filter(d => d.id !== id);
+    saveDoctors(updatedDoctors);
+    alert('Doctor deleted successfully (offline mode)!');
   };
 
   const addPatient = (patient: Omit<Patient, 'id' | 'clinicId'>) => {
@@ -254,12 +371,29 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     }
   };
 
-  const updateAppointmentStatus = (id: string, status: string) => {
+  const updateAppointmentStatus = async (id: string, status: string) => {
+    // Try API first
+    try {
+      const response = await fetch(`${API_URL}/api/clinic/${clinicId}/appointments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (response.ok) {
+        await fetchData();
+        alert(`Appointment ${status}!`);
+        return;
+      }
+    } catch (error) {
+      console.error('API error, updating in localStorage:', error);
+    }
+    
+    // Fallback to localStorage
     const updatedAppointments = appointments.map(apt =>
       apt.id === id ? { ...apt, status } : apt
     );
     saveAppointments(updatedAppointments);
-    alert(`Appointment ${status}!`);
+    alert(`Appointment ${status} (offline mode)!`);
   };
 
   const todayAppointments = appointments.filter(apt => {
@@ -292,6 +426,15 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
       <div style={styles.loadingContainer}>
         <div style={styles.spinner}></div>
         <p>Loading clinic dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error && doctors.length === 0 && patients.length === 0) {
+    return (
+      <div style={styles.loadingContainer}>
+        <p style={{ color: '#ef4444' }}>Error: {error}</p>
+        <button onClick={fetchData} style={styles.primaryButton}>Retry</button>
       </div>
     );
   }
@@ -623,7 +766,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   );
 };
 
-// Modal Components
+// Modal Components (same as before, keeping them)
 const AddDoctorModal = ({ onClose, onSave }: any) => {
   const [formData, setFormData] = useState({
     name: '',
