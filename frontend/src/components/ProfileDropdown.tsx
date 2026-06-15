@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useUser, useClerk } from '@clerk/clerk-react';
-import { User, Settings, LogOut, Shield, Moon, Sun, Globe, Users, ChevronRight, Camera } from 'lucide-react';
+import { User, Settings, LogOut, Shield, Moon, Sun, Globe, Users, ChevronRight, Camera, Check } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -19,7 +19,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
   const { user, isSignedIn } = useUser();
   const { signOut } = useClerk();
   const { theme, toggleTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [showAccounts, setShowAccounts] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -27,8 +27,33 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Available languages list
+  const availableLanguages = [
+    { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+    { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+    { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳' },
+    { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳' },
+    { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇮🇳' },
+    { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳' },
+    { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી', flag: '🇮🇳' },
+    { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ', flag: '🇮🇳' },
+    { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം', flag: '🇮🇳' },
+  ];
+
   useEffect(() => {
     loadAccounts();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setShowAccounts(false);
+        setShowAvatarMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadAccounts = () => {
@@ -58,8 +83,13 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
   };
 
   const addAccount = () => {
-    // This would redirect to Clerk sign-in for new account
     window.location.href = 'https://accounts.clerk.com/sign-up';
+  };
+
+  const handleLanguageChange = (languageCode: string) => {
+    console.log('Changing language to:', languageCode);
+    setLanguage(languageCode as any);
+    setIsOpen(false);
   };
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,24 +116,10 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
     return null;
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setShowAccounts(false);
-        setShowAvatarMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const languages = [
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
-    { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
-    { code: 'te', name: 'తెలుగు', flag: '🇮🇳' },
-  ];
+  // Group languages by script
+  const devanagariLanguages = availableLanguages.filter(l => ['hi', 'mr'].includes(l.code));
+  const dravidianLanguages = availableLanguages.filter(l => ['ta', 'te', 'kn', 'ml'].includes(l.code));
+  const otherLanguages = availableLanguages.filter(l => ['en', 'bn', 'gu'].includes(l.code));
 
   return (
     <div style={styles.container} ref={dropdownRef}>
@@ -195,19 +211,78 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
             <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
           </button>
 
-          {/* Language Selector */}
+          {/* Language Section */}
           <div style={styles.languageSection}>
-            <Globe size={18} />
-            <span>Language</span>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as any)}
-              style={styles.languageSelect}
-            >
-              {languages.map(lang => (
-                <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
+            <div style={styles.languageHeader}>
+              <Globe size={16} />
+              <span>Language / भाषा</span>
+            </div>
+            
+            {/* Devanagari Languages (Hindi, Marathi) */}
+            <div style={styles.languageSubgroup}>
+              <div style={styles.languageSubgroupTitle}>देवनागरी / Devanagari</div>
+              {devanagariLanguages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => handleLanguageChange(lang.code)}
+                  style={{
+                    ...styles.languageOption,
+                    ...(language === lang.code ? styles.languageActive : {})
+                  }}
+                >
+                  <span style={styles.flag}>{lang.flag}</span>
+                  <span style={styles.languageName}>{lang.nativeName}</span>
+                  <span style={styles.languageCode}>({lang.name})</span>
+                  {language === lang.code && (
+                    <Check size={14} style={styles.checkIcon} />
+                  )}
+                </button>
               ))}
-            </select>
+            </div>
+
+            {/* Dravidian Languages (Tamil, Telugu, Kannada, Malayalam) */}
+            <div style={styles.languageSubgroup}>
+              <div style={styles.languageSubgroupTitle}>திராவிட / Dravidian</div>
+              {dravidianLanguages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => handleLanguageChange(lang.code)}
+                  style={{
+                    ...styles.languageOption,
+                    ...(language === lang.code ? styles.languageActive : {})
+                  }}
+                >
+                  <span style={styles.flag}>{lang.flag}</span>
+                  <span style={styles.languageName}>{lang.nativeName}</span>
+                  <span style={styles.languageCode}>({lang.name})</span>
+                  {language === lang.code && (
+                    <Check size={14} style={styles.checkIcon} />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Other Languages (English, Bengali, Gujarati) */}
+            <div style={styles.languageSubgroup}>
+              <div style={styles.languageSubgroupTitle}>Others</div>
+              {otherLanguages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => handleLanguageChange(lang.code)}
+                  style={{
+                    ...styles.languageOption,
+                    ...(language === lang.code ? styles.languageActive : {})
+                  }}
+                >
+                  <span style={styles.flag}>{lang.flag}</span>
+                  <span style={styles.languageName}>{lang.nativeName}</span>
+                  <span style={styles.languageCode}>({lang.name})</span>
+                  {language === lang.code && (
+                    <Check size={14} style={styles.checkIcon} />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* 2FA Option */}
@@ -263,13 +338,14 @@ const styles = {
     position: 'absolute' as const,
     top: 'calc(100% + 8px)',
     right: 0,
-    width: '280px',
+    width: '300px',
+    maxHeight: '80vh',
+    overflowY: 'auto' as const,
     background: 'var(--bg-card)',
     borderRadius: '16px',
     boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
     border: '1px solid var(--border-color)',
     zIndex: 1000,
-    overflow: 'hidden',
   },
   userInfo: {
     padding: '20px',
@@ -343,6 +419,9 @@ const styles = {
     color: 'var(--text-primary)',
     textAlign: 'left' as const,
     transition: 'background 0.2s',
+    ':hover': {
+      background: 'var(--bg-secondary)',
+    },
   },
   signOut: {
     color: '#ef4444',
@@ -364,6 +443,9 @@ const styles = {
     cursor: 'pointer',
     textAlign: 'left' as const,
     transition: 'background 0.2s',
+    ':hover': {
+      background: 'var(--bg-secondary)',
+    },
   },
   accountAvatar: {
     width: '32px',
@@ -404,20 +486,65 @@ const styles = {
     textAlign: 'center' as const,
   },
   languageSection: {
+    padding: '8px 0',
+  },
+  languageHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
+    gap: '10px',
+    padding: '10px 16px',
+    fontSize: '12px',
+    fontWeight: 600,
+    color: 'var(--text-secondary)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
     borderBottom: '1px solid var(--border-color)',
   },
-  languageSelect: {
-    marginLeft: 'auto',
-    padding: '4px 8px',
-    background: 'var(--input-bg)',
-    border: '1px solid var(--input-border)',
-    borderRadius: '6px',
-    color: 'var(--text-primary)',
+  languageSubgroup: {
+    padding: '4px 0',
+  },
+  languageSubgroupTitle: {
+    padding: '6px 16px',
+    fontSize: '10px',
+    fontWeight: 600,
+    color: 'var(--text-secondary)',
+    background: 'var(--bg-secondary)',
+  },
+  languageOption: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    width: '100%',
+    padding: '8px 16px',
+    background: 'transparent',
+    border: 'none',
     cursor: 'pointer',
+    fontSize: '13px',
+    color: 'var(--text-primary)',
+    textAlign: 'left' as const,
+    transition: 'background 0.2s',
+    position: 'relative' as const,
+    ':hover': {
+      background: 'var(--bg-secondary)',
+    },
+  },
+  languageActive: {
+    background: 'rgba(139, 92, 246, 0.1)',
+  },
+  flag: {
+    fontSize: '18px',
+  },
+  languageName: {
+    flex: 1,
+    fontSize: '13px',
+  },
+  languageCode: {
+    fontSize: '10px',
+    color: 'var(--text-secondary)',
+  },
+  checkIcon: {
+    color: '#8b5cf6',
+    marginLeft: '8px',
   },
   avatarMenu: {
     position: 'absolute' as const,
@@ -441,5 +568,8 @@ const styles = {
     cursor: 'pointer',
     fontSize: '13px',
     color: 'var(--text-primary)',
+    ':hover': {
+      background: 'var(--bg-secondary)',
+    },
   },
 };

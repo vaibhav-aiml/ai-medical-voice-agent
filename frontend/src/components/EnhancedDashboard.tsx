@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
 import { Calendar, TrendingUp, Activity, Clock, Award, Brain, Heart, Star, Users } from 'lucide-react';
@@ -24,17 +24,53 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
   const [chartData, setChartData] = useState<any>(null);
   const [specialistChart, setSpecialistChart] = useState<any>(null);
   const [ratingChart, setRatingChart] = useState<any>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
-    prepareChartData();
-    prepareSpecialistChart();
-    prepareRatingChart();
-  }, [consultations, timeRange]);
+  // Use refs to prevent unnecessary re-renders
+  const chartOptionsRef = useRef({
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+      duration: 0, // Disable animation to prevent continuous expansion
+    },
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+    },
+  });
+
+  const doughnutOptionsRef = useRef({
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+      duration: 0, // Disable animation
+    },
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+      },
+    },
+  });
+
+  const barOptionsRef = useRef({
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+      duration: 0, // Disable animation
+    },
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+    },
+  });
 
   const getFilteredData = () => {
     const now = new Date();
     const filterDays = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365;
-    const cutoff = new Date(now.setDate(now.getDate() - filterDays));
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - filterDays);
     return consultations.filter(c => new Date(c.startedAt) >= cutoff);
   };
 
@@ -46,23 +82,23 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
       return date.toLocaleDateString('en-US', { weekday: 'short' });
     });
 
-    const consultationsByDay = last7Days.map(day => {
-      const dayIndex = last7Days.indexOf(day);
+    const consultationsByDay = last7Days.map((_, index) => {
       const date = new Date();
-      date.setDate(date.getDate() - (6 - dayIndex));
-      return filtered.filter(c => new Date(c.startedAt).toDateString() === date.toDateString()).length;
+      date.setDate(date.getDate() - (6 - index));
+      const dateStr = date.toDateString();
+      return filtered.filter(c => new Date(c.startedAt).toDateString() === dateStr).length;
     });
 
-    const durationsByDay = last7Days.map(day => {
-      const dayIndex = last7Days.indexOf(day);
+    const durationsByDay = last7Days.map((_, index) => {
       const date = new Date();
-      date.setDate(date.getDate() - (6 - dayIndex));
-      const dayConsultations = filtered.filter(c => new Date(c.startedAt).toDateString() === date.toDateString());
+      date.setDate(date.getDate() - (6 - index));
+      const dateStr = date.toDateString();
+      const dayConsultations = filtered.filter(c => new Date(c.startedAt).toDateString() === dateStr);
       const totalDuration = dayConsultations.reduce((sum, c) => sum + c.duration, 0);
       return dayConsultations.length > 0 ? Math.round(totalDuration / dayConsultations.length) : 0;
     });
 
-    setChartData({
+    return {
       consultations: {
         labels: last7Days,
         datasets: [
@@ -73,6 +109,8 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: true,
             tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
           },
         ],
       },
@@ -86,10 +124,12 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             fill: true,
             tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
           },
         ],
       },
-    });
+    };
   };
 
   const prepareSpecialistChart = () => {
@@ -99,7 +139,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
       specialistCounts[c.specialistType] = (specialistCounts[c.specialistType] || 0) + 1;
     });
 
-    setSpecialistChart({
+    return {
       labels: Object.keys(specialistCounts).map(s => s.charAt(0).toUpperCase() + s.slice(1)),
       datasets: [
         {
@@ -108,14 +148,14 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
           borderWidth: 0,
         },
       ],
-    });
+    };
   };
 
   const prepareRatingChart = () => {
     const filtered = getFilteredData().filter(c => c.rating);
     const ratings = [1, 2, 3, 4, 5].map(r => filtered.filter(c => c.rating === r).length);
     
-    setRatingChart({
+    return {
       labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
       datasets: [
         {
@@ -124,16 +164,38 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
           borderWidth: 0,
         },
       ],
-    });
+    };
   };
+
+  // Initialize charts once when timeRange changes
+  useEffect(() => {
+    if (consultations.length > 0) {
+      const newChartData = prepareChartData();
+      const newSpecialistChart = prepareSpecialistChart();
+      const newRatingChart = prepareRatingChart();
+      
+      setChartData(newChartData);
+      setSpecialistChart(newSpecialistChart);
+      setRatingChart(newRatingChart);
+      setIsInitialized(true);
+    }
+  }, [consultations, timeRange]);
 
   const getTrend = () => {
     const filtered = getFilteredData();
-    const lastWeek = filtered.filter(c => new Date(c.startedAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+    const now = new Date();
+    const lastWeek = filtered.filter(c => {
+      const date = new Date(c.startedAt);
+      const weekAgo = new Date(now);
+      weekAgo.setDate(now.getDate() - 7);
+      return date >= weekAgo;
+    });
     const previousWeek = filtered.filter(c => {
       const date = new Date(c.startedAt);
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+      const weekAgo = new Date(now);
+      weekAgo.setDate(now.getDate() - 7);
+      const twoWeeksAgo = new Date(now);
+      twoWeeksAgo.setDate(now.getDate() - 14);
       return date >= twoWeeksAgo && date < weekAgo;
     });
     
@@ -146,9 +208,20 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
 
   const trend = getTrend();
   const filteredConsultations = getFilteredData();
-  const avgRating = filteredConsultations.filter(c => c.rating).reduce((acc, c) => acc + (c.rating || 0), 0) / (filteredConsultations.filter(c => c.rating).length || 1);
+  const avgRating = filteredConsultations.filter(c => c.rating).length > 0 
+    ? filteredConsultations.filter(c => c.rating).reduce((acc, c) => acc + (c.rating || 0), 0) / filteredConsultations.filter(c => c.rating).length 
+    : 0;
   const totalMinutes = filteredConsultations.reduce((acc, c) => acc + c.duration, 0);
   const avgDuration = filteredConsultations.length > 0 ? Math.round(totalMinutes / filteredConsultations.length) : 0;
+
+  if (!isInitialized && consultations.length === 0) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div style={styles.spinner}></div>
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -194,29 +267,37 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
         </div>
       </div>
 
-      {/* Charts */}
+      {/* Charts - Fixed height containers prevent expansion */}
       <div style={styles.chartsGrid}>
         <div style={styles.chartCard}>
-          <h3>Consultations Trend</h3>
-          {chartData && <Line data={chartData.consultations} options={chartOptions} />}
+          <h3 style={styles.chartTitle}>Consultations Trend</h3>
+          <div style={styles.chartWrapper}>
+            {chartData && <Line data={chartData.consultations} options={chartOptionsRef.current} />}
+          </div>
         </div>
         <div style={styles.chartCard}>
-          <h3>Average Duration Trend</h3>
-          {chartData && <Line data={chartData.durations} options={chartOptions} />}
+          <h3 style={styles.chartTitle}>Average Duration Trend</h3>
+          <div style={styles.chartWrapper}>
+            {chartData && <Line data={chartData.durations} options={chartOptionsRef.current} />}
+          </div>
         </div>
         <div style={styles.chartCard}>
-          <h3>Specialist Distribution</h3>
-          {specialistChart && <Doughnut data={specialistChart} options={doughnutOptions} />}
+          <h3 style={styles.chartTitle}>Specialist Distribution</h3>
+          <div style={styles.chartWrapperSmall}>
+            {specialistChart && <Doughnut data={specialistChart} options={doughnutOptionsRef.current} />}
+          </div>
         </div>
         <div style={styles.chartCard}>
-          <h3>Rating Distribution</h3>
-          {ratingChart && <Bar data={ratingChart} options={barOptions} />}
+          <h3 style={styles.chartTitle}>Rating Distribution</h3>
+          <div style={styles.chartWrapper}>
+            {ratingChart && <Bar data={ratingChart} options={barOptionsRef.current} />}
+          </div>
         </div>
       </div>
 
       {/* Insights */}
       <div style={styles.insightsCard}>
-        <h3>📈 Health Insights</h3>
+        <h3 style={styles.insightsTitle}>📈 Health Insights</h3>
         <div style={styles.insightsGrid}>
           <div style={styles.insightItem}>
             <TrendingUp size={20} color="#10b981" />
@@ -284,39 +365,26 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
   );
 }
 
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'top' as const,
-    },
-  },
-};
-
-const doughnutOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'bottom' as const,
-    },
-  },
-};
-
-const barOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'top' as const,
-    },
-  },
-};
-
 const styles = {
   container: {
     padding: '24px',
+    maxWidth: '1400px',
+    margin: '0 auto',
+  },
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '400px',
+  },
+  spinner: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid var(--border-color)',
+    borderTopColor: '#3b82f6',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
   },
   timeRangeSelector: {
     display: 'flex',
@@ -332,6 +400,7 @@ const styles = {
     cursor: 'pointer',
     fontSize: '13px',
     color: 'var(--text-secondary)',
+    transition: 'all 0.2s',
   },
   rangeActive: {
     background: '#3b82f6',
@@ -401,11 +470,31 @@ const styles = {
     borderRadius: '16px',
     border: '1px solid var(--border-color)',
   },
+  chartTitle: {
+    fontSize: '16px',
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+    marginBottom: '16px',
+  },
+  chartWrapper: {
+    height: '300px',
+    position: 'relative' as const,
+  },
+  chartWrapperSmall: {
+    height: '250px',
+    position: 'relative' as const,
+  },
   insightsCard: {
     padding: '20px',
     background: 'var(--bg-card)',
     borderRadius: '16px',
     border: '1px solid var(--border-color)',
+  },
+  insightsTitle: {
+    fontSize: '18px',
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+    marginBottom: '16px',
   },
   insightsGrid: {
     display: 'grid',
@@ -431,3 +520,15 @@ const styles = {
     color: 'var(--text-primary)',
   },
 };
+
+// Add keyframes for spinner animation
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+if (!document.head.querySelector('#dashboard-styles')) {
+  styleSheet.id = 'dashboard-styles';
+  document.head.appendChild(styleSheet);
+}

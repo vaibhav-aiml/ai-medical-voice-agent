@@ -20,6 +20,7 @@ interface Props {
   setShowAppointmentsList: (show: boolean) => void;
   onNewConsultation: () => void;
   onUpgrade: () => void;
+  onOpenReminders?: () => void;
   userName: string;
 }
 
@@ -37,6 +38,7 @@ export default function Header({
   setShowAppointmentsList,
   onNewConsultation,
   onUpgrade,
+  onOpenReminders,
   userName
 }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -96,6 +98,12 @@ export default function Header({
               <span>{btn.label}</span>
             </button>
           ))}
+
+          {/* Reminders Button */}
+          <button onClick={onOpenReminders} style={styles.reminderButton}>
+            <Bell size={18} />
+            <span>Reminders</span>
+          </button>
 
           <button onClick={onUpgrade} style={styles.upgradeButton}>
             <CreditCard size={18} />
@@ -211,6 +219,20 @@ const styles = {
   navButtonActive: {
     background: 'var(--badge-bg)',
     color: 'var(--button-primary)',
+  },
+  reminderButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '4px 10px',
+    background: 'transparent',
+    border: '1px solid #8b5cf6',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    color: '#8b5cf6',
+    fontSize: '0.75rem',
+    fontWeight: 500,
+    transition: 'all 0.2s ease',
   },
   upgradeButton: {
     display: 'flex',

@@ -1,3 +1,8 @@
+import enhancedSymptomRoutes from './routes/enhanced-symptom.routes';
+import clinicRoutes from './routes/clinic.routes';
+import analyticsRoutes from './routes/analytics.routes';
+import enhancedReportRoutes from './routes/enhanced-report.routes';
+import reminderRoutes from './routes/reminder.routes';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -92,7 +97,11 @@ app.use('/api/hipaa', hipaaRoutes);
 app.use('/api/triage', triageRoutes);
 app.use('/api/rag', ragRoutes);
 app.use('/api/conversation', conversationRoutes);
-
+app.use('/api/reminder', reminderRoutes);
+app.use('/api/enhanced-report', enhancedReportRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/clinic', clinicRoutes);
+app.use('/api/enhanced-symptom', enhancedSymptomRoutes);
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 

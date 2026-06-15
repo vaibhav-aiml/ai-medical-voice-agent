@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
 import TriageDisplay from './TriageDisplay';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Props {
   consultationId: string;
@@ -21,7 +22,25 @@ interface TriageResult {
   colorCode: 'green' | 'yellow' | 'orange' | 'red';
 }
 
+// Map language to speech recognition code
+const getSpeechRecognitionCode = (language: string): string => {
+  const langMap: Record<string, string> = {
+    en: 'en-US',
+    hi: 'hi-IN',
+    ta: 'ta-IN',
+    te: 'te-IN',
+    bn: 'bn-IN',
+    mr: 'mr-IN',
+    gu: 'gu-IN',
+    kn: 'kn-IN',
+    ml: 'ml-IN',
+    pa: 'pa-IN',
+  };
+  return langMap[language] || 'en-US';
+};
+
 export default function VoiceRecorder({ consultationId, specialistType, onTranscriptUpdate, onAIResponse, onTriageResult, userId }: Props) {
+  const { language, t } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -117,7 +136,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         specialistType,
         userId,
         contextPrompt: contextPrompt || undefined,
-        conversationHistory: conversationHistory, // Send conversation history
+        conversationHistory: conversationHistory,
       });
       return true;
     }
@@ -164,14 +183,18 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Initialize speech recognition
+  // Initialize speech recognition with multi-language support
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
-      recognitionInstance.lang = 'en-US';
+      
+      // Set language based on selected language
+      const speechLang = getSpeechRecognitionCode(language);
+      recognitionInstance.lang = speechLang;
+      console.log(`🎤 Speech recognition language set to: ${speechLang} (${language})`);
       
       recognitionInstance.onresult = (event: any) => {
         let finalTranscript = '';
@@ -190,14 +213,13 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       recognitionInstance.onerror = (event: any) => {
         console.error('Recognition error:', event.error);
         if (event.error === 'not-allowed') {
-          alert('Please allow microphone access to use voice features');
+          alert(t('error.microphone'));
         }
       };
       
       recognitionInstance.onend = () => {
         console.log('Recognition ended');
         if (finalTranscriptRef.current && !isProcessing) {
-          // Add user message to conversation history
           const userMessage = { role: 'user', content: finalTranscriptRef.current };
           setConversationHistory(prev => [...prev, userMessage]);
           
@@ -212,7 +234,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.log('Web Speech API not supported');
       setUseTextInput(true);
     }
-  }, []);
+  }, [language]); // Re-initialize when language changes
 
   // WebSocket connection with streaming support
   useEffect(() => {
@@ -245,11 +267,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         console.log('✅ Streaming complete');
         setIsStreaming(false);
         
-        // Add assistant response to conversation history
         const assistantMessage = { role: 'assistant', content: accumulatedResponseRef.current };
         setConversationHistory(prev => [...prev, assistantMessage]);
         
-        // Send the COMPLETE accumulated response once
         onAIResponse(accumulatedResponseRef.current, true);
         accumulatedResponseRef.current = '';
         setStreamingText('');
@@ -261,11 +281,8 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         if (!isStreaming) {
           setIsStreaming(true);
         }
-        // Accumulate chunks
         accumulatedResponseRef.current += data.chunk;
-        // Update preview only
         setStreamingText(accumulatedResponseRef.current);
-        // Send chunk for real-time preview
         onAIResponse(data.chunk, false);
       }
     });
@@ -274,7 +291,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     socketRef.current.on('ai-response', (data: any) => {
       console.log('🤖 AI Response from Groq:', data);
       if (data.response) {
-        // Add to conversation history
         setConversationHistory(prev => [...prev, { role: 'assistant', content: data.response }]);
         onAIResponse(data.response, true);
         if (voiceSettings.autoSpeak && voiceSettings.enabled) {
@@ -291,7 +307,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.error('Streaming error:', error);
       setIsProcessing(false);
       setIsStreaming(false);
-      onAIResponse("I'm having trouble processing your request. Please try again.", true);
+      onAIResponse(t('error.server'), true);
     });
     
     return () => {
@@ -311,7 +327,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       setIsProcessing(true);
       console.log('🎤 Voice recording started');
     } else {
-      alert('Voice recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      alert(t('error.microphone'));
       setUseTextInput(true);
     }
   };
@@ -328,7 +344,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     if (manualText.trim()) {
       console.log('📤 Sending text message:', manualText);
       
-      // Add user message to conversation history
       const userMessage = { role: 'user', content: manualText };
       setConversationHistory(prev => [...prev, userMessage]);
       
@@ -342,7 +357,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   };
 
   const mockSymptoms = [
-    "I have a headache and fever for the past 2 days. My throat is sore and I feel very tired.",
+    t('symptoms.example'),
     "My lower back hurts when I sit for long hours. The pain radiates to my legs.",
     "I feel chest pain when I walk fast or climb stairs. I also feel short of breath.",
     "My right knee is swollen and painful. It hurts when I bend or walk.",
@@ -353,16 +368,16 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     <>
       <div style={styles.container}>
         <div style={styles.statusBar}>
-          <span>🔌 WebSocket: </span>
+          <span>🔌 {t('consultation.websocket')}: </span>
           <span style={connectionStatus === 'Connected' ? styles.statusConnected : styles.statusDisconnected}>
-            {connectionStatus}
+            {connectionStatus === 'Connected' ? t('consultation.connected') : t('consultation.disconnected')}
           </span>
           <span style={styles.voiceStatus}>
-            {voiceSettings.enabled ? '🔊 Voice ON' : '🔇 Voice OFF'}
+            {voiceSettings.enabled ? t('consultation.voiceOn') : t('consultation.voiceOff')}
           </span>
           {contextPrompt && (
             <span style={styles.contextBadge}>
-              📚 Context Loaded
+              📚 {t('consultation.contextLoaded')}
             </span>
           )}
           {conversationHistory.length > 0 && (
@@ -377,49 +392,49 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
             onClick={() => setUseTextInput(false)} 
             style={{...styles.modeButton, ...(!useTextInput ? styles.activeMode : {})}}
           >
-            🎤 Voice Mode
+            🎤 {t('consultation.voiceMode')}
           </button>
           <button 
             onClick={() => setUseTextInput(true)} 
             style={{...styles.modeButton, ...(useTextInput ? styles.activeMode : {})}}
           >
-            ✏️ Text Mode
+            ✏️ {t('consultation.textMode')}
           </button>
         </div>
         
         {!useTextInput ? (
           <div style={styles.voiceSection}>
             <div style={styles.voiceInstructions}>
-              <p>🎤 Click "Start Speaking" and say your symptoms clearly</p>
-              <p style={styles.tip}>💡 Tip: Speak slowly and clearly for best results</p>
+              <p>🎤 {t('symptoms.speak')}</p>
+              <p style={styles.tip}>💡 {t('symptoms.voiceTip')}</p>
               {voiceSettings.enabled && (
-                <p style={styles.voiceTip}>🔊 AI will speak responses aloud</p>
+                <p style={styles.voiceTip}>🔊 {t('consultation.voiceOn')}</p>
               )}
               {contextPrompt && (
-                <p style={styles.contextTip}>📚 AI remembers your previous consultations</p>
+                <p style={styles.contextTip}>📚 {t('symptoms.contextTip')}</p>
               )}
             </div>
             
             {!isRecording ? (
               <button onClick={startVoiceRecording} style={styles.recordButton}>
-                🎤 Start Speaking
+                🎤 {t('symptoms.speak')}
               </button>
             ) : (
               <button onClick={stopVoiceRecording} style={styles.stopButton}>
-                ⏹️ Stop Recording
+                ⏹️ {t('symptoms.stop')}
               </button>
             )}
             
             {isRecording && (
               <div style={styles.recordingIndicator}>
                 <span style={styles.redDot}></span>
-                Recording... Speak clearly!
+                {t('consultation.recording')}
               </div>
             )}
             
             {transcript && !isRecording && (
               <div style={styles.transcriptPreview}>
-                <strong>You said:</strong>
+                <strong>{t('chat.you')} {t('common.said')}:</strong>
                 <p>{transcript}</p>
               </div>
             )}
@@ -431,29 +446,29 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
                     <div className="typing-dots">
                       <span></span><span></span><span></span>
                     </div>
-                    <span>AI is responding in real-time...</span>
+                    <span>{t('ai.responding')}</span>
                   </div>
                 ) : isAnalyzing ? (
-                  '📊 Checking urgency level...'
+                  t('symptoms.analyzing')
                 ) : (
-                  '🤖 AI Doctor is analyzing your symptoms...'
+                  t('ai.analyzing')
                 )}
               </div>
             )}
             
             {isStreaming && streamingText && (
               <div style={styles.streamingPreview}>
-                <strong>🤖 AI is typing:</strong>
+                <strong>{t('ai.typing')}:</strong>
                 <p>{streamingText}<span className="cursor-blink">|</span></p>
               </div>
             )}
           </div>
         ) : (
           <div style={styles.textInputSection}>
-            <h4>Describe your symptoms in detail:</h4>
+            <h4>{t('consultation.describeSymptoms')}</h4>
             <textarea
               style={styles.textArea}
-              placeholder="Example: I have a headache and fever for the past 2 days. My throat is sore and I feel very tired."
+              placeholder={t('symptoms.placeholder')}
               value={manualText}
               onChange={(e) => setManualText(e.target.value)}
               rows={4}
@@ -466,14 +481,14 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
                 }} 
                 style={styles.mockButton}
               >
-                📋 Example Symptom
+                📋 {t('consultation.exampleSymptom')}
               </button>
               <button 
                 onClick={sendTextMessage}
                 style={styles.sendButton}
                 disabled={!manualText.trim() || isProcessing || isAnalyzing}
               >
-                {isProcessing ? '🤔 Processing...' : '💬 Send to AI Doctor'}
+                {isProcessing ? t('ai.thinking') : t('consultation.sendToAI')}
               </button>
             </div>
           </div>

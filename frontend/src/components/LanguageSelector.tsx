@@ -1,92 +1,158 @@
-import { useState } from 'react';
-import { useLanguage, Language } from '../context/LanguageContext';
-import { Globe } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext';
+import { Languages } from 'lucide-react';
 
-const languages = [
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
-  { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
-  { code: 'te', name: 'తెలుగు', flag: '🇮🇳' },
-  { code: 'bn', name: 'বাংলা', flag: '🇮🇳' },
-  { code: 'mr', name: 'मराठी', flag: '🇮🇳' },
-  { code: 'gu', name: 'ગુજરાતી', flag: '🇮🇳' },
-  { code: 'kn', name: 'ಕನ್ನಡ', flag: '🇮🇳' },
-  { code: 'ml', name: 'മലയാളം', flag: '🇮🇳' },
-  { code: 'pa', name: 'ਪੰਜਾਬੀ', flag: '🇮🇳' },
-];
-
-export default function LanguageSelector() {
-  const { language, setLanguage } = useLanguage();
+const LanguageSelector: React.FC = () => {
+  const { language, setLanguage, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleLanguageChange = (langCode: Language) => {
-    setLanguage(langCode);
+  // Available languages - matching the Language type
+  const availableLanguages = [
+    { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+    { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+    { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳' },
+    { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳' },
+    { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇮🇳' },
+    { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳' },
+    { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી', flag: '🇮🇳' },
+    { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ', flag: '🇮🇳' },
+    { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം', flag: '🇮🇳' },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLanguageChange = (languageCode: string) => {
+    setLanguage(languageCode as any);
     setIsOpen(false);
-    setShowAll(false);
   };
 
-  const displayedLanguages = showAll ? languages : languages.slice(0, 5);
+  // Group languages by script for better organization
+  const devanagariLanguages = availableLanguages.filter(l => ['hi', 'mr'].includes(l.code));
+  const dravidianLanguages = availableLanguages.filter(l => ['ta', 'te', 'kn', 'ml'].includes(l.code));
+  const otherLanguages = availableLanguages.filter(l => ['en', 'bn', 'gu'].includes(l.code));
 
   return (
-    <div style={styles.container}>
-      <button onClick={() => setIsOpen(!isOpen)} style={styles.triggerButton}>
-        <Globe size={18} />
-        <span>{languages.find(l => l.code === language)?.flag} {languages.find(l => l.code === language)?.name}</span>
+    <div ref={dropdownRef} style={styles.container}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={styles.selectorButton}
+        aria-label={t('common.language')}
+      >
+        <Languages size={16} />
+        <span style={styles.languageName}>
+          {availableLanguages.find(l => l.code === language)?.nativeName || 'Language'}
+        </span>
+        <span style={styles.arrow}>{isOpen ? '▲' : '▼'}</span>
       </button>
-      
+
       {isOpen && (
         <div style={styles.dropdown}>
-          <div style={styles.dropdownHeader}>
-            <strong>Select Language</strong>
-            <button onClick={() => setIsOpen(false)} style={styles.closeButton}>×</button>
-          </div>
-          {displayedLanguages.map((lang) => (
+          {/* Devanagari Languages (Hindi, Marathi) */}
+          <div style={styles.groupTitle}>देवनागरी / Devanagari</div>
+          {devanagariLanguages.map((lang) => (
             <button
               key={lang.code}
-              onClick={() => handleLanguageChange(lang.code as Language)}
+              onClick={() => handleLanguageChange(lang.code)}
               style={{
                 ...styles.languageOption,
-                ...(language === lang.code ? styles.languageOptionActive : {}),
+                ...(language === lang.code ? styles.activeOption : {})
               }}
             >
               <span style={styles.flag}>{lang.flag}</span>
-              <span>{lang.name}</span>
+              <div style={styles.languageInfo}>
+                <div style={styles.languageNameText}>{lang.nativeName}</div>
+                <div style={styles.languageCodeText}>{lang.name}</div>
+              </div>
               {language === lang.code && <span style={styles.checkMark}>✓</span>}
             </button>
           ))}
-          {languages.length > 5 && !showAll && (
-            <button onClick={() => setShowAll(true)} style={styles.showMoreButton}>
-              + {languages.length - 5} more languages
+
+          {/* Dravidian Languages (Tamil, Telugu, Kannada, Malayalam) */}
+          <div style={styles.groupTitle}>திராவிட / Dravidian</div>
+          {dravidianLanguages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => handleLanguageChange(lang.code)}
+              style={{
+                ...styles.languageOption,
+                ...(language === lang.code ? styles.activeOption : {})
+              }}
+            >
+              <span style={styles.flag}>{lang.flag}</span>
+              <div style={styles.languageInfo}>
+                <div style={styles.languageNameText}>{lang.nativeName}</div>
+                <div style={styles.languageCodeText}>{lang.name}</div>
+              </div>
+              {language === lang.code && <span style={styles.checkMark}>✓</span>}
             </button>
-          )}
-          {showAll && (
-            <button onClick={() => setShowAll(false)} style={styles.showLessButton}>
-              Show less
+          ))}
+
+          {/* Other Languages (English, Bengali, Gujarati) */}
+          <div style={styles.groupTitle}>Others</div>
+          {otherLanguages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => handleLanguageChange(lang.code)}
+              style={{
+                ...styles.languageOption,
+                ...(language === lang.code ? styles.activeOption : {})
+              }}
+            >
+              <span style={styles.flag}>{lang.flag}</span>
+              <div style={styles.languageInfo}>
+                <div style={styles.languageNameText}>{lang.nativeName}</div>
+                <div style={styles.languageCodeText}>{lang.name}</div>
+              </div>
+              {language === lang.code && <span style={styles.checkMark}>✓</span>}
             </button>
-          )}
+          ))}
         </div>
       )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
-}
+};
 
 const styles = {
   container: {
     position: 'relative' as const,
+    display: 'inline-block',
   },
-  triggerButton: {
+  selectorButton: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    background: 'transparent',
+    gap: '6px',
+    padding: '6px 10px',
+    background: 'var(--bg-card)',
     border: '1px solid var(--border-color)',
-    borderRadius: '10px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '0.875rem',
+    fontSize: '12px',
     fontWeight: 500,
-    color: 'var(--text-secondary)',
+    color: 'var(--text-primary)',
+    transition: 'all 0.2s ease',
+  },
+  languageName: {
+    fontSize: '12px',
+  },
+  arrow: {
+    fontSize: '10px',
+    marginLeft: '4px',
   },
   dropdown: {
     position: 'absolute' as const,
@@ -96,68 +162,58 @@ const styles = {
     background: 'var(--bg-card)',
     border: '1px solid var(--border-color)',
     borderRadius: '12px',
-    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
     zIndex: 1000,
-    minWidth: '180px',
+    minWidth: '220px',
     maxHeight: '400px',
-    overflow: 'auto' as const,
+    overflowY: 'auto' as const,
+    animation: 'fadeIn 0.2s ease',
   },
-  dropdownHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px 16px',
-    borderBottom: '1px solid var(--border-color)',
-  },
-  closeButton: {
-    background: 'transparent',
-    border: 'none',
-    fontSize: '18px',
-    cursor: 'pointer',
+  groupTitle: {
+    padding: '8px 12px',
+    fontSize: '10px',
+    fontWeight: 600,
     color: 'var(--text-secondary)',
+    background: 'var(--bg-secondary)',
+    borderBottom: '1px solid var(--border-color)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
   },
   languageOption: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
+    gap: '10px',
     width: '100%',
-    padding: '10px 16px',
+    padding: '8px 12px',
     background: 'transparent',
     border: 'none',
     cursor: 'pointer',
-    fontSize: '14px',
-    color: 'var(--text-primary)',
     textAlign: 'left' as const,
+    transition: 'background 0.2s ease',
   },
-  languageOptionActive: {
-    background: 'rgba(59, 130, 246, 0.1)',
-    color: '#3b82f6',
+  activeOption: {
+    background: 'rgba(139, 92, 246, 0.1)',
   },
   flag: {
     fontSize: '18px',
   },
-  checkMark: {
-    marginLeft: 'auto',
-    color: '#10b981',
+  languageInfo: {
+    flex: 1,
   },
-  showMoreButton: {
-    width: '100%',
-    padding: '10px',
-    background: 'transparent',
-    border: 'none',
-    borderTop: '1px solid var(--border-color)',
-    cursor: 'pointer',
-    fontSize: '12px',
-    color: '#3b82f6',
+  languageNameText: {
+    fontSize: '13px',
+    fontWeight: 500,
+    color: 'var(--text-primary)',
   },
-  showLessButton: {
-    width: '100%',
-    padding: '10px',
-    background: 'transparent',
-    border: 'none',
-    borderTop: '1px solid var(--border-color)',
-    cursor: 'pointer',
-    fontSize: '12px',
+  languageCodeText: {
+    fontSize: '10px',
     color: 'var(--text-secondary)',
   },
+  checkMark: {
+    color: '#8b5cf6',
+    fontSize: '12px',
+    fontWeight: 'bold',
+  },
 };
+
+export default LanguageSelector;

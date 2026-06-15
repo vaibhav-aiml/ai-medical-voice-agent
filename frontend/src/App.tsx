@@ -3,7 +3,8 @@ import { useAuth, useUser } from '@clerk/clerk-react';
 import { 
   Home, LayoutDashboard, FileText, Calendar, Plus, Mic, Stethoscope,
   ClipboardList, ArrowRight, Download, X, Activity, Brain, Heart, Bone, Baby,
-  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield
+  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Bell,
+  TrendingUp, Building2
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
 import Header from './components/Header';
@@ -33,6 +34,11 @@ import ContactUs from './pages/ContactUs';
 import TermsConditions from './pages/TermsConditions';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import VoiceConsultationPage from './pages/VoiceConsultation';
+import MedicationReminder from './components/MedicationReminder';
+import EnhancedReportViewer from './components/EnhancedReportViewer';
+import DoctorAnalyticsDashboard from './components/DoctorAnalyticsDashboard';
+import ClinicDashboard from './components/ClinicDashboard';
+import EnhancedSymptomChecker from './components/EnhancedSymptomChecker';
 import { useLanguage } from './context/LanguageContext';
 import { useSubscription } from './context/SubscriptionContext';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
@@ -42,7 +48,7 @@ import CookiePolicy from './pages/CookiePolicy';
 function AppContent() {
   const { userId } = useAuth();
   const { user } = useUser();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { canStartConsultation, getRemainingConsultations, subscription, incrementConsultation } = useSubscription();
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedSpecialist, setSelectedSpecialist] = useState('');
@@ -85,6 +91,24 @@ function AppContent() {
   // Streaming states
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  
+  // Reminder states
+  const [showReminders, setShowReminders] = useState(false);
+  
+  // Enhanced Report states
+  const [showEnhancedReport, setShowEnhancedReport] = useState(false);
+  const [selectedReportData, setSelectedReportData] = useState<any>(null);
+  
+  // Analytics Dashboard state
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  
+  // Clinic Dashboard states
+  const [showClinicDashboard, setShowClinicDashboard] = useState(false);
+  const [currentClinicId, setCurrentClinicId] = useState<string>('');
+  const [isCreatingClinic, setIsCreatingClinic] = useState(false);
+  
+  // Enhanced Symptom Checker state
+  const [showEnhancedSymptomChecker, setShowEnhancedSymptomChecker] = useState(false);
 
   // Get current session ID
   const getCurrentSessionId = () => {
@@ -94,6 +118,51 @@ function AppContent() {
   // Get current user ID from Clerk
   const getCurrentUserId = () => {
     return userId || user?.id || `user_${Date.now()}`;
+  };
+
+  // Function to open clinic dashboard
+  const handleOpenClinicDashboard = async () => {
+    setIsCreatingClinic(true);
+    try {
+      const savedClinicId = localStorage.getItem('clinicId');
+      if (savedClinicId) {
+        setCurrentClinicId(savedClinicId);
+        setShowClinicDashboard(true);
+        setIsCreatingClinic(false);
+        return;
+      }
+
+      const response = await fetch('/api/clinic/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${getUserName()}'s Clinic`,
+          subdomain: `${getUserName().toLowerCase()}clinic`,
+          primaryColor: '#3b82f6',
+          secondaryColor: '#10b981',
+          accentColor: '#8b5cf6',
+          contactEmail: user?.emailAddresses[0]?.emailAddress || 'clinic@example.com',
+          contactPhone: '9876543210',
+          address: 'Clinic Address',
+          city: 'Your City',
+          state: 'Your State',
+          pincode: '123456',
+          subscriptionTier: 'enterprise'
+        }),
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        const newClinicId = data.data.id;
+        localStorage.setItem('clinicId', newClinicId);
+        setCurrentClinicId(newClinicId);
+        setShowClinicDashboard(true);
+      }
+    } catch (error) {
+      console.error('Error opening clinic dashboard:', error);
+    } finally {
+      setIsCreatingClinic(false);
+    }
   };
 
   useEffect(() => {
@@ -157,14 +226,14 @@ function AppContent() {
 
   const startConsultation = async () => {
     if (!selectedSpecialist) {
-      alert('Please select a specialist first');
+      alert(t('errors.selectSpecialist') || 'Please select a specialist first');
       return;
     }
 
     if (!canStartConsultation()) {
       const remaining = getRemainingConsultations();
       if (remaining === 0 && subscription.tier === 'free') {
-        alert('You have used all 5 free consultations this month. Please upgrade to Pro or Family plan to continue.');
+        alert(t('errors.upgradeRequired') || 'You have used all 5 free consultations this month. Please upgrade to Pro or Family plan to continue.');
         setShowPricing(true);
         return;
       }
@@ -192,10 +261,8 @@ function AppContent() {
     setMessages(prev => [...prev, userMessage]);
   };
 
-  // Updated handleAIResponse for streaming
   const handleAIResponse = (response: string, isComplete?: boolean) => {
     if (isComplete) {
-      // This is the complete response - add to chat
       const newMessage: Message = {
         id: Date.now().toString(),
         type: 'ai',
@@ -206,7 +273,6 @@ function AppContent() {
       setStreamingMessage('');
       setIsStreaming(false);
     } else {
-      // This is a streaming chunk - update preview only
       setStreamingMessage(prev => prev + response);
       setIsStreaming(true);
     }
@@ -251,7 +317,7 @@ function AppContent() {
     setIsStreaming(false);
     setRefreshKey(prev => prev + 1);
     
-    alert('✅ Consultation ended! Your report has been saved.');
+    alert(t('consultation.ended') || '✅ Consultation ended! Your report has been saved.');
   };
 
   const handleViewReport = (consultationId: string) => {
@@ -260,6 +326,39 @@ function AppContent() {
       setSelectedConsultation(consultation);
       setShowReportModal(true);
     }
+  };
+
+  const handleViewEnhancedReport = (consultation: ConsultationSession) => {
+    const reportData = {
+      consultationId: consultation.id,
+      patientId: userId || 'unknown',
+      patientName: getUserName(),
+      patientAge: undefined,
+      patientGender: undefined,
+      specialistType: consultation.specialistType,
+      specialistName: consultation.specialistName,
+      symptoms: consultation.symptoms || 'No symptoms recorded',
+      recommendations: [
+        'Get adequate rest (7-8 hours)',
+        'Stay hydrated with water and warm fluids',
+        'Monitor symptoms for 2-3 days',
+        'Take over-the-counter medication if needed'
+      ],
+      diagnosis: consultation.notes || 'Under evaluation',
+      severity: 'mild',
+      urgencyLevel: 'routine',
+      riskFactors: [],
+      medicationsPrescribed: [],
+      followUp: 'Schedule follow-up if symptoms persist beyond 5-7 days',
+      patientInstructions: [
+        'Rest and avoid strenuous activities',
+        'Drink plenty of fluids',
+        'Monitor temperature daily',
+        'Seek medical attention if symptoms worsen'
+      ]
+    };
+    setSelectedReportData(reportData);
+    setShowEnhancedReport(true);
   };
 
   const handleBookAppointment = (consultation: ConsultationSession) => {
@@ -276,6 +375,7 @@ function AppContent() {
     setTriageResult(null);
     setStreamingMessage('');
     setIsStreaming(false);
+    setShowReminders(false);
   };
 
   const handleSymptomCheckerConsultation = (specialistType: string, symptoms: string) => {
@@ -287,6 +387,7 @@ function AppContent() {
     setTriageResult(null);
     setStreamingMessage('');
     setIsStreaming(false);
+    setShowReminders(false);
   };
 
   const handleRateConsultation = (consultation: ConsultationSession) => {
@@ -320,6 +421,27 @@ function AppContent() {
     alert('🎥 Video Consultation Coming Soon!\n\nTo enable real video calls:\n1. Sign up at daily.co\n2. Add your API key\n3. Real video calls will work instantly');
   };
 
+  const handleOpenReminders = () => {
+    setCurrentPage('');
+    setShowReminders(true);
+    setShowSymptomChecker(false);
+    setShowHealthTips(false);
+    setShowEmergencyContacts(false);
+    setShowHealthGoals(false);
+    setShowVoiceCustomization(false);
+    setShowProgressDashboard(false);
+    setShowDataExport(false);
+    setShowTwoFactorAuth(false);
+    setShowAppointmentsList(false);
+    setCurrentLegalPage(null);
+    setCurrentServicePage(null);
+    setShowPricing(false);
+    setShowReportModal(false);
+    setShowAppointmentModal(false);
+    setShowRatingModal(false);
+    setShowVideoConsultation(false);
+  };
+
   const getUserName = () => {
     if (user?.fullName) return user.fullName.split(' ')[0];
     if (user?.firstName) return user.firstName;
@@ -342,6 +464,7 @@ function AppContent() {
     setCurrentLegalPage(null);
     setCurrentServicePage(null);
     setCurrentPage('');
+    setShowReminders(false);
     if (page === 'about') setCurrentLegalPage('about');
     else if (page === 'contact') setCurrentLegalPage('contact');
     else if (page === 'terms') setCurrentLegalPage('terms');
@@ -352,6 +475,7 @@ function AppContent() {
     else if (page === 'dashboard') setCurrentPage('dashboard');
     else if (page === 'reports') setCurrentPage('reports');
     else if (page === 'home') setCurrentPage('home');
+    else if (page === 'reminders') handleOpenReminders();
     window.scrollTo(0, 0);
   };
 
@@ -372,7 +496,7 @@ function AppContent() {
       <Header
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
-        setShowSymptomChecker={setShowSymptomChecker}
+        setShowSymptomChecker={setShowEnhancedSymptomChecker}
         setShowHealthTips={setShowHealthTips}
         setShowEmergencyContacts={setShowEmergencyContacts}
         setShowHealthGoals={setShowHealthGoals}
@@ -383,143 +507,147 @@ function AppContent() {
         setShowAppointmentsList={setShowAppointmentsList}
         onNewConsultation={handleNewConsultation}
         onUpgrade={() => setShowPricing(true)}
+        onOpenReminders={handleOpenReminders}
         userName={getUserName()}
       />
 
-      {currentPage !== 'home' && (
+      {currentPage !== 'home' && currentPage !== '' && !showReminders && (
         <div style={styles.pageNav}>
           <button onClick={() => setCurrentPage('home')} style={styles.pageNavButton}>
-            ← Back to Home
+            ← {t('common.back')} {t('nav.home')}
           </button>
           <span style={styles.pageNavTitle}>
-            {currentPage === 'dashboard' && 'Dashboard'}
-            {currentPage === 'consultation' && 'AI Medical Consultation'}
-            {currentPage === 'reports' && 'Medical Reports'}
+            {currentPage === 'dashboard' && t('nav.dashboard')}
+            {currentPage === 'consultation' && t('consultation.title')}
+            {currentPage === 'reports' && t('reports.title')}
           </span>
         </div>
       )}
 
       {currentPage === 'home' && (
         <div style={styles.homeContainer}>
+          {/* Hero Section */}
           <div style={styles.heroSection}>
             <div style={styles.heroContent}>
               <div style={styles.heroBadge}>
                 <Sparkles size={16} />
-                <span>AI-Powered Healthcare</span>
+                <span>{t('home.aiPowered')}</span>
               </div>
               <h1 style={styles.heroTitle}>
-                Your Health,<br />
-                <span style={styles.heroTitleAccent}>Our Priority</span>
+                {t('home.yourHealth')}<br />
+                <span style={styles.heroTitleAccent}>{t('home.ourPriority')}</span>
               </h1>
               <p style={styles.heroSubtitle}>
-                Experience the future of healthcare with AI-powered consultations. 
-                Get instant medical advice from specialized doctors, anytime, anywhere.
+                {t('home.subtitle')}
               </p>
               <div style={styles.heroButtons}>
                 <button onClick={() => setCurrentPage('consultation')} style={styles.primaryButton}>
-                  Start Consultation
+                  {t('home.startConsultation')}
                   <ArrowRight size={18} />
                 </button>
-                <button onClick={() => setShowSymptomChecker(true)} style={styles.secondaryButton}>
-                  Check Symptoms
+                <button onClick={() => setShowEnhancedSymptomChecker(true)} style={styles.secondaryButton}>
+                  {t('home.checkSymptoms')}
                 </button>
               </div>
             </div>
             <div style={styles.heroImage}>
               <div style={styles.floatingCard1}>
                 <Mic size={24} color="#3b82f6" />
-                <span>Voice Consultation</span>
+                <span>{t('home.voiceConsultation')}</span>
               </div>
               <div style={styles.floatingCard2}>
                 <Stethoscope size={24} color="#10b981" />
-                <span>AI Specialists</span>
+                <span>{t('home.specialists')}</span>
               </div>
               <div style={styles.floatingCard3}>
                 <ClipboardList size={24} color="#f59e0b" />
-                <span>Medical Reports</span>
+                <span>{t('home.medicalReports')}</span>
               </div>
               <div style={styles.heroCircle}></div>
             </div>
           </div>
 
+          {/* Stats Section */}
           <div style={styles.statsSection}>
             <div style={styles.statsContainer}>
               <div style={styles.statCard}>
                 <div style={styles.statIconBg}><MessageCircle size={24} /></div>
                 <div style={styles.statNumber}>{stats.totalConsultations}</div>
-                <div style={styles.statLabel}>Total Consultations</div>
-                <div style={styles.statTrend}>↑ 12% this month</div>
+                <div style={styles.statLabel}>{t('home.totalConsultations')}</div>
+                <div style={styles.statTrend}>↑ 12% {t('home.thisMonth')}</div>
               </div>
               <div style={styles.statCard}>
                 <div style={styles.statIconBg}><CheckCircle size={24} /></div>
                 <div style={styles.statNumber}>{stats.completedConsultations}</div>
-                <div style={styles.statLabel}>Completed</div>
-                <div style={styles.statTrend}>↑ 8% this month</div>
+                <div style={styles.statLabel}>{t('home.completed')}</div>
+                <div style={styles.statTrend}>↑ 8% {t('home.thisMonth')}</div>
               </div>
               <div style={styles.statCard}>
                 <div style={styles.statIconBg}><Clock size={24} /></div>
                 <div style={styles.statNumber}>{stats.averageDuration}</div>
-                <div style={styles.statLabel}>Avg Minutes</div>
-                <div style={styles.statTrend}>↓ 5% faster</div>
+                <div style={styles.statLabel}>{t('home.avgMinutes')}</div>
+                <div style={styles.statTrend}>↓ 5% {t('home.faster')}</div>
               </div>
               <div style={styles.statCard}>
                 <div style={styles.statIconBg}><Star size={24} /></div>
                 <div style={styles.statNumber}>4.8</div>
-                <div style={styles.statLabel}>User Rating</div>
+                <div style={styles.statLabel}>{t('home.userRating')}</div>
                 <div style={styles.statTrend}>★★★★★</div>
               </div>
             </div>
           </div>
 
+          {/* Features Section */}
           <div style={styles.featuresSection}>
             <div style={styles.sectionHeader}>
-              <h2>Why Choose <span style={styles.sectionHeaderAccent}>MediVoice AI?</span></h2>
-              <p>Experience healthcare reimagined with cutting-edge AI technology</p>
+              <h2>{t('home.whyChoose')} <span style={styles.sectionHeaderAccent}>{t('home.mediVoiceAI')}</span></h2>
+              <p>{t('home.featureDesc')}</p>
             </div>
             <div style={styles.featuresGrid}>
               <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Mic size={32} /></div>
-                <h3>Voice Consultation</h3>
-                <p>Speak naturally and get real-time AI responses without typing</p>
-                <div style={styles.featureTag}>Real-time</div>
+                <h3>{t('home.featureVoice')}</h3>
+                <p>{t('home.featureVoiceDesc')}</p>
+                <div style={styles.featureTag}>{t('home.realTime')}</div>
               </div>
               <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Stethoscope size={32} /></div>
-                <h3>5+ Specialists</h3>
-                <p>General, Orthopedic, Cardiologist, Neurologist & Pediatrician</p>
-                <div style={styles.featureTag}>Multi-specialty</div>
+                <h3>{t('home.featureSpecialists')}</h3>
+                <p>{t('home.featureSpecialistsDesc')}</p>
+                <div style={styles.featureTag}>{t('home.multiSpecialty')}</div>
               </div>
               <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><ClipboardList size={32} /></div>
-                <h3>Medical Reports</h3>
-                <p>Download detailed PDF reports instantly after consultation</p>
-                <div style={styles.featureTag}>Instant Download</div>
+                <h3>{t('home.featureReports')}</h3>
+                <p>{t('home.featureReportsDesc')}</p>
+                <div style={styles.featureTag}>{t('home.instantDownload')}</div>
               </div>
               <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Calendar size={32} /></div>
-                <h3>Appointment Booking</h3>
-                <p>Schedule follow-up appointments with your preferred specialist</p>
-                <div style={styles.featureTag}>Easy Booking</div>
+                <h3>{t('home.featureAppointments')}</h3>
+                <p>{t('home.featureAppointmentsDesc')}</p>
+                <div style={styles.featureTag}>{t('home.easyBooking')}</div>
               </div>
               <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Mail size={32} /></div>
-                <h3>Email Reports</h3>
-                <p>Receive medical reports directly in your inbox</p>
-                <div style={styles.featureTag}>Share with Doctors</div>
+                <h3>{t('home.featureEmail')}</h3>
+                <p>{t('home.featureEmailDesc')}</p>
+                <div style={styles.featureTag}>{t('home.shareWithDoctors')}</div>
               </div>
               <div style={styles.featureCard}>
                 <div style={styles.featureIcon}><Shield size={32} /></div>
-                <h3>Secure & Private</h3>
-                <p>Your medical data is encrypted and securely stored</p>
-                <div style={styles.featureTag}>HIPAA Compliant</div>
+                <h3>{t('home.featureSecure')}</h3>
+                <p>{t('home.featureSecureDesc')}</p>
+                <div style={styles.featureTag}>{t('home.hipaaCompliant')}</div>
               </div>
             </div>
           </div>
 
+          {/* How It Works Section */}
           <div style={styles.howItWorksSection}>
             <div style={styles.sectionHeader}>
-              <h2>How It <span style={styles.sectionHeaderAccent}>Works</span></h2>
-              <p>Click on any step to learn more</p>
+              <h2>{t('home.howItWorks')} <span style={styles.sectionHeaderAccent}>{t('home.works')}</span></h2>
+              <p>{t('home.clickToLearn')}</p>
             </div>
             <div style={styles.stepsContainer}>
               <div 
@@ -532,14 +660,14 @@ function AppContent() {
               >
                 <div style={styles.stepNumber}>01</div>
                 <div style={styles.stepIcon}>🎤</div>
-                <h3 style={styles.stepTitle}>Speak Your Symptoms</h3>
-                <p style={styles.stepDescription}>Simply speak or type your symptoms naturally</p>
+                <h3 style={styles.stepTitle}>{t('home.step1Title')}</h3>
+                <p style={styles.stepDescription}>{t('home.step1Desc')}</p>
                 {selectedStep === 1 && (
                   <div style={styles.stepDetails}>
-                    <div style={styles.stepDetailItem}>🎙️ No typing needed - just speak naturally</div>
-                    <div style={styles.stepDetailItem}>🌐 Works in multiple languages</div>
-                    <div style={styles.stepDetailItem}>⚡ Real-time transcription</div>
-                    <div style={styles.stepDetailItem}>⌨️ Text input also available</div>
+                    <div style={styles.stepDetailItem}>🎙️ {t('home.step1Detail1')}</div>
+                    <div style={styles.stepDetailItem}>🌐 {t('home.step1Detail2')}</div>
+                    <div style={styles.stepDetailItem}>⚡ {t('home.step1Detail3')}</div>
+                    <div style={styles.stepDetailItem}>⌨️ {t('home.step1Detail4')}</div>
                   </div>
                 )}
               </div>
@@ -554,14 +682,14 @@ function AppContent() {
               >
                 <div style={styles.stepNumber}>02</div>
                 <div style={styles.stepIcon}>🤖</div>
-                <h3 style={styles.stepTitle}>AI Doctor Analysis</h3>
-                <p style={styles.stepDescription}>Our AI analyzes your symptoms and provides advice</p>
+                <h3 style={styles.stepTitle}>{t('home.step2Title')}</h3>
+                <p style={styles.stepDescription}>{t('home.step2Desc')}</p>
                 {selectedStep === 2 && (
                   <div style={styles.stepDetails}>
-                    <div style={styles.stepDetailItem}>🧠 Powered by advanced AI (Groq/OpenAI)</div>
-                    <div style={styles.stepDetailItem}>👨‍⚕️ 5+ medical specialists available</div>
-                    <div style={styles.stepDetailItem}>💭 Remembers conversation history</div>
-                    <div style={styles.stepDetailItem}>📝 Provides personalized recommendations</div>
+                    <div style={styles.stepDetailItem}>🧠 {t('home.step2Detail1')}</div>
+                    <div style={styles.stepDetailItem}>👨‍⚕️ {t('home.step2Detail2')}</div>
+                    <div style={styles.stepDetailItem}>💭 {t('home.step2Detail3')}</div>
+                    <div style={styles.stepDetailItem}>📝 {t('home.step2Detail4')}</div>
                   </div>
                 )}
               </div>
@@ -576,68 +704,70 @@ function AppContent() {
               >
                 <div style={styles.stepNumber}>03</div>
                 <div style={styles.stepIcon}>📋</div>
-                <h3 style={styles.stepTitle}>Get Report & Follow-up</h3>
-                <p style={styles.stepDescription}>Download report and schedule follow-up if needed</p>
+                <h3 style={styles.stepTitle}>{t('home.step3Title')}</h3>
+                <p style={styles.stepDescription}>{t('home.step3Desc')}</p>
                 {selectedStep === 3 && (
                   <div style={styles.stepDetails}>
-                    <div style={styles.stepDetailItem}>📄 Download detailed PDF reports</div>
-                    <div style={styles.stepDetailItem}>📧 Email reports to yourself or doctor</div>
-                    <div style={styles.stepDetailItem}>📅 Book follow-up appointments</div>
-                    <div style={styles.stepDetailItem}>📊 Track consultation history</div>
+                    <div style={styles.stepDetailItem}>📄 {t('home.step3Detail1')}</div>
+                    <div style={styles.stepDetailItem}>📧 {t('home.step3Detail2')}</div>
+                    <div style={styles.stepDetailItem}>📅 {t('home.step3Detail3')}</div>
+                    <div style={styles.stepDetailItem}>📊 {t('home.step3Detail4')}</div>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
+          {/* Testimonials Section */}
           <div style={styles.testimonialsSection}>
             <div style={styles.sectionHeader}>
-              <h2>What Our <span style={styles.sectionHeaderAccent}>Users Say</span></h2>
-              <p>Trusted by thousands of patients worldwide</p>
+              <h2>{t('home.whatUsersSay')} <span style={styles.sectionHeaderAccent}>{t('home.aboutUs')}</span></h2>
+              <p>{t('home.trustedBy')}</p>
             </div>
             <div style={styles.testimonialsGrid}>
               <div style={styles.testimonialCard}>
                 <div style={styles.testimonialStars}>★★★★★</div>
-                <p>"Amazing experience! The AI doctor understood my symptoms perfectly and gave helpful advice."</p>
+                <p>{t('home.testimonial1')}</p>
                 <div style={styles.testimonialAuthor}>
                   <div style={styles.testimonialAvatar}>R</div>
                   <div>
                     <strong>Rajesh Kumar</strong>
-                    <span>Verified User</span>
+                    <span>{t('home.verifiedUser')}</span>
                   </div>
                 </div>
               </div>
               <div style={styles.testimonialCard}>
                 <div style={styles.testimonialStars}>★★★★★</div>
-                <p>"Saved me a trip to the clinic. Quick, accurate, and the report was very detailed."</p>
+                <p>{t('home.testimonial2')}</p>
                 <div style={styles.testimonialAuthor}>
                   <div style={styles.testimonialAvatar}>P</div>
                   <div>
                     <strong>Priya Sharma</strong>
-                    <span>Verified User</span>
+                    <span>{t('home.verifiedUser')}</span>
                   </div>
                 </div>
               </div>
               <div style={styles.testimonialCard}>
                 <div style={styles.testimonialStars}>★★★★★</div>
-                <p>"The voice consultation feature is fantastic! So easy to use and the AI is very responsive."</p>
+                <p>{t('home.testimonial3')}</p>
                 <div style={styles.testimonialAuthor}>
                   <div style={styles.testimonialAvatar}>A</div>
                   <div>
                     <strong>Amit Patel</strong>
-                    <span>Verified User</span>
+                    <span>{t('home.verifiedUser')}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* CTA Section */}
           <div style={styles.ctaSection}>
             <div style={styles.ctaContent}>
-              <h2>Ready to Experience the Future of Healthcare?</h2>
-              <p>Join thousands of satisfied users who trust MediVoice AI for their healthcare needs</p>
+              <h2>{t('home.readyTitle')}</h2>
+              <p>{t('home.readyDesc')}</p>
               <button onClick={() => setCurrentPage('consultation')} style={styles.ctaButton}>
-                Start Your Free Consultation
+                {t('home.startYourFreeConsultation')}
                 <ArrowRight size={18} />
               </button>
             </div>
@@ -648,6 +778,22 @@ function AppContent() {
       {currentPage === 'dashboard' && (
         <div style={styles.pageContainer}>
           <EnhancedDashboard consultations={consultations} stats={stats} />
+          {/* Analytics and Clinic Dashboard Buttons */}
+          <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <button 
+              onClick={() => setShowAnalytics(true)} 
+              style={styles.analyticsButton}
+            >
+              <TrendingUp size={16} /> View Analytics Dashboard
+            </button>
+            <button 
+              onClick={handleOpenClinicDashboard} 
+              style={styles.clinicButton}
+              disabled={isCreatingClinic}
+            >
+              <Building2 size={18} /> {isCreatingClinic ? 'Loading Clinic...' : '🏥 Clinic Dashboard'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -700,30 +846,34 @@ function AppContent() {
                 <div style={styles.reportHeader}>
                   <div style={styles.reportIconArea}>{getSpecialistIcon(consultation.specialistType)}</div>
                   <div style={styles.reportInfo}>
-                    <h3 style={styles.reportTitle}>Consultation with {consultation.specialistName}</h3>
+                    <h3 style={styles.reportTitle}>{t('reports.consultationWith')} {consultation.specialistName}</h3>
                     <p style={styles.reportDate}>{new Date(consultation.startedAt).toLocaleDateString()}</p>
                   </div>
                   <div style={styles.reportStatus}>
                     <CheckCircle size={14} color="#10b981" />
-                    <span>Completed</span>
+                    <span>{t('reports.completed')}</span>
                   </div>
                 </div>
                 <div style={styles.reportContent}>
-                  <p><strong>Symptoms:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
-                  <p><strong>Duration:</strong> {consultation.duration} minutes</p>
+                  <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
+                  <p><strong>{t('reports.duration')}:</strong> {consultation.duration} {t('reports.minutes')}</p>
                 </div>
                 <div style={styles.reportActions}>
                   <button onClick={() => handleViewReport(consultation.id)} style={styles.downloadButton}>
                     <Download size={16} />
-                    <span>View Report</span>
+                    <span>{t('reports.viewReport')}</span>
                   </button>
                   <button onClick={() => handleBookAppointment(consultation)} style={styles.bookButton}>
                     <Calendar size={16} />
-                    <span>Book Follow-up</span>
+                    <span>{t('reports.bookFollowup')}</span>
                   </button>
                   <button onClick={() => handleRateConsultation(consultation)} style={styles.ratingButton}>
                     <Star size={16} />
-                    <span>Rate Consultation</span>
+                    <span>{t('reports.rateConsultation')}</span>
+                  </button>
+                  <button onClick={() => handleViewEnhancedReport(consultation)} style={styles.enhancedReportButton}>
+                    <FileText size={16} />
+                    <span>View SOAP Report</span>
                   </button>
                 </div>
               </div>
@@ -732,15 +882,67 @@ function AppContent() {
         </div>
       )}
 
+      {/* Enhanced Symptom Checker Modal */}
+      {showEnhancedSymptomChecker && (
+        <EnhancedSymptomChecker 
+          onClose={() => setShowEnhancedSymptomChecker(false)}
+          onStartConsultation={handleSymptomCheckerConsultation}
+        />
+      )}
+
+      {/* Regular Symptom Checker Modal (for backward compatibility) */}
+      {showSymptomChecker && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <button onClick={() => setShowSymptomChecker(false)} style={styles.modalClose}><X size={18} /></button>
+            <SymptomChecker onClose={() => setShowSymptomChecker(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Medication Reminder Modal */}
+      {showReminders && (
+        <MedicationReminder 
+          userId={getCurrentUserId()} 
+          onClose={() => setShowReminders(false)} 
+        />
+      )}
+
+      {/* Enhanced Report Modal */}
+      {showEnhancedReport && selectedReportData && (
+        <EnhancedReportViewer 
+          consultationData={selectedReportData} 
+          onClose={() => setShowEnhancedReport(false)} 
+        />
+      )}
+
+      {/* Doctor Analytics Dashboard Modal */}
+      {showAnalytics && (
+        <DoctorAnalyticsDashboard 
+          consultations={consultations}
+          ratings={JSON.parse(localStorage.getItem('consultationRatings') || '{}')}
+          onClose={() => setShowAnalytics(false)}
+        />
+      )}
+
+      {/* Clinic Dashboard Modal */}
+      {showClinicDashboard && currentClinicId && (
+        <div style={styles.modalOverlayFull}>
+          <div style={styles.modalFullContent}>
+            <button onClick={() => setShowClinicDashboard(false)} style={styles.modalCloseBtn}>×</button>
+            <ClinicDashboard clinicId={currentClinicId} />
+          </div>
+        </div>
+      )}
+
       {showReportModal && selectedConsultation && <MedicalReportModal consultationId={selectedConsultation.id} specialistType={selectedConsultation.specialistType} symptoms={selectedConsultation.symptoms || 'No symptoms recorded'} onClose={() => setShowReportModal(false)} />}
-      {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} patientName={getUserName()} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert('✅ Appointment booked successfully!'); }} />}
-      {showSymptomChecker && <SymptomChecker onClose={() => setShowSymptomChecker(false)} onStartConsultation={handleSymptomCheckerConsultation} />}
+      {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} patientName={getUserName()} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert(t('appointments.booked') || '✅ Appointment booked successfully!'); }} />}
       {showHealthTips && <HealthTips onClose={() => setShowHealthTips(false)} />}
       {showEmergencyContacts && <EmergencyContacts onClose={() => setShowEmergencyContacts(false)} />}
       {showRatingModal && selectedRatingConsultation && (
         <ConsultationRating
           consultationId={selectedRatingConsultation.id}
-          consultationTitle={`Consultation with ${selectedRatingConsultation.specialistName}`}
+          consultationTitle={`${t('reports.consultationWith')} ${selectedRatingConsultation.specialistName}`}
           onClose={() => setShowRatingModal(false)}
           onSubmit={handleRatingSubmit}
         />
@@ -758,7 +960,7 @@ function AppContent() {
           onClose={() => setShowVideoConsultation(false)}
           onEndCall={() => {
             setShowVideoConsultation(false);
-            alert('Video consultation ended. A report will be generated.');
+            alert(t('consultation.videoEnded') || 'Video consultation ended. A report will be generated.');
           }}
         />
       )}
@@ -776,7 +978,7 @@ function AppContent() {
       
       <Footer 
         setCurrentPage={handleFooterNavigation}
-        setShowSymptomChecker={setShowSymptomChecker}
+        setShowSymptomChecker={setShowEnhancedSymptomChecker}
         setShowHealthTips={setShowHealthTips}
         setShowEmergencyContacts={setShowEmergencyContacts}
         setShowHealthGoals={setShowHealthGoals}
@@ -1201,6 +1403,35 @@ const styles = {
     fontSize: '14px', 
     color: 'var(--text-secondary)' 
   },
+  analyticsButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 600,
+    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+  },
+  clinicButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 600,
+    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+  },
   consultationContainer: { 
     maxWidth: '1200px', 
     margin: '40px auto', 
@@ -1259,47 +1490,47 @@ const styles = {
     alignItems: 'center', 
     marginBottom: '24px', 
     padding: '14px 20px', 
-    background: 'var(--badge-bg)', 
+    background: 'var(--badge-bg)',
     borderRadius: '12px' 
   },
   specialistBadge: { 
     display: 'flex', 
-    alignItems: 'center', 
-    gap: '10px', 
-    fontSize: '14px', 
-    fontWeight: 500, 
-    color: 'var(--button-primary)' 
+    alignItems: 'center',
+    gap: '10px',
+    fontSize: '14px',
+    fontWeight: 500,
+    color: 'var(--button-primary)'
   },
-  endButton: { 
-    padding: '8px 20px', 
-    background: 'var(--button-danger)', 
-    color: 'white', 
-    border: 'none', 
-    borderRadius: '8px', 
-    cursor: 'pointer', 
-    fontWeight: 500, 
-    fontSize: '13px' 
+  endButton: {
+    padding: '8px 20px',
+    background: 'var(--button-danger)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    fontSize: '13px'
   },
-  reportsList: { 
-    display: 'grid', 
-    gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', 
-    gap: '24px' 
+  reportsList: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
+    gap: '24px'
   },
-  reportCard: { 
+  reportCard: {
     background: 'var(--bg-card)',
     borderRadius: '16px',
     padding: '20px',
     border: '1px solid var(--border-color)'
   },
-  reportHeader: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '12px', 
-    marginBottom: '16px', 
-    paddingBottom: '16px', 
-    borderBottom: '1px solid var(--border-color)' 
+  reportHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '16px',
+    paddingBottom: '16px',
+    borderBottom: '1px solid var(--border-color)'
   },
-  reportIconArea: { 
+  reportIconArea: {
     width: '40px',
     height: '40px',
     background: 'var(--badge-bg)',
@@ -1387,6 +1618,21 @@ const styles = {
     fontWeight: 500,
     fontSize: '13px',
   },
+  enhancedReportButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    width: '100%',
+    padding: '10px',
+    background: '#8b5cf6',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    fontSize: '13px',
+  },
   modalOverlay: {
     position: 'fixed' as const,
     top: 0,
@@ -1394,6 +1640,19 @@ const styles = {
     right: 0,
     bottom: 0,
     background: 'rgba(0,0,0,0.4)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  modalOverlayFull: {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.5)',
     backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
@@ -1409,6 +1668,32 @@ const styles = {
     overflow: 'auto' as const,
     position: 'relative' as const,
     padding: '24px',
+  },
+  modalFullContent: {
+    background: 'var(--bg-primary)',
+    borderRadius: '20px',
+    width: '95%',
+    maxWidth: '1400px',
+    height: '90vh',
+    overflow: 'auto' as const,
+    position: 'relative' as const,
+  },
+  modalCloseBtn: {
+    position: 'absolute' as const,
+    top: '16px',
+    right: '16px',
+    background: 'rgba(0,0,0,0.5)',
+    border: 'none',
+    cursor: 'pointer',
+    color: 'white',
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1001,
+    fontSize: '20px',
   },
   modalClose: {
     position: 'absolute' as const,

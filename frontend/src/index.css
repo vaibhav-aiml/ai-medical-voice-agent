@@ -1,6 +1,9 @@
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+/* Indian Language Font Support */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600;700&family=Noto+Sans+Kannada:wght@400;500;600;700&family=Noto+Sans+Malayalam:wght@400;500;600;700&family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap');
+
 /* Light Theme (Default) */
 :root {
   --bg-primary: #f0f9ff;
@@ -96,6 +99,65 @@ body {
   min-height: 100vh;
   position: relative;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Indian Language Font Classes */
+.lang-hi, .lang-mr {
+  font-family: 'Noto Sans Devanagari', 'Mangal', 'Inter', 'Arial', sans-serif;
+}
+
+.lang-bn {
+  font-family: 'Noto Sans Bengali', 'Shonar Bangla', 'Inter', 'Arial', sans-serif;
+}
+
+.lang-ta {
+  font-family: 'Noto Sans Tamil', 'Latha', 'Inter', 'Arial', sans-serif;
+}
+
+.lang-te {
+  font-family: 'Noto Sans Telugu', 'Gautami', 'Inter', 'Arial', sans-serif;
+}
+
+.lang-kn {
+  font-family: 'Noto Sans Kannada', 'Tunga', 'Inter', 'Arial', sans-serif;
+}
+
+.lang-ml {
+  font-family: 'Noto Sans Malayalam', 'Kartika', 'Inter', 'Arial', sans-serif;
+}
+
+.lang-gu {
+  font-family: 'Noto Sans Gujarati', 'Shruti', 'Inter', 'Arial', sans-serif;
+}
+
+/* Apply language font when html has language class */
+html[lang="hi"] body,
+html[lang="mr"] body {
+  font-family: 'Noto Sans Devanagari', 'Mangal', 'Inter', sans-serif;
+}
+
+html[lang="bn"] body {
+  font-family: 'Noto Sans Bengali', 'Shonar Bangla', 'Inter', sans-serif;
+}
+
+html[lang="ta"] body {
+  font-family: 'Noto Sans Tamil', 'Latha', 'Inter', sans-serif;
+}
+
+html[lang="te"] body {
+  font-family: 'Noto Sans Telugu', 'Gautami', 'Inter', sans-serif;
+}
+
+html[lang="kn"] body {
+  font-family: 'Noto Sans Kannada', 'Tunga', 'Inter', sans-serif;
+}
+
+html[lang="ml"] body {
+  font-family: 'Noto Sans Malayalam', 'Kartika', 'Inter', sans-serif;
+}
+
+html[lang="gu"] body {
+  font-family: 'Noto Sans Gujarati', 'Shruti', 'Inter', sans-serif;
 }
 
 /* Subtle gradient overlay */
@@ -422,6 +484,7 @@ button:active {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
 }
+
 /* Glass effect for navbar */
 .glass-nav {
   background: rgba(255, 255, 255, 0.08);
@@ -431,4 +494,28 @@ button:active {
 
 [data-theme="dark"] .glass-nav {
   background: rgba(0, 0, 0, 0.2);
+}
+
+/* RTL Support for future */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Language-specific text adjustments */
+html[lang="hi"] .small-text,
+html[lang="mr"] .small-text,
+html[lang="bn"] .small-text,
+html[lang="ta"] .small-text,
+html[lang="te"] .small-text {
+  line-height: 1.6;
+}
+
+/* Ensure proper spacing for Indian language characters */
+.lang-hi, .lang-mr, .lang-bn, .lang-ta, .lang-te, .lang-kn, .lang-ml, .lang-gu {
+  line-height: 1.6;
+  letter-spacing: normal;
 }
