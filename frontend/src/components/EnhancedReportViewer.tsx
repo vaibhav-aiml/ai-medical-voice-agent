@@ -31,11 +31,15 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ ADD THIS - Full backend URL
+  const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
+
   const generatePreview = async () => {
     setIsGenerating(true);
     setError(null);
     try {
-      const response = await fetch('/api/enhanced-report/preview', {
+      // ✅ Use full URL
+      const response = await fetch(`${API_URL}/api/enhanced-report/preview`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(consultationData),
@@ -89,7 +93,8 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
         ]
       };
       
-      const response = await fetch('/api/enhanced-report/generate-soap', {
+      // ✅ Use full URL
+      const response = await fetch(`${API_URL}/api/enhanced-report/generate-soap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reportPayload),
@@ -131,7 +136,8 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
     setIsGenerating(true);
     setError(null);
     try {
-      const response = await fetch('/api/enhanced-report/generate-and-email', {
+      // ✅ Use full URL
+      const response = await fetch(`${API_URL}/api/enhanced-report/generate-and-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...consultationData, email }),
