@@ -1,35 +1,30 @@
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env' });
-
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
+// Use EMAIL_USER/EMAIL_PASS (same credentials as reminderService)
+const EMAIL_USER = process.env.EMAIL_USER || process.env.SMTP_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS || process.env.SMTP_PASS;
 
 console.log('📧 Email Service Initialized');
-console.log('  User:', SMTP_USER);
-console.log('  Pass:', SMTP_PASS ? '✅ Set' : '❌ Missing');
+console.log('  User:', EMAIL_USER);
+console.log('  Pass:', EMAIL_PASS ? '✅ Set' : '❌ Missing');
 
-// Create transporter with correct configuration
+// Create transporter using Gmail service (recommended over manual host/port)
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  service: 'gmail',
   auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
+    user: EMAIL_USER,
+    pass: EMAIL_PASS,
   },
-  tls: {
-    rejectUnauthorized: false
-  }
 });
 
-// Verify connection on startup
+// Verify connection on startup (non-fatal — server starts regardless)
 transporter.verify((error, success) => {
   if (error) {
     console.error('❌ SMTP Verification Failed:', error.message);
+    console.log('💡 Tip: Make sure you are using a valid Gmail App Password.');
+    console.log('   Go to https://myaccount.google.com/apppasswords to generate one.');
   } else {
-    console.log('✅ SMTP Ready! Emails will be sent from:', SMTP_USER);
+    console.log('✅ SMTP Ready! Emails will be sent from:', EMAIL_USER);
   }
 });
 
@@ -37,7 +32,7 @@ export const sendTestEmail = async (to: string) => {
   console.log(`📧 Sending test email to: ${to}`);
   
   const mailOptions = {
-    from: `"MediVoice AI" <${SMTP_USER}>`,
+    from: `"MediVoice AI" <${EMAIL_USER}>`,
     to: to,
     subject: '✅ MediVoice AI - Test Email',
     html: `
@@ -90,7 +85,7 @@ export const sendMedicalReportEmail = async (data: any) => {
   console.log(`📧 Sending medical report to: ${to}`);
   
   const mailOptions = {
-    from: `"MediVoice AI" <${SMTP_USER}>`,
+    from: `"MediVoice AI" <${EMAIL_USER}>`,
     to: to,
     subject: `🏥 Your Medical Report - ${consultationId}`,
     html: `

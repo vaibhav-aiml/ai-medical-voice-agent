@@ -133,24 +133,24 @@ function AppContent() {
       }
 
       const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
-const response = await fetch(`${API_URL}/api/clinic/create`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    name: `${getUserName()}'s Clinic`,
-    subdomain: `${getUserName().toLowerCase()}clinic`,
-    primaryColor: '#3b82f6',
-    secondaryColor: '#10b981',
-    accentColor: '#8b5cf6',
-    contactEmail: user?.emailAddresses[0]?.emailAddress || 'clinic@example.com',
-    contactPhone: '9876543210',
-    address: 'Clinic Address',
-    city: 'Your City',
-    state: 'Your State',
-    pincode: '123456',
-    subscriptionTier: 'enterprise'
-  }),
-});
+      const response = await fetch(`${API_URL}/api/clinic/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${getUserName()}'s Clinic`,
+          subdomain: `${getUserName().toLowerCase()}clinic`,
+          primaryColor: '#3b82f6',
+          secondaryColor: '#10b981',
+          accentColor: '#8b5cf6',
+          contactEmail: user?.emailAddresses[0]?.emailAddress || 'clinic@example.com',
+          contactPhone: '9876543210',
+          address: 'Clinic Address',
+          city: 'Your City',
+          state: 'Your State',
+          pincode: '123456',
+          subscriptionTier: 'enterprise'
+        }),
+      });
       const data = await response.json();
       
       if (data.success) {
@@ -493,499 +493,500 @@ const response = await fetch(`${API_URL}/api/clinic/create`, {
   if (currentLegalPage === 'cookies') return <CookiePolicy />;
 
   return (
-    <div style={{...styles.app, paddingTop: '0px' }}>
-      <Header
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        setShowSymptomChecker={setShowEnhancedSymptomChecker}
-        setShowHealthTips={setShowHealthTips}
-        setShowEmergencyContacts={setShowEmergencyContacts}
-        setShowHealthGoals={setShowHealthGoals}
-        setShowVoiceCustomization={setShowVoiceCustomization}
-        setShowProgressDashboard={setShowProgressDashboard}
-        setShowDataExport={setShowDataExport}
-        setShowTwoFactorAuth={setShowTwoFactorAuth}
-        setShowAppointmentsList={setShowAppointmentsList}
-        onNewConsultation={handleNewConsultation}
-        onUpgrade={() => setShowPricing(true)}
-        onOpenReminders={handleOpenReminders}
-        userName={getUserName()}
-      />
+    <AuthGuard>
+      <div style={{...styles.app, paddingTop: '0px' }}>
+        <Header
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          setShowSymptomChecker={setShowEnhancedSymptomChecker}
+          setShowHealthTips={setShowHealthTips}
+          setShowEmergencyContacts={setShowEmergencyContacts}
+          setShowHealthGoals={setShowHealthGoals}
+          setShowVoiceCustomization={setShowVoiceCustomization}
+          setShowProgressDashboard={setShowProgressDashboard}
+          setShowDataExport={setShowDataExport}
+          setShowTwoFactorAuth={setShowTwoFactorAuth}
+          setShowAppointmentsList={setShowAppointmentsList}
+          onNewConsultation={handleNewConsultation}
+          onUpgrade={() => setShowPricing(true)}
+          onOpenReminders={handleOpenReminders}
+          userName={getUserName()}
+        />
 
-      {currentPage !== 'home' && currentPage !== '' && !showReminders && (
-        <div style={styles.pageNav}>
-          <button onClick={() => setCurrentPage('home')} style={styles.pageNavButton}>
-            ← {t('common.back')} {t('nav.home')}
-          </button>
-          <span style={styles.pageNavTitle}>
-            {currentPage === 'dashboard' && t('nav.dashboard')}
-            {currentPage === 'consultation' && t('consultation.title')}
-            {currentPage === 'reports' && t('reports.title')}
-          </span>
-        </div>
-      )}
+        {currentPage !== 'home' && currentPage !== '' && !showReminders && (
+          <div style={styles.pageNav}>
+            <button onClick={() => setCurrentPage('home')} style={styles.pageNavButton}>
+              ← {t('common.back')} {t('nav.home')}
+            </button>
+            <span style={styles.pageNavTitle}>
+              {currentPage === 'dashboard' && t('nav.dashboard')}
+              {currentPage === 'consultation' && t('consultation.title')}
+              {currentPage === 'reports' && t('reports.title')}
+            </span>
+          </div>
+        )}
 
-      {currentPage === 'home' && (
-        <div style={styles.homeContainer}>
-          {/* Hero Section */}
-          <div style={styles.heroSection}>
-            <div style={styles.heroContent}>
-              <div style={styles.heroBadge}>
-                <Sparkles size={16} />
-                <span>{t('home.aiPowered')}</span>
+        {currentPage === 'home' && (
+          <div style={styles.homeContainer}>
+            {/* Hero Section - IMPROVED */}
+            <div style={styles.heroSection}>
+              <div style={styles.heroContent}>
+                <div style={styles.heroBadge}>
+                  <Sparkles size={16} />
+                  <span>{t('home.aiPowered')}</span>
+                </div>
+                <h1 style={styles.heroTitle}>
+                  {t('home.yourHealth')}<br />
+                  <span style={styles.heroTitleAccent}>{t('home.ourPriority')}</span>
+                </h1>
+                <p style={styles.heroSubtitle}>
+                  {t('home.subtitle')}
+                </p>
+                <div style={styles.heroButtons}>
+                  <button onClick={() => setCurrentPage('consultation')} style={styles.primaryButton}>
+                    {t('home.startConsultation')}
+                    <ArrowRight size={18} />
+                  </button>
+                  <button onClick={() => setShowEnhancedSymptomChecker(true)} style={styles.secondaryButton}>
+                    {t('home.checkSymptoms')}
+                  </button>
+                </div>
               </div>
-              <h1 style={styles.heroTitle}>
-                {t('home.yourHealth')}<br />
-                <span style={styles.heroTitleAccent}>{t('home.ourPriority')}</span>
-              </h1>
-              <p style={styles.heroSubtitle}>
-                {t('home.subtitle')}
-              </p>
-              <div style={styles.heroButtons}>
-                <button onClick={() => setCurrentPage('consultation')} style={styles.primaryButton}>
-                  {t('home.startConsultation')}
+              <div style={styles.heroImage}>
+                <div style={styles.floatingCard1}>
+                  <Mic size={24} color="#3b82f6" />
+                  <span>{t('home.voiceConsultation')}</span>
+                </div>
+                <div style={styles.floatingCard2}>
+                  <Stethoscope size={24} color="#10b981" />
+                  <span>{t('home.specialists')}</span>
+                </div>
+                <div style={styles.floatingCard3}>
+                  <ClipboardList size={24} color="#f59e0b" />
+                  <span>{t('home.medicalReports')}</span>
+                </div>
+                <div style={styles.heroCircle}></div>
+              </div>
+            </div>
+
+            {/* Stats Section - IMPROVED */}
+            <div style={styles.statsSection}>
+              <div style={styles.statsContainer}>
+                <div style={styles.statCard}>
+                  <div style={styles.statIconBg}><MessageCircle size={24} /></div>
+                  <div style={styles.statNumber}>{stats.totalConsultations}</div>
+                  <div style={styles.statLabel}>{t('home.totalConsultations')}</div>
+                  <div style={styles.statTrend}>↑ 12% {t('home.thisMonth')}</div>
+                </div>
+                <div style={styles.statCard}>
+                  <div style={styles.statIconBg}><CheckCircle size={24} /></div>
+                  <div style={styles.statNumber}>{stats.completedConsultations}</div>
+                  <div style={styles.statLabel}>{t('home.completed')}</div>
+                  <div style={styles.statTrend}>↑ 8% {t('home.thisMonth')}</div>
+                </div>
+                <div style={styles.statCard}>
+                  <div style={styles.statIconBg}><Clock size={24} /></div>
+                  <div style={styles.statNumber}>{stats.averageDuration}</div>
+                  <div style={styles.statLabel}>{t('home.avgMinutes')}</div>
+                  <div style={styles.statTrend}>↓ 5% {t('home.faster')}</div>
+                </div>
+                <div style={styles.statCard}>
+                  <div style={styles.statIconBg}><Star size={24} /></div>
+                  <div style={styles.statNumber}>4.8</div>
+                  <div style={styles.statLabel}>{t('home.userRating')}</div>
+                  <div style={styles.statTrend}>★★★★★</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Features Section - IMPROVED */}
+            <div style={styles.featuresSection}>
+              <div style={styles.sectionHeader}>
+                <h2>{t('home.whyChoose')} <span style={styles.sectionHeaderAccent}>{t('home.mediVoiceAI')}</span></h2>
+                <p>{t('home.featureDesc')}</p>
+              </div>
+              <div style={styles.featuresGrid}>
+                <div style={styles.featureCard}>
+                  <div style={styles.featureIcon}><Mic size={32} /></div>
+                  <h3>{t('home.featureVoice')}</h3>
+                  <p>{t('home.featureVoiceDesc')}</p>
+                  <div style={styles.featureTag}>{t('home.realTime')}</div>
+                </div>
+                <div style={styles.featureCard}>
+                  <div style={styles.featureIcon}><Stethoscope size={32} /></div>
+                  <h3>{t('home.featureSpecialists')}</h3>
+                  <p>{t('home.featureSpecialistsDesc')}</p>
+                  <div style={styles.featureTag}>{t('home.multiSpecialty')}</div>
+                </div>
+                <div style={styles.featureCard}>
+                  <div style={styles.featureIcon}><ClipboardList size={32} /></div>
+                  <h3>{t('home.featureReports')}</h3>
+                  <p>{t('home.featureReportsDesc')}</p>
+                  <div style={styles.featureTag}>{t('home.instantDownload')}</div>
+                </div>
+                <div style={styles.featureCard}>
+                  <div style={styles.featureIcon}><Calendar size={32} /></div>
+                  <h3>{t('home.featureAppointments')}</h3>
+                  <p>{t('home.featureAppointmentsDesc')}</p>
+                  <div style={styles.featureTag}>{t('home.easyBooking')}</div>
+                </div>
+                <div style={styles.featureCard}>
+                  <div style={styles.featureIcon}><Mail size={32} /></div>
+                  <h3>{t('home.featureEmail')}</h3>
+                  <p>{t('home.featureEmailDesc')}</p>
+                  <div style={styles.featureTag}>{t('home.shareWithDoctors')}</div>
+                </div>
+                <div style={styles.featureCard}>
+                  <div style={styles.featureIcon}><Shield size={32} /></div>
+                  <h3>{t('home.featureSecure')}</h3>
+                  <p>{t('home.featureSecureDesc')}</p>
+                  <div style={styles.featureTag}>{t('home.hipaaCompliant')}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* How It Works Section */}
+            <div style={styles.howItWorksSection}>
+              <div style={styles.sectionHeader}>
+                <h2>{t('home.howItWorks')} <span style={styles.sectionHeaderAccent}>{t('home.works')}</span></h2>
+                <p>{t('home.clickToLearn')}</p>
+              </div>
+              <div style={styles.stepsContainer}>
+                <div 
+                  onClick={() => setSelectedStep(selectedStep === 1 ? null : 1)}
+                  style={{
+                    ...styles.stepCard,
+                    ...(selectedStep === 1 ? styles.stepCardExpanded : {}),
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={styles.stepNumber}>01</div>
+                  <div style={styles.stepIcon}>🎤</div>
+                  <h3 style={styles.stepTitle}>{t('home.step1Title')}</h3>
+                  <p style={styles.stepDescription}>{t('home.step1Desc')}</p>
+                  {selectedStep === 1 && (
+                    <div style={styles.stepDetails}>
+                      <div style={styles.stepDetailItem}>🎙️ {t('home.step1Detail1')}</div>
+                      <div style={styles.stepDetailItem}>🌐 {t('home.step1Detail2')}</div>
+                      <div style={styles.stepDetailItem}>⚡ {t('home.step1Detail3')}</div>
+                      <div style={styles.stepDetailItem}>⌨️ {t('home.step1Detail4')}</div>
+                    </div>
+                  )}
+                </div>
+                <div style={styles.stepArrow}>→</div>
+                <div 
+                  onClick={() => setSelectedStep(selectedStep === 2 ? null : 2)}
+                  style={{
+                    ...styles.stepCard,
+                    ...(selectedStep === 2 ? styles.stepCardExpanded : {}),
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={styles.stepNumber}>02</div>
+                  <div style={styles.stepIcon}>🤖</div>
+                  <h3 style={styles.stepTitle}>{t('home.step2Title')}</h3>
+                  <p style={styles.stepDescription}>{t('home.step2Desc')}</p>
+                  {selectedStep === 2 && (
+                    <div style={styles.stepDetails}>
+                      <div style={styles.stepDetailItem}>🧠 {t('home.step2Detail1')}</div>
+                      <div style={styles.stepDetailItem}>👨‍⚕️ {t('home.step2Detail2')}</div>
+                      <div style={styles.stepDetailItem}>💭 {t('home.step2Detail3')}</div>
+                      <div style={styles.stepDetailItem}>📝 {t('home.step2Detail4')}</div>
+                    </div>
+                  )}
+                </div>
+                <div style={styles.stepArrow}>→</div>
+                <div 
+                  onClick={() => setSelectedStep(selectedStep === 3 ? null : 3)}
+                  style={{
+                    ...styles.stepCard,
+                    ...(selectedStep === 3 ? styles.stepCardExpanded : {}),
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={styles.stepNumber}>03</div>
+                  <div style={styles.stepIcon}>📋</div>
+                  <h3 style={styles.stepTitle}>{t('home.step3Title')}</h3>
+                  <p style={styles.stepDescription}>{t('home.step3Desc')}</p>
+                  {selectedStep === 3 && (
+                    <div style={styles.stepDetails}>
+                      <div style={styles.stepDetailItem}>📄 {t('home.step3Detail1')}</div>
+                      <div style={styles.stepDetailItem}>📧 {t('home.step3Detail2')}</div>
+                      <div style={styles.stepDetailItem}>📅 {t('home.step3Detail3')}</div>
+                      <div style={styles.stepDetailItem}>📊 {t('home.step3Detail4')}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonials Section */}
+            <div style={styles.testimonialsSection}>
+              <div style={styles.sectionHeader}>
+                <h2>{t('home.whatUsersSay')} <span style={styles.sectionHeaderAccent}>{t('home.aboutUs')}</span></h2>
+                <p>{t('home.trustedBy')}</p>
+              </div>
+              <div style={styles.testimonialsGrid}>
+                <div style={styles.testimonialCard}>
+                  <div style={styles.testimonialStars}>★★★★★</div>
+                  <p>{t('home.testimonial1')}</p>
+                  <div style={styles.testimonialAuthor}>
+                    <div style={styles.testimonialAvatar}>R</div>
+                    <div>
+                      <strong>Rajesh Kumar</strong>
+                      <span>{t('home.verifiedUser')}</span>
+                    </div>
+                  </div>
+                </div>
+                <div style={styles.testimonialCard}>
+                  <div style={styles.testimonialStars}>★★★★★</div>
+                  <p>{t('home.testimonial2')}</p>
+                  <div style={styles.testimonialAuthor}>
+                    <div style={styles.testimonialAvatar}>P</div>
+                    <div>
+                      <strong>Priya Sharma</strong>
+                      <span>{t('home.verifiedUser')}</span>
+                    </div>
+                  </div>
+                </div>
+                <div style={styles.testimonialCard}>
+                  <div style={styles.testimonialStars}>★★★★★</div>
+                  <p>{t('home.testimonial3')}</p>
+                  <div style={styles.testimonialAuthor}>
+                    <div style={styles.testimonialAvatar}>A</div>
+                    <div>
+                      <strong>Amit Patel</strong>
+                      <span>{t('home.verifiedUser')}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Section - IMPROVED */}
+            <div style={styles.ctaSection}>
+              <div style={styles.ctaContent}>
+                <h2>{t('home.readyTitle')}</h2>
+                <p>{t('home.readyDesc')}</p>
+                <button onClick={() => setCurrentPage('consultation')} style={styles.ctaButton}>
+                  {t('home.startYourFreeConsultation')}
                   <ArrowRight size={18} />
                 </button>
-                <button onClick={() => setShowEnhancedSymptomChecker(true)} style={styles.secondaryButton}>
-                  {t('home.checkSymptoms')}
-                </button>
-              </div>
-            </div>
-            <div style={styles.heroImage}>
-              <div style={styles.floatingCard1}>
-                <Mic size={24} color="#3b82f6" />
-                <span>{t('home.voiceConsultation')}</span>
-              </div>
-              <div style={styles.floatingCard2}>
-                <Stethoscope size={24} color="#10b981" />
-                <span>{t('home.specialists')}</span>
-              </div>
-              <div style={styles.floatingCard3}>
-                <ClipboardList size={24} color="#f59e0b" />
-                <span>{t('home.medicalReports')}</span>
-              </div>
-              <div style={styles.heroCircle}></div>
-            </div>
-          </div>
-
-          {/* Stats Section */}
-          <div style={styles.statsSection}>
-            <div style={styles.statsContainer}>
-              <div style={styles.statCard}>
-                <div style={styles.statIconBg}><MessageCircle size={24} /></div>
-                <div style={styles.statNumber}>{stats.totalConsultations}</div>
-                <div style={styles.statLabel}>{t('home.totalConsultations')}</div>
-                <div style={styles.statTrend}>↑ 12% {t('home.thisMonth')}</div>
-              </div>
-              <div style={styles.statCard}>
-                <div style={styles.statIconBg}><CheckCircle size={24} /></div>
-                <div style={styles.statNumber}>{stats.completedConsultations}</div>
-                <div style={styles.statLabel}>{t('home.completed')}</div>
-                <div style={styles.statTrend}>↑ 8% {t('home.thisMonth')}</div>
-              </div>
-              <div style={styles.statCard}>
-                <div style={styles.statIconBg}><Clock size={24} /></div>
-                <div style={styles.statNumber}>{stats.averageDuration}</div>
-                <div style={styles.statLabel}>{t('home.avgMinutes')}</div>
-                <div style={styles.statTrend}>↓ 5% {t('home.faster')}</div>
-              </div>
-              <div style={styles.statCard}>
-                <div style={styles.statIconBg}><Star size={24} /></div>
-                <div style={styles.statNumber}>4.8</div>
-                <div style={styles.statLabel}>{t('home.userRating')}</div>
-                <div style={styles.statTrend}>★★★★★</div>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Features Section */}
-          <div style={styles.featuresSection}>
-            <div style={styles.sectionHeader}>
-              <h2>{t('home.whyChoose')} <span style={styles.sectionHeaderAccent}>{t('home.mediVoiceAI')}</span></h2>
-              <p>{t('home.featureDesc')}</p>
-            </div>
-            <div style={styles.featuresGrid}>
-              <div style={styles.featureCard}>
-                <div style={styles.featureIcon}><Mic size={32} /></div>
-                <h3>{t('home.featureVoice')}</h3>
-                <p>{t('home.featureVoiceDesc')}</p>
-                <div style={styles.featureTag}>{t('home.realTime')}</div>
-              </div>
-              <div style={styles.featureCard}>
-                <div style={styles.featureIcon}><Stethoscope size={32} /></div>
-                <h3>{t('home.featureSpecialists')}</h3>
-                <p>{t('home.featureSpecialistsDesc')}</p>
-                <div style={styles.featureTag}>{t('home.multiSpecialty')}</div>
-              </div>
-              <div style={styles.featureCard}>
-                <div style={styles.featureIcon}><ClipboardList size={32} /></div>
-                <h3>{t('home.featureReports')}</h3>
-                <p>{t('home.featureReportsDesc')}</p>
-                <div style={styles.featureTag}>{t('home.instantDownload')}</div>
-              </div>
-              <div style={styles.featureCard}>
-                <div style={styles.featureIcon}><Calendar size={32} /></div>
-                <h3>{t('home.featureAppointments')}</h3>
-                <p>{t('home.featureAppointmentsDesc')}</p>
-                <div style={styles.featureTag}>{t('home.easyBooking')}</div>
-              </div>
-              <div style={styles.featureCard}>
-                <div style={styles.featureIcon}><Mail size={32} /></div>
-                <h3>{t('home.featureEmail')}</h3>
-                <p>{t('home.featureEmailDesc')}</p>
-                <div style={styles.featureTag}>{t('home.shareWithDoctors')}</div>
-              </div>
-              <div style={styles.featureCard}>
-                <div style={styles.featureIcon}><Shield size={32} /></div>
-                <h3>{t('home.featureSecure')}</h3>
-                <p>{t('home.featureSecureDesc')}</p>
-                <div style={styles.featureTag}>{t('home.hipaaCompliant')}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* How It Works Section */}
-          <div style={styles.howItWorksSection}>
-            <div style={styles.sectionHeader}>
-              <h2>{t('home.howItWorks')} <span style={styles.sectionHeaderAccent}>{t('home.works')}</span></h2>
-              <p>{t('home.clickToLearn')}</p>
-            </div>
-            <div style={styles.stepsContainer}>
-              <div 
-                onClick={() => setSelectedStep(selectedStep === 1 ? null : 1)}
-                style={{
-                  ...styles.stepCard,
-                  ...(selectedStep === 1 ? styles.stepCardExpanded : {}),
-                  cursor: 'pointer',
-                }}
+        {currentPage === 'dashboard' && (
+          <div style={styles.pageContainer}>
+            <EnhancedDashboard consultations={consultations} stats={stats} />
+            <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setShowAnalytics(true)} 
+                style={styles.analyticsButton}
               >
-                <div style={styles.stepNumber}>01</div>
-                <div style={styles.stepIcon}>🎤</div>
-                <h3 style={styles.stepTitle}>{t('home.step1Title')}</h3>
-                <p style={styles.stepDescription}>{t('home.step1Desc')}</p>
-                {selectedStep === 1 && (
-                  <div style={styles.stepDetails}>
-                    <div style={styles.stepDetailItem}>🎙️ {t('home.step1Detail1')}</div>
-                    <div style={styles.stepDetailItem}>🌐 {t('home.step1Detail2')}</div>
-                    <div style={styles.stepDetailItem}>⚡ {t('home.step1Detail3')}</div>
-                    <div style={styles.stepDetailItem}>⌨️ {t('home.step1Detail4')}</div>
-                  </div>
-                )}
-              </div>
-              <div style={styles.stepArrow}>→</div>
-              <div 
-                onClick={() => setSelectedStep(selectedStep === 2 ? null : 2)}
-                style={{
-                  ...styles.stepCard,
-                  ...(selectedStep === 2 ? styles.stepCardExpanded : {}),
-                  cursor: 'pointer',
-                }}
+                <TrendingUp size={16} /> View Analytics Dashboard
+              </button>
+              <button 
+                onClick={handleOpenClinicDashboard} 
+                style={styles.clinicButton}
+                disabled={isCreatingClinic}
               >
-                <div style={styles.stepNumber}>02</div>
-                <div style={styles.stepIcon}>🤖</div>
-                <h3 style={styles.stepTitle}>{t('home.step2Title')}</h3>
-                <p style={styles.stepDescription}>{t('home.step2Desc')}</p>
-                {selectedStep === 2 && (
-                  <div style={styles.stepDetails}>
-                    <div style={styles.stepDetailItem}>🧠 {t('home.step2Detail1')}</div>
-                    <div style={styles.stepDetailItem}>👨‍⚕️ {t('home.step2Detail2')}</div>
-                    <div style={styles.stepDetailItem}>💭 {t('home.step2Detail3')}</div>
-                    <div style={styles.stepDetailItem}>📝 {t('home.step2Detail4')}</div>
-                  </div>
-                )}
-              </div>
-              <div style={styles.stepArrow}>→</div>
-              <div 
-                onClick={() => setSelectedStep(selectedStep === 3 ? null : 3)}
-                style={{
-                  ...styles.stepCard,
-                  ...(selectedStep === 3 ? styles.stepCardExpanded : {}),
-                  cursor: 'pointer',
-                }}
-              >
-                <div style={styles.stepNumber}>03</div>
-                <div style={styles.stepIcon}>📋</div>
-                <h3 style={styles.stepTitle}>{t('home.step3Title')}</h3>
-                <p style={styles.stepDescription}>{t('home.step3Desc')}</p>
-                {selectedStep === 3 && (
-                  <div style={styles.stepDetails}>
-                    <div style={styles.stepDetailItem}>📄 {t('home.step3Detail1')}</div>
-                    <div style={styles.stepDetailItem}>📧 {t('home.step3Detail2')}</div>
-                    <div style={styles.stepDetailItem}>📅 {t('home.step3Detail3')}</div>
-                    <div style={styles.stepDetailItem}>📊 {t('home.step3Detail4')}</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Testimonials Section */}
-          <div style={styles.testimonialsSection}>
-            <div style={styles.sectionHeader}>
-              <h2>{t('home.whatUsersSay')} <span style={styles.sectionHeaderAccent}>{t('home.aboutUs')}</span></h2>
-              <p>{t('home.trustedBy')}</p>
-            </div>
-            <div style={styles.testimonialsGrid}>
-              <div style={styles.testimonialCard}>
-                <div style={styles.testimonialStars}>★★★★★</div>
-                <p>{t('home.testimonial1')}</p>
-                <div style={styles.testimonialAuthor}>
-                  <div style={styles.testimonialAvatar}>R</div>
-                  <div>
-                    <strong>Rajesh Kumar</strong>
-                    <span>{t('home.verifiedUser')}</span>
-                  </div>
-                </div>
-              </div>
-              <div style={styles.testimonialCard}>
-                <div style={styles.testimonialStars}>★★★★★</div>
-                <p>{t('home.testimonial2')}</p>
-                <div style={styles.testimonialAuthor}>
-                  <div style={styles.testimonialAvatar}>P</div>
-                  <div>
-                    <strong>Priya Sharma</strong>
-                    <span>{t('home.verifiedUser')}</span>
-                  </div>
-                </div>
-              </div>
-              <div style={styles.testimonialCard}>
-                <div style={styles.testimonialStars}>★★★★★</div>
-                <p>{t('home.testimonial3')}</p>
-                <div style={styles.testimonialAuthor}>
-                  <div style={styles.testimonialAvatar}>A</div>
-                  <div>
-                    <strong>Amit Patel</strong>
-                    <span>{t('home.verifiedUser')}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Section */}
-          <div style={styles.ctaSection}>
-            <div style={styles.ctaContent}>
-              <h2>{t('home.readyTitle')}</h2>
-              <p>{t('home.readyDesc')}</p>
-              <button onClick={() => setCurrentPage('consultation')} style={styles.ctaButton}>
-                {t('home.startYourFreeConsultation')}
-                <ArrowRight size={18} />
+                <Building2 size={18} /> {isCreatingClinic ? 'Loading Clinic...' : '🏥 Clinic Dashboard'}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {currentPage === 'dashboard' && (
-        <div style={styles.pageContainer}>
-          <EnhancedDashboard consultations={consultations} stats={stats} />
-          {/* Analytics and Clinic Dashboard Buttons */}
-          <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <button 
-              onClick={() => setShowAnalytics(true)} 
-              style={styles.analyticsButton}
-            >
-              <TrendingUp size={16} /> View Analytics Dashboard
-            </button>
-            <button 
-              onClick={handleOpenClinicDashboard} 
-              style={styles.clinicButton}
-              disabled={isCreatingClinic}
-            >
-              <Building2 size={18} /> {isCreatingClinic ? 'Loading Clinic...' : '🏥 Clinic Dashboard'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {currentPage === 'consultation' && (
-        <div style={styles.consultationContainer}>
-          <div style={styles.consultationHeader}>
-            <div><h2 style={styles.consultationTitle}>{t('consultation.title')}</h2><p style={styles.consultationSubtitle}>{t('consultation.subtitle')}</p></div>
-            <button onClick={() => setCurrentPage('home')} style={styles.closeButton}><X size={20} /></button>
-          </div>
-          {!consultationStarted ? (
-            <div style={styles.setupSection}>
-              <SpecialistSelector selectedSpecialist={selectedSpecialist} onSelect={setSelectedSpecialist} />
-              <button onClick={startConsultation} disabled={!selectedSpecialist} style={styles.startConsultButton}>{t('consultation.startWith')} {selectedSpecialist || t('consultation.selectedSpecialist')}</button>
+        {currentPage === 'consultation' && (
+          <div style={styles.consultationContainer}>
+            <div style={styles.consultationHeader}>
+              <div><h2 style={styles.consultationTitle}>{t('consultation.title')}</h2><p style={styles.consultationSubtitle}>{t('consultation.subtitle')}</p></div>
+              <button onClick={() => setCurrentPage('home')} style={styles.closeButton}><X size={20} /></button>
             </div>
-          ) : (
-            <div style={styles.activeConsultation}>
-              <div style={styles.specialistInfo}>
-                <div style={styles.specialistBadge}>{getSpecialistIcon(selectedSpecialist)}<span>{selectedSpecialist} {t('consultation.specialist') || 'Specialist'}</span></div>
-                <button onClick={endConsultation} style={styles.endButton}>{t('consultation.endConsultation')}</button>
+            {!consultationStarted ? (
+              <div style={styles.setupSection}>
+                <SpecialistSelector selectedSpecialist={selectedSpecialist} onSelect={setSelectedSpecialist} />
+                <button onClick={startConsultation} disabled={!selectedSpecialist} style={styles.startConsultButton}>{t('consultation.startWith')} {selectedSpecialist || t('consultation.selectedSpecialist')}</button>
               </div>
-              <VoiceRecorder 
-                consultationId={consultationId} 
-                specialistType={selectedSpecialist} 
-                onTranscriptUpdate={handleTranscriptUpdate} 
-                onAIResponse={handleAIResponse}
-                onTriageResult={setTriageResult}
-                userId={getCurrentUserId()}
-              />
-              
-              <ChatMessages 
-                messages={messages}
-                onAddMessage={addMessage}
-                sessionId={getCurrentSessionId()}
-                userId={getCurrentUserId()}
-                triageResult={triageResult}
-                streamingMessage={streamingMessage}
-                isStreaming={isStreaming}
-              />
+            ) : (
+              <div style={styles.activeConsultation}>
+                <div style={styles.specialistInfo}>
+                  <div style={styles.specialistBadge}>{getSpecialistIcon(selectedSpecialist)}<span>{selectedSpecialist} {t('consultation.specialist') || 'Specialist'}</span></div>
+                  <button onClick={endConsultation} style={styles.endButton}>{t('consultation.endConsultation')}</button>
+                </div>
+                <VoiceRecorder 
+                  consultationId={consultationId} 
+                  specialistType={selectedSpecialist} 
+                  onTranscriptUpdate={handleTranscriptUpdate} 
+                  onAIResponse={handleAIResponse}
+                  onTriageResult={setTriageResult}
+                  userId={getCurrentUserId()}
+                />
+                
+                <ChatMessages 
+                  messages={messages}
+                  onAddMessage={addMessage}
+                  sessionId={getCurrentSessionId()}
+                  userId={getCurrentUserId()}
+                  triageResult={triageResult}
+                  streamingMessage={streamingMessage}
+                  isStreaming={isStreaming}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {currentPage === 'reports' && (
+          <div style={styles.pageContainer}>
+            <div style={styles.pageHeader}><h2 style={styles.pageTitle}>{t('reports.title')}</h2><p style={styles.pageSubtitle}>{t('reports.subtitle')}</p></div>
+            <div style={styles.reportsList}>
+              {consultations.filter(c => c.status === 'completed').map((consultation) => (
+                <div key={consultation.id} style={styles.reportCard}>
+                  <div style={styles.reportHeader}>
+                    <div style={styles.reportIconArea}>{getSpecialistIcon(consultation.specialistType)}</div>
+                    <div style={styles.reportInfo}>
+                      <h3 style={styles.reportTitle}>{t('reports.consultationWith')} {consultation.specialistName}</h3>
+                      <p style={styles.reportDate}>{new Date(consultation.startedAt).toLocaleDateString()}</p>
+                    </div>
+                    <div style={styles.reportStatus}>
+                      <CheckCircle size={14} color="#10b981" />
+                      <span>{t('reports.completed')}</span>
+                    </div>
+                  </div>
+                  <div style={styles.reportContent}>
+                    <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
+                    <p><strong>{t('reports.duration')}:</strong> {consultation.duration} {t('reports.minutes')}</p>
+                  </div>
+                  <div style={styles.reportActions}>
+                    <button onClick={() => handleViewReport(consultation.id)} style={styles.downloadButton}>
+                      <Download size={16} />
+                      <span>{t('reports.viewReport')}</span>
+                    </button>
+                    <button onClick={() => handleBookAppointment(consultation)} style={styles.bookButton}>
+                      <Calendar size={16} />
+                      <span>{t('reports.bookFollowup')}</span>
+                    </button>
+                    <button onClick={() => handleRateConsultation(consultation)} style={styles.ratingButton}>
+                      <Star size={16} />
+                      <span>{t('reports.rateConsultation')}</span>
+                    </button>
+                    <button onClick={() => handleViewEnhancedReport(consultation)} style={styles.enhancedReportButton}>
+                      <FileText size={16} />
+                      <span>View SOAP Report</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
-      )}
-
-      {currentPage === 'reports' && (
-        <div style={styles.pageContainer}>
-          <div style={styles.pageHeader}><h2 style={styles.pageTitle}>{t('reports.title')}</h2><p style={styles.pageSubtitle}>{t('reports.subtitle')}</p></div>
-          <div style={styles.reportsList}>
-            {consultations.filter(c => c.status === 'completed').map((consultation) => (
-              <div key={consultation.id} style={styles.reportCard}>
-                <div style={styles.reportHeader}>
-                  <div style={styles.reportIconArea}>{getSpecialistIcon(consultation.specialistType)}</div>
-                  <div style={styles.reportInfo}>
-                    <h3 style={styles.reportTitle}>{t('reports.consultationWith')} {consultation.specialistName}</h3>
-                    <p style={styles.reportDate}>{new Date(consultation.startedAt).toLocaleDateString()}</p>
-                  </div>
-                  <div style={styles.reportStatus}>
-                    <CheckCircle size={14} color="#10b981" />
-                    <span>{t('reports.completed')}</span>
-                  </div>
-                </div>
-                <div style={styles.reportContent}>
-                  <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
-                  <p><strong>{t('reports.duration')}:</strong> {consultation.duration} {t('reports.minutes')}</p>
-                </div>
-                <div style={styles.reportActions}>
-                  <button onClick={() => handleViewReport(consultation.id)} style={styles.downloadButton}>
-                    <Download size={16} />
-                    <span>{t('reports.viewReport')}</span>
-                  </button>
-                  <button onClick={() => handleBookAppointment(consultation)} style={styles.bookButton}>
-                    <Calendar size={16} />
-                    <span>{t('reports.bookFollowup')}</span>
-                  </button>
-                  <button onClick={() => handleRateConsultation(consultation)} style={styles.ratingButton}>
-                    <Star size={16} />
-                    <span>{t('reports.rateConsultation')}</span>
-                  </button>
-                  <button onClick={() => handleViewEnhancedReport(consultation)} style={styles.enhancedReportButton}>
-                    <FileText size={16} />
-                    <span>View SOAP Report</span>
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Enhanced Symptom Checker Modal */}
-      {showEnhancedSymptomChecker && (
-        <EnhancedSymptomChecker 
-          onClose={() => setShowEnhancedSymptomChecker(false)}
-          onStartConsultation={handleSymptomCheckerConsultation}
-        />
-      )}
+        {/* Enhanced Symptom Checker Modal */}
+        {showEnhancedSymptomChecker && (
+          <EnhancedSymptomChecker 
+            onClose={() => setShowEnhancedSymptomChecker(false)}
+            onStartConsultation={handleSymptomCheckerConsultation}
+          />
+        )}
 
-      {/* Regular Symptom Checker Modal (for backward compatibility) */}
-      {showSymptomChecker && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
-            <button onClick={() => setShowSymptomChecker(false)} style={styles.modalClose}><X size={18} /></button>
-            <SymptomChecker onClose={() => setShowSymptomChecker(false)} />
+        {/* Regular Symptom Checker Modal (for backward compatibility) */}
+        {showSymptomChecker && (
+          <div style={styles.modalOverlay}>
+            <div style={styles.modalContent}>
+              <button onClick={() => setShowSymptomChecker(false)} style={styles.modalClose}><X size={18} /></button>
+              <SymptomChecker onClose={() => setShowSymptomChecker(false)} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Medication Reminder Modal */}
-      {showReminders && (
-        <MedicationReminder 
-          userId={getCurrentUserId()} 
-          onClose={() => setShowReminders(false)} 
-        />
-      )}
+        {/* Medication Reminder Modal */}
+        {showReminders && (
+          <MedicationReminder 
+            userId={getCurrentUserId()} 
+            onClose={() => setShowReminders(false)} 
+          />
+        )}
 
-      {/* Enhanced Report Modal */}
-      {showEnhancedReport && selectedReportData && (
-        <EnhancedReportViewer 
-          consultationData={selectedReportData} 
-          onClose={() => setShowEnhancedReport(false)} 
-        />
-      )}
+        {/* Enhanced Report Modal */}
+        {showEnhancedReport && selectedReportData && (
+          <EnhancedReportViewer 
+            consultationData={selectedReportData} 
+            onClose={() => setShowEnhancedReport(false)} 
+          />
+        )}
 
-      {/* Doctor Analytics Dashboard Modal */}
-      {showAnalytics && (
-        <DoctorAnalyticsDashboard 
-          consultations={consultations}
-          ratings={JSON.parse(localStorage.getItem('consultationRatings') || '{}')}
-          onClose={() => setShowAnalytics(false)}
-        />
-      )}
+        {/* Doctor Analytics Dashboard Modal */}
+        {showAnalytics && (
+          <DoctorAnalyticsDashboard 
+            consultations={consultations}
+            ratings={JSON.parse(localStorage.getItem('consultationRatings') || '{}')}
+            onClose={() => setShowAnalytics(false)}
+          />
+        )}
 
-      {/* Clinic Dashboard Modal */}
-      {showClinicDashboard && currentClinicId && (
-        <div style={styles.modalOverlayFull}>
-          <div style={styles.modalFullContent}>
-            <button onClick={() => setShowClinicDashboard(false)} style={styles.modalCloseBtn}>×</button>
-            <ClinicDashboard clinicId={currentClinicId} />
+        {/* Clinic Dashboard Modal */}
+        {showClinicDashboard && currentClinicId && (
+          <div style={styles.modalOverlayFull}>
+            <div style={styles.modalFullContent}>
+              <button onClick={() => setShowClinicDashboard(false)} style={styles.modalCloseBtn}>×</button>
+              <ClinicDashboard clinicId={currentClinicId} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {showReportModal && selectedConsultation && <MedicalReportModal consultationId={selectedConsultation.id} specialistType={selectedConsultation.specialistType} symptoms={selectedConsultation.symptoms || 'No symptoms recorded'} onClose={() => setShowReportModal(false)} />}
-      {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} patientName={getUserName()} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert(t('appointments.booked') || '✅ Appointment booked successfully!'); }} />}
-      {showHealthTips && <HealthTips onClose={() => setShowHealthTips(false)} />}
-      {showEmergencyContacts && <EmergencyContacts onClose={() => setShowEmergencyContacts(false)} />}
-      {showRatingModal && selectedRatingConsultation && (
-        <ConsultationRating
-          consultationId={selectedRatingConsultation.id}
-          consultationTitle={`${t('reports.consultationWith')} ${selectedRatingConsultation.specialistName}`}
-          onClose={() => setShowRatingModal(false)}
-          onSubmit={handleRatingSubmit}
-        />
-      )}
-      {showHealthGoals && <HealthGoals onClose={() => setShowHealthGoals(false)} />}
-      {showVoiceCustomization && <VoiceCustomization onClose={() => setShowVoiceCustomization(false)} />}
-      {showProgressDashboard && <ProgressDashboard onClose={() => setShowProgressDashboard(false)} />}
-      {showTwoFactorAuth && <TwoFactorAuth onClose={() => setShowTwoFactorAuth(false)} />}
-      {showDataExport && <DataExport onClose={() => setShowDataExport(false)} />}
-      {showVideoConsultation && selectedVideoConsultation && (
-        <VideoConsultation
-          consultationId={selectedVideoConsultation.id}
-          specialistName={selectedVideoConsultation.specialistName}
-          specialistType={selectedVideoConsultation.specialistType}
-          onClose={() => setShowVideoConsultation(false)}
-          onEndCall={() => {
-            setShowVideoConsultation(false);
-            alert(t('consultation.videoEnded') || 'Video consultation ended. A report will be generated.');
-          }}
-        />
-      )}
-      
-      {showAppointmentsList && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
-            <button onClick={() => setShowAppointmentsList(false)} style={styles.modalClose}><X size={18} /></button>
-            <MyAppointments />
+        {showReportModal && selectedConsultation && <MedicalReportModal consultationId={selectedConsultation.id} specialistType={selectedConsultation.specialistType} symptoms={selectedConsultation.symptoms || 'No symptoms recorded'} onClose={() => setShowReportModal(false)} />}
+        {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} patientName={getUserName()} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert(t('appointments.booked') || '✅ Appointment booked successfully!'); }} />}
+        {showHealthTips && <HealthTips onClose={() => setShowHealthTips(false)} />}
+        {showEmergencyContacts && <EmergencyContacts onClose={() => setShowEmergencyContacts(false)} />}
+        {showRatingModal && selectedRatingConsultation && (
+          <ConsultationRating
+            consultationId={selectedRatingConsultation.id}
+            consultationTitle={`${t('reports.consultationWith')} ${selectedRatingConsultation.specialistName}`}
+            onClose={() => setShowRatingModal(false)}
+            onSubmit={handleRatingSubmit}
+          />
+        )}
+        {showHealthGoals && <HealthGoals onClose={() => setShowHealthGoals(false)} />}
+        {showVoiceCustomization && <VoiceCustomization onClose={() => setShowVoiceCustomization(false)} />}
+        {showProgressDashboard && <ProgressDashboard onClose={() => setShowProgressDashboard(false)} />}
+        {showTwoFactorAuth && <TwoFactorAuth onClose={() => setShowTwoFactorAuth(false)} />}
+        {showDataExport && <DataExport onClose={() => setShowDataExport(false)} />}
+        {showVideoConsultation && selectedVideoConsultation && (
+          <VideoConsultation
+            consultationId={selectedVideoConsultation.id}
+            specialistName={selectedVideoConsultation.specialistName}
+            specialistType={selectedVideoConsultation.specialistType}
+            onClose={() => setShowVideoConsultation(false)}
+            onEndCall={() => {
+              setShowVideoConsultation(false);
+              alert(t('consultation.videoEnded') || 'Video consultation ended. A report will be generated.');
+            }}
+          />
+        )}
+        
+        {showAppointmentsList && (
+          <div style={styles.modalOverlay}>
+            <div style={styles.modalContent}>
+              <button onClick={() => setShowAppointmentsList(false)} style={styles.modalClose}><X size={18} /></button>
+              <MyAppointments />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {showPricing && <PricingPlans onClose={() => setShowPricing(false)} />}
-      
-      <Footer 
-        setCurrentPage={handleFooterNavigation}
-        setShowSymptomChecker={setShowEnhancedSymptomChecker}
-        setShowHealthTips={setShowHealthTips}
-        setShowEmergencyContacts={setShowEmergencyContacts}
-        setShowHealthGoals={setShowHealthGoals}
-        setShowAppointmentsList={setShowAppointmentsList}
-      />
-    </div>
+        {showPricing && <PricingPlans onClose={() => setShowPricing(false)} />}
+        
+        <Footer 
+          setCurrentPage={handleFooterNavigation}
+          setShowSymptomChecker={setShowEnhancedSymptomChecker}
+          setShowHealthTips={setShowHealthTips}
+          setShowEmergencyContacts={setShowEmergencyContacts}
+          setShowHealthGoals={setShowHealthGoals}
+          setShowAppointmentsList={setShowAppointmentsList}
+        />
+      </div>
+    </AuthGuard>
   );
 }
 
@@ -997,6 +998,7 @@ function App() {
   );
 }
 
+// ===== UPDATED STYLES =====
 const styles = {
   app: { 
     minHeight: '100vh', 
@@ -1032,74 +1034,89 @@ const styles = {
   homeContainer: {
     overflowX: 'hidden' as const,
   },
+  // ===== IMPROVED HERO SECTION =====
   heroSection: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: '48px',
-    padding: '60px 24px',
-    background: 'linear-gradient(135deg, var(--bg-primary), var(--bg-secondary))',
+    gap: '60px',
+    padding: '60px 40px',
+    background: 'var(--hero-bg)',
     alignItems: 'center',
+    borderRadius: '20px',
+    margin: '0 24px 40px',
+    boxShadow: 'var(--card-shadow)',
   },
   heroContent: {
-    maxWidth: '600px',
+    maxWidth: '560px',
   },
   heroBadge: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '6px 16px',
-    background: 'rgba(59, 130, 246, 0.1)',
-    borderRadius: '50px',
-    color: '#3b82f6',
-    fontSize: '14px',
-    marginBottom: '24px',
-  },
-  heroTitle: {
-    fontSize: '56px',
-    fontWeight: 800,
-    color: 'var(--text-primary)',
-    lineHeight: 1.2,
+    padding: '6px 16px 6px 12px',
+    background: 'rgba(37, 99, 235, 0.1)',
+    borderRadius: '9999px',
+    color: '#2563eb',
+    fontSize: '13px',
+    fontWeight: 500,
     marginBottom: '20px',
   },
+  heroTitle: {
+    fontSize: '48px',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    lineHeight: 1.15,
+    marginBottom: '16px',
+  },
   heroTitleAccent: {
-    color: '#3b82f6',
+    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
   },
   heroSubtitle: {
     fontSize: '18px',
     color: 'var(--text-secondary)',
-    lineHeight: 1.6,
+    lineHeight: 1.7,
     marginBottom: '32px',
   },
   heroButtons: {
     display: 'flex',
     gap: '16px',
+    flexWrap: 'wrap' as const,
   },
   primaryButton: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '14px 28px',
-    background: '#3b82f6',
+    padding: '14px 32px',
+    background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
     color: 'white',
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: '9999px',
     cursor: 'pointer',
     fontSize: '16px',
     fontWeight: 600,
+    transition: 'all 0.25s ease',
+    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
   },
   secondaryButton: {
-    padding: '14px 28px',
+    padding: '14px 32px',
     background: 'transparent',
-    border: '1px solid var(--border-color)',
-    borderRadius: '12px',
+    border: '2px solid var(--border-color)',
+    borderRadius: '9999px',
     cursor: 'pointer',
     fontSize: '16px',
     fontWeight: 500,
     color: 'var(--text-primary)',
+    transition: 'all 0.25s ease',
   },
   heroImage: {
     position: 'relative' as const,
     height: '400px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   floatingCard1: {
     position: 'absolute' as const,
@@ -1150,12 +1167,13 @@ const styles = {
     transform: 'translate(-50%, -50%)',
     width: '300px',
     height: '300px',
-    background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0) 70%)',
+    background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0) 70%)',
     borderRadius: '50%',
   },
+  // ===== IMPROVED STATS SECTION =====
   statsSection: {
     padding: '40px 24px',
-    background: 'var(--bg-card)',
+    background: 'transparent',
   },
   statsContainer: {
     maxWidth: '1200px',
@@ -1166,10 +1184,12 @@ const styles = {
   },
   statCard: {
     textAlign: 'center' as const,
-    padding: '24px',
-    background: 'var(--bg-secondary)',
-    borderRadius: '20px',
+    padding: '28px 20px',
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
     border: '1px solid var(--border-color)',
+    boxShadow: 'var(--card-shadow)',
+    transition: 'all 0.3s ease',
   },
   statIconBg: {
     width: '56px',
@@ -1197,6 +1217,7 @@ const styles = {
     color: '#10b981',
     marginTop: '8px',
   },
+  // ===== IMPROVED FEATURES SECTION =====
   featuresSection: {
     padding: '60px 24px',
     maxWidth: '1200px',
@@ -1220,6 +1241,8 @@ const styles = {
     borderRadius: '24px',
     border: '1px solid var(--border-color)',
     position: 'relative' as const,
+    boxShadow: 'var(--card-shadow)',
+    transition: 'all 0.3s ease',
   },
   featureIcon: {
     width: '64px',
@@ -1238,135 +1261,19 @@ const styles = {
     right: '20px',
     padding: '4px 12px',
     background: 'rgba(59, 130, 246, 0.1)',
-    borderRadius: '20px',
+    borderRadius: '9999px',
     fontSize: '12px',
     color: '#3b82f6',
   },
-  howItWorksSection: {
-    padding: '60px 24px',
-    background: 'var(--bg-secondary)',
-  },
-  stepsContainer: {
-    maxWidth: '1000px',
-    margin: '0 auto',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '24px',
-  },
-  stepCard: {
-    flex: 1,
-    textAlign: 'center' as const,
-    padding: '32px 24px',
-    background: 'var(--bg-card)',
-    borderRadius: '24px',
-    position: 'relative' as const,
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    border: '1px solid var(--border-color)',
-    cursor: 'pointer',
-    boxShadow: 'var(--card-shadow)',
-  },
-  stepCardExpanded: {
-    transform: 'scale(1.02)',
-    boxShadow: '0 0 0 3px #3b82f6, 0 20px 40px -10px rgba(0,0,0,0.25)',
-    borderColor: '#3b82f6',
-  },
-  stepNumber: {
-    position: 'absolute' as const,
-    top: '-12px',
-    left: '20px',
-    fontSize: '48px',
-    fontWeight: 800,
-    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-    WebkitBackgroundClip: 'text',
-    backgroundClip: 'text',
-    color: 'transparent',
-    opacity: 0.3,
-  },
-  stepIcon: {
-    fontSize: '48px',
-    marginBottom: '16px',
-  },
-  stepTitle: {
-    fontSize: '18px',
-    fontWeight: 600,
-    marginBottom: '8px',
-    color: 'var(--text-primary)',
-  },
-  stepDescription: {
-    fontSize: '14px',
-    color: 'var(--text-secondary)',
-    lineHeight: 1.5,
-  },
-  stepArrow: {
-    fontSize: '32px',
-    color: '#3b82f6',
-    opacity: 0.7,
-  },
-  stepDetails: {
-    marginTop: '20px',
-    paddingTop: '16px',
-    borderTop: '1px solid var(--border-color)',
-    animation: 'fadeInUp 0.3s ease-out',
-    background: 'var(--badge-bg)',
-    borderRadius: '12px',
-    padding: '16px',
-  },
-  stepDetailItem: {
-    padding: '8px 0',
-    fontSize: '13px',
-    color: 'var(--text-secondary)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    borderBottom: '1px dashed var(--border-light)',
-  },
-  testimonialsSection: {
-    padding: '60px 24px',
-    maxWidth: '1200px',
-    margin: '0 auto',
-  },
-  testimonialsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '32px',
-  },
-  testimonialCard: {
-    padding: '28px',
-    background: 'var(--bg-card)',
-    borderRadius: '24px',
-    border: '1px solid var(--border-color)',
-  },
-  testimonialStars: {
-    fontSize: '20px',
-    color: '#f59e0b',
-    marginBottom: '16px',
-  },
-  testimonialAuthor: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    marginTop: '20px',
-  },
-  testimonialAvatar: {
-    width: '48px',
-    height: '48px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '20px',
-    fontWeight: 600,
-    color: 'white',
-  },
+  // ===== IMPROVED CTA SECTION =====
   ctaSection: {
     margin: '40px 24px 60px',
     padding: '60px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    borderRadius: '32px',
+    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+    borderRadius: '20px',
     textAlign: 'center' as const,
     color: 'white',
+    boxShadow: '0 8px 32px rgba(37, 99, 235, 0.3)',
   },
   ctaContent: {
     maxWidth: '600px',
@@ -1378,14 +1285,16 @@ const styles = {
     gap: '8px',
     padding: '14px 32px',
     background: 'white',
-    color: '#3b82f6',
+    color: '#2563eb',
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: '9999px',
     cursor: 'pointer',
     fontSize: '16px',
     fontWeight: 600,
     marginTop: '24px',
+    transition: 'all 0.25s ease',
   },
+  // ===== EXISTING STYLES (unchanged) =====
   pageContainer: { 
     maxWidth: '1280px', 
     margin: '40px auto', 
@@ -1710,6 +1619,125 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // ===== KEEP EXISTING HOW IT WORKS & TESTIMONIALS STYLES =====
+  howItWorksSection: {
+    padding: '60px 24px',
+    background: 'var(--bg-secondary)',
+  },
+  stepsContainer: {
+    maxWidth: '1000px',
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '24px',
+  },
+  stepCard: {
+    flex: 1,
+    textAlign: 'center' as const,
+    padding: '32px 24px',
+    background: 'var(--bg-card)',
+    borderRadius: '24px',
+    position: 'relative' as const,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    border: '1px solid var(--border-color)',
+    cursor: 'pointer',
+    boxShadow: 'var(--card-shadow)',
+  },
+  stepCardExpanded: {
+    transform: 'scale(1.02)',
+    boxShadow: '0 0 0 3px #3b82f6, 0 20px 40px -10px rgba(0,0,0,0.25)',
+    borderColor: '#3b82f6',
+  },
+  stepNumber: {
+    position: 'absolute' as const,
+    top: '-12px',
+    left: '20px',
+    fontSize: '48px',
+    fontWeight: 800,
+    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    color: 'transparent',
+    opacity: 0.3,
+  },
+  stepIcon: {
+    fontSize: '48px',
+    marginBottom: '16px',
+  },
+  stepTitle: {
+    fontSize: '18px',
+    fontWeight: 600,
+    marginBottom: '8px',
+    color: 'var(--text-primary)',
+  },
+  stepDescription: {
+    fontSize: '14px',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.5,
+  },
+  stepArrow: {
+    fontSize: '32px',
+    color: '#3b82f6',
+    opacity: 0.7,
+  },
+  stepDetails: {
+    marginTop: '20px',
+    paddingTop: '16px',
+    borderTop: '1px solid var(--border-color)',
+    animation: 'fadeInUp 0.3s ease-out',
+    background: 'var(--badge-bg)',
+    borderRadius: '12px',
+    padding: '16px',
+  },
+  stepDetailItem: {
+    padding: '8px 0',
+    fontSize: '13px',
+    color: 'var(--text-secondary)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    borderBottom: '1px dashed var(--border-light)',
+  },
+  testimonialsSection: {
+    padding: '60px 24px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+  },
+  testimonialsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '32px',
+  },
+  testimonialCard: {
+    padding: '28px',
+    background: 'var(--bg-card)',
+    borderRadius: '24px',
+    border: '1px solid var(--border-color)',
+  },
+  testimonialStars: {
+    fontSize: '20px',
+    color: '#f59e0b',
+    marginBottom: '16px',
+  },
+  testimonialAuthor: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginTop: '20px',
+  },
+  testimonialAvatar: {
+    width: '48px',
+    height: '48px',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    fontWeight: 600,
+    color: 'white',
   },
 };
 
