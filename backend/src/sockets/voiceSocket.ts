@@ -101,10 +101,13 @@ export function setupVoiceSocket(io: Server) {
       try {
         console.log('🚀 Starting Groq streaming with conversation history...');
         
-        // Start streaming response with full conversation context
-        // Updated to use the new recommended model
+        // ============================================================
+        // ✅ UPDATED: Using Groq's new recommended model
+        // Old: llama-3.3-70b-versatile (DEPRECATED)
+        // New: gpt-oss-120b (Groq's recommended replacement)
+        // ============================================================
         const stream = await groq.chat.completions.create({
-          model: 'llama-3.3-70b-versatile',  // ✅ Updated model (replacing deprecated llama3-70b-8192)
+          model: 'gpt-oss-120b',  // ✅ Groq OSS 120B - Recommended replacement
           messages: messages as any,
           temperature: 0.7,
           max_tokens: 800,
@@ -199,9 +202,13 @@ export function setupVoiceSocket(io: Server) {
       }
       
       try {
-        // Updated to use the new recommended model
+        // ============================================================
+        // ✅ UPDATED: Using Groq's new recommended model
+        // Old: llama-3.3-70b-versatile (DEPRECATED)
+        // New: gpt-oss-120b (Groq's recommended replacement)
+        // ============================================================
         const completion = await groq.chat.completions.create({
-          model: 'llama-3.3-70b-versatile',  // ✅ Updated model (replacing deprecated llama3-70b-8192)
+          model: 'gpt-oss-120b',  // ✅ Groq OSS 120B - Recommended replacement
           messages: messages as any,
           temperature: 0.7,
           max_tokens: 800,
