@@ -1,241 +1,578 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/MediVoice-AI-1e5fa8?style=for-the-badge&logo=stethoscope&logoColor=white" alt="MediVoice AI" height="40"/>
+<br/>
 
-# MediVoice AI — Production-Grade AI Medical Voice Consultation Platform
+<img src="https://img.shields.io/badge/-%F0%9F%A9%BA%20MediVoice%20AI-0a1628?style=for-the-badge&logoColor=white" height="42"/>
 
-**Enterprise-ready AI-powered voice consultation platform for healthcare.**  
-Hardened with real-time voice streaming, Zod schema validation, Winston diagnostics, robust rate-limiting, and PostgreSQL write-through persistence.
+<h1>AI Medical Voice Consultation Platform</h1>
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Netlify-00C7B7?style=flat-square&logo=netlify)](https://majestic-speculoos-f73a91.netlify.app)
-[![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-square&logo=render)](https://ai-medical-voice-agent-ygc5.onrender.com/health)
-[![License](https://img.shields.io/badge/License-ISC-blue?style=flat-square)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=node.js)](https://nodejs.org/)
+<p><strong>Talk to an AI specialist doctor. Get real clinical insights. Download your report.</strong><br/>
+Built for the Indian healthcare market — 9 languages, 5 specialist personas, HIPAA-aware.</p>
+
+<br/>
+
+[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-Visit%20App-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://majestic-speculoos-f73a91.netlify.app)
+[![Backend API](https://img.shields.io/badge/⚡%20Backend%20API-Health%20Check-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://ai-medical-voice-agent-ygc5.onrender.com/health)
+
+<br/>
+
+![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-Express%205-339933?style=flat-square&logo=node.js&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-Streaming-010101?style=flat-square&logo=socket.io&logoColor=white)
+![License](https://img.shields.io/badge/License-ISC-blue?style=flat-square)
+
+<br/>
+
+<img src="https://img.shields.io/badge/AI%20Provider-Groq%20%7C%20llama--3.3--70b-FF6B35?style=flat-square"/>
+<img src="https://img.shields.io/badge/STT-AssemblyAI-6B46C1?style=flat-square"/>
+<img src="https://img.shields.io/badge/Auth-Clerk-6C47FF?style=flat-square"/>
+<img src="https://img.shields.io/badge/Deploy-Render%20%2B%20Netlify-brightgreen?style=flat-square"/>
+
+<br/><br/>
 
 </div>
 
 ---
 
-## 📋 Table of Contents
+## 📌 What Is This?
 
-- [Overview](#-overview)
-- [New Production Hardening Updates](#-new-production-hardening-updates)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Architecture](#️-architecture)
-- [Getting Started](#-getting-started)
-- [Environment Variables](#-environment-variables)
-- [Project Structure](#-project-structure)
-- [API Reference](#-api-reference)
-- [HIPAA Compliance](#-hipaa-compliance)
-- [Deployment](#-deployment)
-- [Roadmap](#️-roadmap)
-- [Author](#-author)
-- [Disclaimer](#️-disclaimer)
+**MediVoice AI** is a production-grade, full-stack healthcare SaaS platform where patients speak or type their symptoms, and an AI specialist doctor responds in real time — streaming token by token via WebSocket, just like talking to a real doctor.
+
+Every consultation produces a structured **SOAP medical report** (Subjective · Objective · Assessment · Plan) that patients can download as PDF, email to themselves, or share via WhatsApp — in any of **9 Indian languages**.
+
+The platform is architected for enterprise use: multi-tenant clinic management, HIPAA-aware audit logging, Stripe subscriptions, and a full analytics dashboard for healthcare providers.
+
+> ⚠️ **Disclaimer**: MediVoice AI is an AI-assisted informational tool. It does not replace professional medical advice. Always consult a qualified healthcare provider for diagnosis and treatment.
 
 ---
 
-## 🌟 Overview
+## 🎬 Core User Journey
 
-**MediVoice AI** is a full-stack healthcare platform that lets patients consult with AI-powered specialist doctors through natural voice or text. Built for the Indian healthcare market, it supports **9 regional languages** and delivers clinical-grade outputs including urgency triage, differential diagnosis, and downloadable SOAP medical reports.
-
-The platform has been hardened from a local prototype into a robust, secure, production-ready system utilizing serverless PostgreSQL persistence, centralized logging, strict security headers, API rate limiting, and 100% test coverage.
-
-> ⚠️ **This is an AI-assisted informational tool. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider.**
-
----
-
-## ⚡ New Production Hardening Updates
-
-During the latest production-readiness refactor, the following critical changes were implemented:
-
-1. **Security & API Protection**:
-   * **Rate Limiting**: Integrated `express-rate-limit` with global limits (100 req/15 mins) and strict throttles (20 req/15 mins) on expensive AI processing routes to prevent resource abuse.
-   * **Helmet CSP Hardening**: Configured secure Helmet headers with strict Content-Security-Policy rules allowing safe WebSockets (`wss://`) and Clerk authorization domains.
-   * **Secure Configs**: Removed leaked DB secrets from git history and added placeholders to `.env.example`.
-
-2. **Data Integration & Performance**:
-   * **Write-Through Caching**: Swapped `localStorage` consultation records for Postgres database persistence on Neon via **Drizzle ORM**. Implemented a fallback caching pattern for offline resilience.
-   * **Database Tuning**: Created custom database indexes on high-frequency query columns (`userId`, `status`, `consultationId`) to optimize lookup speeds.
-   * **Redis Caching**: Wired a non-blocking Redis cache singleton for quick retrieval of clinic dashboard statistics.
-
-3. **Service Refactoring (Class-to-Function)**:
-   * Converted all 10 legacy backend service classes (including `triageService`, `voiceService`, `reminderService`, and `reportGenerator`) into lightweight, decoupled functional modules.
-   * Standardized LLM provider execution to run **Llama 3.3 70B** on Groq Cloud as the primary AI engine.
-   * Preserved backward-compatible object exports to prevent breaking legacy call sites.
-
-4. **Resilience & Validation**:
-   * **Environment Schema Protection**: Added Zod validation to ensure the server crashes immediately if required variables are missing, showing friendly console warnings for missing optional variables.
-   * **Winston Structured Logger**: Configured production JSON logs with custom redaction middlewares to block credential leaks.
-   * **Centralized Error Boundary**: Created a global Express error-handler with async catchers and clean formatting for operational errors.
-   * **Request Payloads Validation**: Added Zod schemas to validate incoming request bodies on all POST and PUT endpoints.
-
-5. **Test Suite**:
-   * Built unit test suites under Vitest covering environment schemas and symptom triage logic, achieving 100% pass rates.
+```
+Patient speaks symptoms
+        │
+        ▼
+AssemblyAI transcribes voice → text in real time
+        │
+        ▼
+Groq llama-3.3-70b streams clinical response via WebSocket
+        │
+        ├──► Triage Engine scores urgency  (🔴🟠🟡🟢)
+        │
+        ├──► RAG Knowledge Base enriches diagnosis context
+        │
+        └──► SOAP Report → PDF / Email / WhatsApp
+```
 
 ---
 
-## ✨ Features
+## ✨ Feature Overview
+
+<table>
+<tr>
+<td width="50%">
 
 ### 🎙️ Voice Consultation Engine
-- Real-time voice input with **AssemblyAI** speech-to-text transcription.
-- **WebSocket streaming** (Socket.IO) delivers AI responses token-by-token for a natural experience.
-- Full **conversation memory** — the AI remembers the last 10 message exchanges for contextual follow-ups.
+- Real-time STT via **AssemblyAI**
+- **Streaming WebSocket** responses (token-by-token)
+- **10-message conversation memory** — full contextual follow-ups
+- Graceful fallback to intelligent pre-built responses
+- Consultation timer + voice quality indicator
 
-### 🩺 AI Specialist Doctors
-Five distinct specialist personas, each with tailored clinical system prompts:
+</td>
+<td width="50%">
 
-| Specialist | Focus Area |
+### 🩺 5 AI Specialist Doctors
+| Specialist | Focus |
 |---|---|
-| 👨⚕️ General Physician | Common illnesses, general health, medication guidance |
-| 🦴 Orthopedic Specialist | Bones, joints, muscles, spine, RICE protocol |
-| ❤️ Cardiologist | Heart health, blood pressure, cardiovascular risk |
-| 🧠 Neurologist | Headaches, migraines, nerve pain, dizziness |
-| 👶 Pediatrician | Infant to adolescent care, fever management |
+| 👨‍⚕️ General Physician | Common illness, medications |
+| 🦴 Orthopedic | Joints, spine, RICE protocol |
+| ❤️ Cardiologist | Heart, BP, cardiovascular |
+| 🧠 Neurologist | Headaches, migraines, nerves |
+| 👶 Pediatrician | Infant to teen, fever care |
+
+</td>
+</tr>
+<tr>
+<td width="50%">
 
 ### 🚨 Smart Triage Engine
-Keyword-based urgency scoring system with 4 levels:
+```
+Score 90–100 → 🔴 Emergency  → Call 108 (ambulance)
+Score 70–89  → 🟠 Urgent     → See doctor in 24h
+Score 40–69  → 🟡 Soon       → Consult in 48h
+Score 0–39   → 🟢 Routine    → Monitor at home
+```
+- Age risk adjustment (< 2 yrs, > 65 yrs)
+- Pre-existing condition detection
+- Mental health crisis escalation
 
-| Color | Level | Action |
-|---|---|---|
-| 🔴 Red | Emergency Immediate | Call ambulance (108/911) |
-| 🟠 Orange | Consult within 24h | Visit urgent care |
-| 🟡 Yellow | Consult within 48h | Book appointment |
-| 🟢 Green | Routine | Monitor at home |
-
-- Age-based risk adjustment (infants < 2 yrs, seniors > 65 yrs).
-- Pre-existing condition detection (diabetes, heart disease, asthma, etc.).
-- Mental health crisis detection with appropriate escalation.
+</td>
+<td width="50%">
 
 ### 📋 Medical Reports
-- **SOAP format** reports (Subjective, Objective, Assessment, Plan).
-- **PDF export** via jsPDF + html2pdf.
-- **Email delivery** via Nodemailer.
-- **WhatsApp sharing** integration.
-- Enhanced report viewer with print support.
+- **SOAP format** (clinical standard)
+- **PDF export** via jsPDF + html2pdf
+- **Email delivery** via Nodemailer (Gmail SMTP)
+- **WhatsApp sharing** integration
+- Enhanced print-ready report viewer
 
-### 🏥 Clinic Management
-- Multi-tenant clinic dashboard.
-- Doctor and patient management.
-- Appointment scheduling with calendar view.
-- Role-based access control.
+</td>
+</tr>
+<tr>
+<td width="50%">
 
-### 🌐 Multilingual Support (9 Languages)
-Full UI translation across all major Indian languages:
-`English` · `हिंदी` · `தமிழ்` · `తెలుగు` · `ಕನ್ನಡ` · `മലയാളം` · `বাংলা` · `मराठी` · `ગુજરાતી`
+### 🏥 Clinic Management (Multi-Tenant)
+- Per-clinic doctor + patient management
+- Appointment scheduling with calendar UI
+- Role-based access control (RBAC)
+- Clinic-scoped analytics dashboard
+
+</td>
+<td width="50%">
+
+### 🌐 9 Indian Languages
+`English` · `हिंदी` · `தமிழ்` · `తెలుగు`
+`ಕನ್ನಡ` · `മലയാളം` · `বাংলা` · `मराठी` · `ગુજરાતી`
+
+Full UI translation — every label, button, message.
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🔐 Production Hardening
+
+This project was refactored from a working prototype into a production-ready system. Here is what changed:
+
+### Security
+| What | How |
+|---|---|
+| Rate limiting | Global: 100 req/15 min · AI routes: 20 req/15 min · Auth: 10 req/15 min |
+| Input validation | Zod schemas on every POST/PUT endpoint body |
+| Helmet CSP | Strict Content-Security-Policy with `wss://` and Clerk domain allowlist |
+| Auth middleware | Clerk JWT verification on all protected routes |
+| Secret hygiene | Real credentials removed from git history, `.env.example` uses placeholders only |
+
+### Reliability
+| What | How |
+|---|---|
+| Env validation | Zod schema crashes server fast on missing required vars before any route loads |
+| Error handling | Centralized Express error handler + `catchAsync()` wrapper |
+| Unhandled rejections | Global `process.on('unhandledRejection')` + `uncaughtException` handlers |
+| DB persistence | Consultations wired to Neon PostgreSQL — replaced localStorage write path |
+| Write-through cache | localStorage kept as offline fallback; Postgres is source of truth |
+
+### Performance
+| What | How |
+|---|---|
+| DB indexes | `consultations.userId`, `consultations.status`, `voiceSessions.consultationId` |
+| Redis caching | Analytics dashboard cached 5 minutes via ioredis singleton |
+| Compression | `compression` middleware on all responses |
+| Connection pooling | Neon serverless pool configured |
+
+### Code Quality
+| What | How |
+|---|---|
+| Class → Function | All 10 backend service classes converted to functional modules |
+| Structured logging | Winston replaces all `console.log` — JSON in prod, pretty in dev |
+| Dead code removed | `index-working.ts`, `App-with-clerk.tsx`, unused imports deleted |
+| Test suite | Vitest unit + integration + WebSocket tests — 100% pass rate |
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-* **React 18 + TypeScript** — UI Library
-* **Vite** — Build tool
-* **Socket.IO Client** — WebSocket streaming
-* **Clerk React** — Identity management
-* **Chart.js** — Visualizations
+| Tech | Version | Purpose |
+|---|---|---|
+| React | 18 | UI framework |
+| TypeScript | 5.x | Type safety |
+| Vite | 5 | Build tool |
+| Socket.IO Client | 4.x | Real-time voice streaming |
+| Clerk React | 5.x | Authentication |
+| Chart.js + React-Chartjs-2 | 4.x | Analytics visualizations |
+| jsPDF + html2pdf.js | latest | PDF report generation |
+| Lucide React | latest | Icon library |
+| React Hot Toast | 2.x | Notifications |
+| Axios | 1.x | HTTP client |
 
 ### Backend
-* **Node.js + Express 5** — REST API & WS Engine
-* **TypeScript 6.x** — Type safety
-* **Drizzle ORM** — Database querying
-* **Neon PostgreSQL** — Serverless Database
-* **Winston** — Structured logs
-* **Vitest** — Unit testing
+| Tech | Version | Purpose |
+|---|---|---|
+| Node.js + Express | 5.x | REST API server |
+| TypeScript | 6.x | Type safety |
+| Socket.IO | 4.x | WebSocket voice streaming |
+| Groq SDK | 1.x | Primary AI (llama-3.3-70b-versatile) |
+| OpenAI SDK | 6.x | AI fallback (gpt-3.5-turbo) |
+| AssemblyAI | 4.x | Speech-to-text transcription |
+| Drizzle ORM | 0.45 | Type-safe PostgreSQL queries |
+| Zod | 4.x | Schema validation (env + routes) |
+| Winston | 3.x | Structured production logging |
+| Stripe | 22.x | Subscription billing |
+| Twilio | 6.x | SMS medication reminders |
+| Nodemailer | 8.x | Email report delivery |
+| ioredis | 5.x | Redis caching |
+| Vitest | latest | Test suite |
+
+### Infrastructure
+| Service | Role |
+|---|---|
+| **Netlify** | Frontend hosting + SPA routing |
+| **Render** | Backend Web Service |
+| **Neon** | Serverless PostgreSQL |
+| **Redis** | Session + analytics cache |
+| **Clerk** | Identity + JWT management |
+| **Groq Cloud** | Free LLM inference (llama-3.3-70b) |
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
-┌─────────────────────────────────────────────────────────┐ │ Frontend (React + Vite) │ │ Voice Recorder │ Chat UI │ Triage │ Reports │ Dashboard │ └─────────────────────┬───────────────────────────────────┘ │ HTTP + WebSocket (Socket.IO) ┌─────────────────────▼───────────────────────────────────┐ │ Backend (Express + Socket.IO) │ │ Voice Service │ Triage │ RAG │ Auth │ Analytics │ Clinic│ └────┬──────────────────────────────────────────┬──────────┘ │ │ ┌────▼──────────────────┐ ┌─────────────▼──────────┐ │ AI & External APIs │ │ Data Layer │ │ Groq (llama-3.3-70b) │ │ Neon PostgreSQL │ │ OpenAI (gpt-3.5) │ │ Drizzle ORM │ │ AssemblyAI (STT) │ │ Redis (cache) │ │ Twilio (SMS) │ │ Clerk (auth) │ │ Nodemailer (Email) │ │ Stripe (billing) │ └───────────────────────┘ └────────────────────────┘
+```
+┌──────────────────────────────────────────────────────────────┐
+│                  Frontend (React 18 + Vite)                  │
+│                                                              │
+│  VoiceRecorder │ StreamingChat │ TriageDisplay │ SOAPReport  │
+│  ClinicDashboard │ Analytics │ AppointmentBooking │ i18n     │
+└──────────────────────────┬───────────────────────────────────┘
+                           │
+              HTTP (Axios) + WebSocket (Socket.IO)
+                           │
+┌──────────────────────────▼───────────────────────────────────┐
+│              Backend (Express 5 + Socket.IO)                 │
+│                                                              │
+│  ┌─────────────┐  ┌──────────┐  ┌─────────┐  ┌──────────┐  │
+│  │ voiceSocket │  │  Triage  │  │   RAG   │  │Analytics │  │
+│  │  (stream)   │  │ Service  │  │   KB    │  │ Service  │  │
+│  └─────────────┘  └──────────┘  └─────────┘  └──────────┘  │
+│                                                              │
+│  Rate Limiter → Zod Validator → Clerk Auth → Route Handler   │
+│                        ↓                                     │
+│              Centralized Error Handler                       │
+│              Winston Structured Logger                       │
+└──────┬─────────────────────────────────────┬────────────────┘
+       │                                     │
+┌──────▼──────────────┐        ┌─────────────▼──────────────┐
+│   AI & Comms APIs   │        │        Data Layer          │
+│                     │        │                            │
+│  Groq llama-3.3-70b │        │  Neon PostgreSQL           │
+│  OpenAI gpt-3.5     │        │  Drizzle ORM               │
+│  AssemblyAI STT     │        │  Redis Cache (ioredis)     │
+│  Twilio SMS         │        │  Clerk Identity            │
+│  Nodemailer Email   │        │  Stripe Billing            │
+└─────────────────────┘        └────────────────────────────┘
+```
+
+### Database Schema
+```
+users ──────────────────────── consultations ── voiceSessions
+  │   clerkId, email, tier          │               transcript[]
+  │   subscriptionEndsAt            │               aiResponses[]
+  │                                 │
+  └── subscriptions          medicalReports
+        stripeSubscriptionId     symptoms, diagnosis
+        plan, status             recommendations[]
+        currentPeriodEnd         followUpDate
+```
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js 18+
-- A [Neon](https://neon.tech) PostgreSQL database
-- A [Clerk](https://clerk.com) project for auth
-- A [Groq](https://console.groq.com) API key
+- [Neon](https://neon.tech) PostgreSQL database (free tier works)
+- [Clerk](https://clerk.com) project (free tier works)
+- [Groq](https://console.groq.com) API key (completely free)
 
-### 1. Clone & Set Up Backend
-
-
+### 1. Clone the Repository
+```bash
 git clone https://github.com/vaibhav-aiml/ai-medical-voice-agent.git
-cd ai-medical-voice-agent/backend
+cd ai-medical-voice-agent
+```
+
+### 2. Set Up the Backend
+```bash
+cd backend
 npm install
-cp .env.example .env # Set your variables here
-Apply database migrations:
+cp .env.example .env
+# Fill in your values — see Environment Variables section below
+npm run db:push   # Push schema to Neon PostgreSQL
+npm run dev       # Starts at http://localhost:3000
+```
 
+Verify it's running: `http://localhost:3000/health`
 
-npm run db:push
-Start the backend server in development mode:
-
-
-npm run dev
-2. Set Up Frontend
+### 3. Set Up the Frontend
+```bash
 cd ../frontend
 npm install
-cp .env.example .env.development # Configure Clerk credentials
-npm run dev
-🔑 Environment Variables
-Backend (backend/.env)
+cp .env.example .env.development
+# Add VITE_BACKEND_URL and VITE_CLERK_PUBLISHABLE_KEY
+npm run dev       # Starts at http://localhost:5173
+```
+
+### 4. Run the Test Suite
+```bash
+cd backend
+npm test          # All Vitest tests should pass
+```
+
+---
+
+## 🔑 Environment Variables
+
+### Backend — `backend/.env`
+
+```env
+# ── Server ──────────────────────────────────────────────────
 PORT=3000
 NODE_ENV=development
 
-# Database (Neon PostgreSQL)
+# ── Database (Required) ─────────────────────────────────────
 DATABASE_URL=postgresql://user:password@host/neondb?sslmode=require
 
-# Authentication
+# ── Authentication (Required) ───────────────────────────────
 CLERK_SECRET_KEY=sk_test_...
 
-# AI Providers
-GROQ_API_KEY=gsk_...
-OPENAI_API_KEY=sk-...
+# ── AI Providers ────────────────────────────────────────────
+GROQ_API_KEY=gsk_...              # Primary — FREE at console.groq.com
+OPENAI_API_KEY=sk-...             # Fallback (optional)
 
-# Speech-to-Text
-ASSEMBLYAI_API_KEY=...
+# ── Speech-to-Text ──────────────────────────────────────────
+ASSEMBLYAI_API_KEY=...            # Optional — enables real voice STT
 
-# Cache
-REDIS_URL=redis://localhost:6379
+# ── Cache ───────────────────────────────────────────────────
+REDIS_URL=redis://localhost:6379  # Optional — analytics caching
 
-# Email SMTP
+# ── Email (Optional) ────────────────────────────────────────
 EMAIL_USER=your@gmail.com
-EMAIL_PASS=your_app_password
-📁 Project Structure
+EMAIL_PASS=your_gmail_app_password
+
+# ── SMS Reminders (Optional) ────────────────────────────────
+TWILIO_ACCOUNT_SID=AC...
+TWILIO_AUTH_TOKEN=...
+TWILIO_PHONE_NUMBER=+1...
+
+# ── Payments (Optional) ─────────────────────────────────────
+STRIPE_SECRET_KEY=sk_test_...
+
+# ── CORS ────────────────────────────────────────────────────
+FRONTEND_URL=http://localhost:5173
+```
+
+**Required to start**: `DATABASE_URL`, `CLERK_SECRET_KEY`, `GROQ_API_KEY`
+All other variables are optional — the server starts and degrades gracefully without them.
+
+### Frontend — `frontend/.env.development`
+```env
+VITE_BACKEND_URL=http://localhost:3000
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+```
+
+---
+
+## 📁 Project Structure
+
+```
 ai-medical-voice-agent/
+│
 ├── backend/
 │   ├── src/
-│   │   ├── config/                     # Database, redis, and env schemas
-│   │   ├── db/schema/                  # Drizzle ORM models
-│   │   ├── middleware/                 # Rate limiting, Auth & global errors
-│   │   ├── routes/                     # Domain consultation & triage routes
-│   │   ├── services/                   # Modular functional doctor services
-│   │   ├── sockets/                    # WebSockets streaming handlers
-│   │   ├── utils/                      # Winston logs & AppError formatters
-│   │   └── validators/                 # Zod validation schemas
-│   ├── tests/                          # Vitest tests
-│   └── render.yaml                     # Render deployment settings
+│   │   ├── config/
+│   │   │   ├── env.ts                  # Zod env validation — crashes fast on missing vars
+│   │   │   ├── database.ts             # Neon + Drizzle client
+│   │   │   └── redis.ts                # ioredis singleton
+│   │   │
+│   │   ├── db/schema/
+│   │   │   └── index.ts                # Drizzle table definitions + indexes
+│   │   │
+│   │   ├── middleware/
+│   │   │   ├── auth.ts                 # Clerk JWT verification
+│   │   │   ├── clinicMiddleware.ts     # Multi-tenant clinic scoping
+│   │   │   ├── errorHandler.ts         # Centralized Express error handler
+│   │   │   ├── rateLimiter.ts          # Global + per-route rate limits
+│   │   │   └── validate.ts             # Zod validation middleware factory
+│   │   │
+│   │   ├── routes/                     # 15 domain route files
+│   │   │
+│   │   ├── services/                   # All functional modules (zero classes)
+│   │   │   ├── voice.service.ts        # Groq → OpenAI fallback chain
+│   │   │   ├── triageService.ts        # Urgency scoring engine
+│   │   │   ├── ragKnowledgeBase.ts     # Medical knowledge retrieval
+│   │   │   ├── enhancedSymptomChecker.ts
+│   │   │   ├── analyticsService.ts
+│   │   │   ├── clinicService.ts
+│   │   │   ├── email.service.ts
+│   │   │   ├── reminderService.ts
+│   │   │   ├── reportGenerator.ts
+│   │   │   └── conversationMemory.ts
+│   │   │
+│   │   ├── sockets/
+│   │   │   └── voiceSocket.ts          # Streaming + non-streaming WS handlers
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── logger.ts               # Winston — JSON prod / pretty dev
+│   │   │   ├── AppError.ts             # Custom error class with statusCode
+│   │   │   └── catchAsync.ts           # Async route wrapper
+│   │   │
+│   │   ├── validators/
+│   │   │   ├── consultation.validator.ts
+│   │   │   ├── triage.validator.ts
+│   │   │   └── voice.validator.ts
+│   │   │
+│   │   └── index.ts                    # App entry — routes, CORS, Socket.IO
+│   │
+│   ├── tests/                          # Vitest test suite
+│   ├── render.yaml                     # Render deployment config
+│   └── package.json
 │
 └── frontend/
     ├── src/
-    │   ├── components/                 # Redesigned pages & dialog bounds
-    │   ├── context/                    # Language & subscription providers
-    │   ├── hooks/                      # Custom medical session hooks
-    │   └── services/                   # Axios API & local cache synchronizers
-    └── netlify.toml                    # Netlify redirects and SPA routing
+    │   ├── components/                 # 40+ React functional components
+    │   ├── context/                    # Language, Subscription, Theme providers
+    │   ├── hooks/                      # useConsultation, useVoiceSocket, useLanguage
+    │   ├── pages/                      # Full page views
+    │   ├── services/                   # Axios client + consultationService
+    │   └── translations/               # en / hi / ta / te / kn / ml / bn / mr / gu
+    │
+    ├── netlify.toml                    # SPA redirect + build config
+    └── package.json
+```
 
-🔒 HIPAA Compliance
-MediVoice AI incorporates best-practice compliance constraints:
+---
 
-Encryption: AES-256 for database fields, TLS 1.3 for network transactions.
-Audit Trail: Action audit trails with Winston JSON logs and masked secure strings.
-Clinic RBAC: Strict scope checking validating user-to-clinic relations on multi-tenant dashboards.
-⚠️ Disclaimer
-MediVoice AI is an informational tool only. The AI-generated responses, triage scores, symptom assessments, and medical reports provided by this platform are for educational and informational purposes only. They do not constitute professional medical advice, diagnosis, or treatment.
+## 📡 API Reference
 
-In case of a medical emergency, call your local emergency services immediately (108 in India, 911 in the US).
+### REST Endpoints
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | — | Health check + service status |
+| `POST` | `/api/consultations` | ✅ | Start a new consultation |
+| `GET` | `/api/consultations` | ✅ | List user consultations |
+| `POST` | `/api/voice` | ✅ | Process voice audio buffer |
+| `POST` | `/api/triage/analyze` | ✅ | Analyze symptoms → urgency score |
+| `GET` | `/api/triage/guidelines` | — | Triage reference table |
+| `POST` | `/api/rag/search` | ✅ | Search medical knowledge base |
+| `GET` | `/api/reports` | ✅ | Fetch generated reports |
+| `POST` | `/api/email/send-report` | ✅ | Email report to patient |
+| `POST` | `/api/audit/log` | ✅ | Log HIPAA audit event |
+| `GET` | `/api/audit/logs` | ✅ | Retrieve immutable audit trail |
+| `POST` | `/api/analytics/dashboard` | ✅ | Clinic dashboard metrics |
+| `POST` | `/api/analytics/trends` | ✅ | 30-day consultation trends |
+| `POST` | `/api/clinic/create` | ✅ | Create a clinic tenant |
+| `POST` | `/api/clinic/:id/appointments` | ✅ | Book appointment |
+| `POST` | `/api/reminder` | ✅ | Set medication reminder (SMS) |
+| `POST` | `/api/enhanced-symptom/check` | ✅ | Differential diagnosis engine |
+
+### WebSocket Events (Socket.IO)
+
+| Event | Direction | Description |
+|---|---|---|
+| `join-consultation` | Client → Server | Join a consultation room by ID |
+| `get-ai-response-stream` | Client → Server | Request streaming AI response with history |
+| `ai-response-chunk` | Server → Client | Streaming token chunk (or full fallback) |
+| `get-ai-response` | Client → Server | Request non-streaming response |
+| `ai-response` | Server → Client | Complete AI response |
+| `ai-response-error` | Server → Client | Error with fallback triggered |
+
+---
+
+## 🔒 HIPAA Compliance
+
+| Control | Implementation |
+|---|---|
+| **Encryption at Rest** | AES-256 on all stored PHI |
+| **Encryption in Transit** | TLS 1.3 for all API communications |
+| **Authentication** | Clerk with MFA support |
+| **Audit Logging** | Immutable cryptographically-signed Winston logs |
+| **Log Retention** | 7-year retention policy |
+| **Access Control** | Role-based (RBAC) scoped per clinic tenant |
+| **Session Timeout** | 15-minute auto-logout |
+| **Breach Detection** | 60-hour SLA + automated HHS notification |
+| **Data Minimization** | Only necessary PHI collected per consultation |
+| **Backup / Recovery** | RTO: 4 hours · RPO: 15 minutes |
+
+Full documentation: [`README-HIPAA.md`](./README-HIPAA.md)
+
+---
+
+## 🚢 Deployment
+
+### Backend → Render
+`render.yaml` is pre-configured. Connect the GitHub repo to Render, set all env vars in the dashboard — every push to `main` auto-deploys.
+
+```bash
+cd backend
+npm run build   # TypeScript → dist/
+npm start       # Runs dist/index.js
+```
+
+### Frontend → Netlify
+`netlify.toml` handles the SPA redirect (without it, page refresh on any route returns 404).
+
+```bash
+cd frontend
+npm run build   # Outputs to dist/
+```
+
+Set `VITE_BACKEND_URL` and `VITE_CLERK_PUBLISHABLE_KEY` in Netlify environment settings.
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] **Vector DB for RAG** — pgvector on Neon or Pinecone for scalable knowledge retrieval
+- [ ] **Video Consultation** — Daily.co / Zoom Video SDK (SDK already installed)
+- [ ] **Prescription Generation** — digital signature + pharmacy integration
+- [ ] **EHR Integration** — FHIR API for hospital system connectivity
+- [ ] **Mobile App** — React Native for iOS + Android
+- [ ] **Doctor Portal** — dedicated interface with patient queue management
+- [ ] **Wearable Integration** — real-time heart rate + SpO₂ from smartwatches
+
+---
+
+## 👨‍💻 Author
+
+**Vaibhav** — Full-stack developer building AI applications for healthcare.
+
+[![GitHub](https://img.shields.io/badge/GitHub-vaibhav--aiml-181717?style=flat-square&logo=github)](https://github.com/vaibhav-aiml)
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome. For major changes, please open an issue first.
+
+```bash
+git checkout -b feature/your-feature
+git commit -m "feat: describe your change"
+git push origin feature/your-feature
+# Open a Pull Request against main
+```
+
+---
+
+## 📄 License
+
+ISC License — see [LICENSE](./LICENSE) for details.
+
+---
+
+<div align="center">
+
+**Built with ❤️ for better healthcare access across India**
+
+*© 2026 MediVoice AI. All rights reserved.*
+
+<br/>
+
+⭐ **If this project helped you, please consider starring the repo!** ⭐
+
+</div>
