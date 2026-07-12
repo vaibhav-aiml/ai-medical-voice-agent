@@ -1,69 +1,52 @@
-# HIPAA Compliance Documentation
+# HIPAA Compliance Reference & Architecture
 
-## Overview
-MediVoice AI is designed with HIPAA compliance considerations for US healthcare applications.
+This document describes the HIPAA-compliant security measures built directly into the MediVoice AI application code, and details how the deploying organization can satisfy remaining physical/administrative safeguards.
 
-## HIPAA Compliance Measures
+## Implemented Technical Controls
 
-### 1. Encryption Standards
-- **Data at Rest**: AES-256 encryption for all stored patient data
-- **Data in Transit**: TLS 1.3 for all API communications
-- **Database Encryption**: PostgreSQL with Transparent Data Encryption (TDE)
+The following security controls are implemented at the application and database level:
 
-### 2. Access Controls
-- Role-Based Access Control (RBAC)
-- Multi-factor authentication required for all users
-- Automatic session timeout after 15 minutes of inactivity
-- IP whitelisting for admin access
+### 1. Secure Access Controls
+- **Clerk Authentication**: All patient data routes are protected via authenticated session checks (`requireAuth`). The backend performs cryptographic verification of Clerk JWT tokens (`clerkClient.verifyToken`) to validate user identities.
+- **Route Protection**: Access controls are strictly enforced on all sensitive endpoints (e.g., consultations, voice records, reports, triage results, RAG queries, and clinic dashboards).
 
-### 3. Audit Controls
-- Immutable audit logs with cryptographic signatures
-- Real-time monitoring of all data access
-- 7-year log retention policy
-- Automated alerting for suspicious activities
+### 2. Audit & Access Logging
+- **Database Persistence**: Audit logs and HIPAA logs are persisted to a PostgreSQL database (via Drizzle ORM) rather than in-memory storage, maintaining permanent records of data access.
+- **Cryptographic Signatures**: The frontend client-side logger cryptographically signs audit log entries to ensure their integrity. Any subsequent modification of log files can be detected by signature mismatch.
+- **Admin Access API**: Secure `/api/hipaa/logs` and `/api/audit/logs` endpoints are built and restricted to authenticated users.
 
-### 4. Business Associate Agreements (BAA)
-We maintain BAAs with all vendors handling PHI:
+### 3. Client-Side Data Minimization (PHI Sanitization)
+- **Local Anonymization**: The application includes a client-side utility (`hipaaCompliance.ts`) that runs prior to any third-party AI inferences. It detects and redacts standard Protected Health Information (PHI) identifiers (e.g., names, emails, phone numbers, and street addresses).
 
-| Vendor | Purpose | BAA Status |
-|--------|---------|------------|
-| Clerk | Authentication | ✅ Signed |
-| Groq/OpenAI | AI Processing | ✅ Signed |
-| Vercel | Hosting | ✅ Signed |
-| PostgreSQL | Database | ✅ Signed |
+---
 
-### 5. Data Minimization
-- Only collect necessary PHI for medical consultation
-- Automatic data anonymization for AI training
-- 30-day automatic data purging for non-essential logs
+## Deployer Compliance Checklist (Infrastructure & Administrative)
 
-### 6. Breach Notification
-- 60-hour breach detection SLA
-- Automated patient notification system
-- HHS reporting within 60 days (as required)
+Because HIPAA compliance is a property of the overall system deployment and organizational policies, the organization deploying this application must implement the following safeguards:
 
-### 7. Physical Safeguards
-- Cloud infrastructure with ISO 27001 certification
-- 24/7 physical security at data centers
-- Redundant backup in geographically separated regions
+### 1. Data Encryption at Rest and in Transit
+- **Database & Storage**: Ensure your production database (e.g., Neon / Amazon RDS) has encryption at rest enabled (AES-256).
+- **Transport Security**: Configure hosting platforms (e.g., Netlify, Render, Vercel) to enforce TLS 1.3 for all communications.
 
-### 8. Technical Safeguards
-- Unique user identification
-- Emergency access procedures
-- Automatic log-off
-- Data backup and disaster recovery (RTO: 4 hours, RPO: 15 minutes)
+### 2. Business Associate Agreements (BAAs)
+Deployers must sign BAAs with all third-party vendors handling PHI in their deployment environment:
+- **Authentication**: Clerk (requires Enterprise or custom plans for BAA).
+- **AI Processing**: OpenAI / Groq (requires enterprise agreements).
+- **Database & Hosting**: Neon / AWS / Render.
 
-## Implementation Checklist
+### 3. Administrative Policies
+- Establish a HIPAA training regimen for all medical/administrative staff.
+- Set up automated database backups with clear Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO).
+- Formulate a 60-day Breach Notification procedure and SLA.
 
-- [x] Encryption at rest (AES-256)
-- [x] Encryption in transit (TLS 1.3)
-- [x] Audit logging system
-- [x] Access control system
-- [ ] BAA with OpenAI (In Progress)
-- [x] Data backup procedures
-- [ ] HIPAA training for all team members
-- [ ] Annual risk assessment
+---
 
-## Contact
-**HIPAA Privacy Officer**: privacy@medivoice.ai
-**Security Incident Response**: security@medivoice.ai
+## Active Checklist
+
+- [x] Application-level Access Controls (Clerk JWT Signature Verification)
+- [x] Permanent Database Logging (Audit & HIPAA tables)
+- [x] Cryptographic Integrity Verification for client-side audit logs
+- [x] Local PHI Data Minimization & Redaction (Regex Anonymizer)
+- [ ] Infrastructure-level Encryption (To be configured by Deployer)
+- [ ] BAA Contracts signed with vendors (To be executed by Deployer)
+- [ ] Administrative policies and team training (To be established by Deployer)

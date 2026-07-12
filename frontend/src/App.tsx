@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
+import axios from 'axios';
 import { 
   Home, LayoutDashboard, FileText, Calendar, Plus, Mic, Stethoscope,
   ClipboardList, ArrowRight, Download, X, Activity, Brain, Heart, Bone, Baby,
@@ -47,8 +48,48 @@ import HIPAACompliance from './pages/HIPAACompliance';
 import CookiePolicy from './pages/CookiePolicy';
 
 function AppContent() {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const { user } = useUser();
+
+  // Set up global request interceptors for auth tokens
+  useEffect(() => {
+    // 1. Axios request interceptor
+    const axiosInterceptor = axios.interceptors.request.use(async (config) => {
+      try {
+        const token = await getToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (err) {
+        console.error('Failed to attach token to Axios request', err);
+      }
+      return config;
+    });
+
+    // 2. Global fetch interceptor
+    const originalFetch = window.fetch;
+    window.fetch = async function (input, init) {
+      try {
+        const token = await getToken();
+        if (token) {
+          init = init || {};
+          init.headers = {
+            ...init.headers,
+            'Authorization': `Bearer ${token}`,
+          };
+        }
+      } catch (err) {
+        console.error('Failed to attach token to fetch request', err);
+      }
+      return originalFetch(input, init);
+    };
+
+    return () => {
+      axios.interceptors.request.eject(axiosInterceptor);
+      window.fetch = originalFetch;
+    };
+  }, [getToken]);
+
   const { t, language } = useLanguage();
   const { canStartConsultation, getRemainingConsultations, subscription, incrementConsultation } = useSubscription();
   const [currentPage, setCurrentPage] = useState('home');

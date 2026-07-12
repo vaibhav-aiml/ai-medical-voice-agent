@@ -16,6 +16,7 @@ import { redis } from './config/redis';
 import { setupVoiceSocket } from './sockets/voiceSocket';
 import { errorHandler } from './middleware/errorHandler';
 import { globalLimiter, aiLimiter } from './middleware/rateLimiter';
+import { requireAuth } from './middleware/auth';
 
 // Import routes
 import consultationRoutes from './routes/consultation.routes';
@@ -117,22 +118,22 @@ app.use((req, res, next) => {
 });
 
 // Routes with specific rate limiters applied to AI routes
-app.use('/api/consultations', aiLimiter, consultationRoutes);
-app.use('/api/voice', aiLimiter, voiceRoutes);
-app.use('/api/triage', aiLimiter, triageRoutes);
-app.use('/api/enhanced-symptom', aiLimiter, enhancedSymptomRoutes);
+app.use('/api/consultations', requireAuth, aiLimiter, consultationRoutes);
+app.use('/api/voice', requireAuth, aiLimiter, voiceRoutes);
+app.use('/api/triage', requireAuth, aiLimiter, triageRoutes);
+app.use('/api/enhanced-symptom', requireAuth, aiLimiter, enhancedSymptomRoutes);
 
 // Other standard routes
-app.use('/api/reports', reportRoutes);
+app.use('/api/reports', requireAuth, reportRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/hipaa', hipaaRoutes);
-app.use('/api/rag', ragRoutes);
-app.use('/api/conversation', conversationRoutes);
+app.use('/api/rag', requireAuth, ragRoutes);
+app.use('/api/conversation', requireAuth, conversationRoutes);
 app.use('/api/reminder', reminderRoutes);
-app.use('/api/enhanced-report', enhancedReportRoutes);
+app.use('/api/enhanced-report', requireAuth, enhancedReportRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/clinic', clinicRoutes);
+app.use('/api/clinic', requireAuth, clinicRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

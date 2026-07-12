@@ -1,34 +1,37 @@
 import { Router, Request, Response } from 'express';
+import { db } from '../config/database';
+import { hipaaLogs } from '../db/schema/index';
+import { requireAuth } from '../middleware/auth';
+import { catchAsync } from '../utils/catchAsync';
+import { desc } from 'drizzle-orm';
 
 const router = Router();
 
-// Store HIPAA logs in memory (use database in production)
-const hipaaLogs: any[] = [];
-
 // POST /api/hipaa/log
-router.post('/log', (req: Request, res: Response) => {
-  try {
-    const logEntry = req.body;
-    logEntry.receivedAt = new Date().toISOString();
-    hipaaLogs.push(logEntry);
-    
-    console.log(`[HIPAA] ${logEntry.type} accessed by ${logEntry.accessedBy}`);
-    
-    // Keep only last 10,000 logs
-    if (hipaaLogs.length > 10000) {
-      hipaaLogs.shift();
-    }
-    
-    res.status(200).json({ success: true, message: 'HIPAA log received' });
-  } catch (error) {
-    console.error('Error saving HIPAA log:', error);
-    res.status(500).json({ success: false, error: 'Failed to save HIPAA log' });
-  }
-});
+router.post('/log', catchAsync(async (req: Request, res: Response) => {
+  const { type, value, accessReason, accessedBy, timestamp, extraData } = req.body;
+  
+  await db.insert(hipaaLogs).values({
+    type,
+    value,
+    accessReason,
+    accessedBy,
+    timestamp: timestamp ? new Date(timestamp) : new Date(),
+    extraData: extraData || null,
+  });
+  
+  console.log(`[HIPAA] ${type} accessed by ${accessedBy}`);
+  res.status(200).json({ success: true, message: 'HIPAA log received' });
+}));
 
 // GET /api/hipaa/logs (for admin)
-router.get('/logs', (req: Request, res: Response) => {
-  res.status(200).json({ success: true, logs: hipaaLogs });
-});
+router.get('/logs', requireAuth, catchAsync(async (req: Request, res: Response) => {
+  const logs = await db.select()
+    .from(hipaaLogs)
+    .orderBy(desc(hipaaLogs.receivedAt))
+    .limit(1000); // safety limit
+  
+  res.status(200).json({ success: true, logs });
+}));
 
 export default router;

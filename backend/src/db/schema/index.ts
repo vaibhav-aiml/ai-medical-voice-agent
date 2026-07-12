@@ -71,3 +71,34 @@ export const subscriptions = pgTable('subscriptions', {
   cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+export const hipaaLogs = pgTable('hipaa_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  type: text('type').notNull(),
+  value: text('value'),
+  accessReason: text('access_reason'),
+  accessedBy: text('accessed_by'),
+  timestamp: timestamp('timestamp'),
+  receivedAt: timestamp('received_at').defaultNow(),
+  extraData: jsonb('extra_data'),
+}, (table) => [
+  index('idx_hipaa_logs_type').on(table.type),
+  index('idx_hipaa_logs_accessed_by').on(table.accessedBy),
+  index('idx_hipaa_logs_timestamp').on(table.timestamp),
+]);
+
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  timestamp: timestamp('timestamp'),
+  userId: text('user_id'),
+  sessionId: text('session_id'),
+  action: text('action').notNull(),
+  message: text('message'),
+  metadata: jsonb('metadata'),
+  signature: text('signature'),
+  receivedAt: timestamp('received_at').defaultNow(),
+}, (table) => [
+  index('idx_audit_logs_user_id').on(table.userId),
+  index('idx_audit_logs_action').on(table.action),
+  index('idx_audit_logs_timestamp').on(table.timestamp),
+]);
