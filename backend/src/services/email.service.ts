@@ -1,14 +1,14 @@
 import nodemailer from 'nodemailer';
+import logger from '../utils/logger';
 
-// Use EMAIL_USER/EMAIL_PASS (same credentials as reminderService)
 const EMAIL_USER = process.env.EMAIL_USER || process.env.SMTP_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS || process.env.SMTP_PASS;
 
-console.log('📧 Email Service Initialized');
-console.log('  User:', EMAIL_USER);
-console.log('  Pass:', EMAIL_PASS ? '✅ Set' : '❌ Missing');
+logger.info('Email Service Initialized', {
+  user: EMAIL_USER,
+  passSet: !!EMAIL_PASS,
+});
 
-// Create transporter using Gmail service (recommended over manual host/port)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -17,19 +17,16 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Verify connection on startup (non-fatal — server starts regardless)
 transporter.verify((error, success) => {
   if (error) {
-    console.error('❌ SMTP Verification Failed:', error.message);
-    console.log('💡 Tip: Make sure you are using a valid Gmail App Password.');
-    console.log('   Go to https://myaccount.google.com/apppasswords to generate one.');
+    logger.error('SMTP Verification Failed', { error: error.message });
   } else {
-    console.log('✅ SMTP Ready! Emails will be sent from:', EMAIL_USER);
+    logger.info('SMTP Ready! Emails will be sent from', { user: EMAIL_USER });
   }
 });
 
 export const sendTestEmail = async (to: string) => {
-  console.log(`📧 Sending test email to: ${to}`);
+  logger.info(`Sending test email to: ${to}`);
   
   const mailOptions = {
     from: `"MediVoice AI" <${EMAIL_USER}>`,
@@ -69,12 +66,10 @@ export const sendTestEmail = async (to: string) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully!');
-    console.log('  Message ID:', info.messageId);
-    console.log('  Sent to:', to);
+    logger.info('Email sent successfully!', { messageId: info.messageId, to });
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
-    console.error('❌ Failed to send email:', error.message);
+    logger.error('Failed to send email', { error: error.message });
     throw error;
   }
 };
@@ -82,7 +77,7 @@ export const sendTestEmail = async (to: string) => {
 export const sendMedicalReportEmail = async (data: any) => {
   const { to, patientName, consultationId, specialistName, symptoms, diagnosis, recommendations } = data;
   
-  console.log(`📧 Sending medical report to: ${to}`);
+  logger.info(`Sending medical report to: ${to}`);
   
   const mailOptions = {
     from: `"MediVoice AI" <${EMAIL_USER}>`,
@@ -147,10 +142,17 @@ export const sendMedicalReportEmail = async (data: any) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Medical report sent successfully!');
+    logger.info('Medical report sent successfully!', { messageId: info.messageId });
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
-    console.error('❌ Failed to send medical report:', error.message);
+    logger.error('Failed to send medical report', { error: error.message });
     throw error;
   }
 };
+
+// Backward-compatible export
+export const emailService = {
+  sendTestEmail,
+  sendMedicalReportEmail,
+};
+export default emailService;

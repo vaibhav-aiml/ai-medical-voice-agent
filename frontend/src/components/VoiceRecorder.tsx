@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
+import { BACKEND_URL, API_URL } from '../config/api';
 import TriageDisplay from './TriageDisplay';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -71,7 +72,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       if (!userId) return;
       
       try {
-        const response = await fetch(`/api/conversation/previous-symptoms/${userId}`);
+        const response = await fetch(`${API_URL}/conversation/previous-symptoms/${userId}`);
         const data = await response.json();
         if (data.success && data.data && data.data.length > 0) {
           const previousSymptoms = data.data.slice(0, 3).join(', ');
@@ -147,7 +148,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const analyzeSymptomsForTriage = async (symptoms: string) => {
     setIsAnalyzing(true);
     try {
-      const triageResponse = await fetch('/api/triage/analyze', {
+      const triageResponse = await fetch(`${API_URL}/triage/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symptoms })
@@ -238,8 +239,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
 
   // WebSocket connection with streaming support
   useEffect(() => {
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-    
     console.log('🔌 Connecting to WebSocket at:', BACKEND_URL);
     
     socketRef.current = io(BACKEND_URL, {

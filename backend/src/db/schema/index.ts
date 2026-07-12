@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, jsonb, boolean, decimal } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, jsonb, boolean, decimal, index } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -26,7 +26,11 @@ export const consultations = pgTable('consultations', {
   duration: decimal('duration'),
   audioRecordingUrl: text('audio_recording_url'),
   createdAt: timestamp('created_at').defaultNow(),
-});
+}, (table) => [
+  index('idx_consultations_user_id').on(table.userId),
+  index('idx_consultations_status').on(table.status),
+  index('idx_consultations_started_at').on(table.startedAt),
+]);
 
 export const voiceSessions = pgTable('voice_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -36,7 +40,9 @@ export const voiceSessions = pgTable('voice_sessions', {
   audioUrl: text('audio_url'),
   startedAt: timestamp('started_at').defaultNow(),
   endedAt: timestamp('ended_at'),
-});
+}, (table) => [
+  index('idx_voice_sessions_consultation_id').on(table.consultationId),
+]);
 
 export const medicalReports = pgTable('medical_reports', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -49,7 +55,9 @@ export const medicalReports = pgTable('medical_reports', {
   followUpDate: timestamp('follow_up_date'),
   reportUrl: text('report_url'),
   generatedAt: timestamp('generated_at').defaultNow(),
-});
+}, (table) => [
+  index('idx_medical_reports_consultation_id').on(table.consultationId),
+]);
 
 export const subscriptions = pgTable('subscriptions', {
   id: uuid('id').primaryKey().defaultRandom(),

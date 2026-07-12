@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
+import { BACKEND_URL, API_URL } from '../config/api';
 
 interface StreamingChatProps {
   consultationId: string;
@@ -19,7 +20,7 @@ export default function StreamingChat({ consultationId, specialistType, userId, 
   useEffect(() => {
     const loadContext = async () => {
       try {
-        const response = await fetch(`/api/conversation/previous-symptoms/${userId}`);
+        const response = await fetch(`${API_URL}/conversation/previous-symptoms/${userId}`);
         const data = await response.json();
         if (data.success && data.data.length > 0) {
           const context = `\n\n[Previous consultations] You previously reported: ${data.data.slice(0, 3).join(', ')}. Consider this history.`;
@@ -37,8 +38,6 @@ export default function StreamingChat({ consultationId, specialistType, userId, 
 
   // WebSocket connection
   useEffect(() => {
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://ai-medical-voice-agent-ygc5.onrender.com';
-    
     socketRef.current = io(BACKEND_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,

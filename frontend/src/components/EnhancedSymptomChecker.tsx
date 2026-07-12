@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL } from '../config/api';
 import { Activity, AlertCircle, CheckCircle, Clock, Heart, Brain, Stethoscope, Pill, TrendingUp, AlertTriangle, Shield, Plus, Trash2 } from 'lucide-react';
 
 interface Symptom {
@@ -162,7 +163,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
         severities[s.name] = s.severity;
       });
 
-      const response = await fetch('/api/enhanced-symptom/analyze', {
+      const response = await fetch(`${API_URL}/enhanced-symptom/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

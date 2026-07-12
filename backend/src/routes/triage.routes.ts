@@ -1,29 +1,23 @@
 import { Router, Request, Response } from 'express';
 import { triageService } from '../services/triageService';
+import { validate } from '../middleware/validate';
+import { analyzeTriageSchema } from '../validators/triage.validator';
+import { catchAsync } from '../utils/catchAsync';
 
 const router = Router();
 
 // POST /api/triage/analyze - Analyze symptoms for urgency scoring
-router.post('/analyze', (req: Request, res: Response) => {
-  try {
-    const { symptoms, age, existingConditions } = req.body;
-    
-    if (!symptoms) {
-      return res.status(400).json({ error: 'Symptoms are required' });
-    }
-    
-    const result = triageService.analyzeSymptoms(symptoms, age, existingConditions);
-    
-    res.json({
-      success: true,
-      data: result,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Triage analysis error:', error);
-    res.status(500).json({ error: 'Failed to analyze symptoms' });
-  }
-});
+router.post('/analyze', validate(analyzeTriageSchema), catchAsync(async (req: Request, res: Response) => {
+  const { symptoms, age, existingConditions } = req.body;
+  
+  const result = triageService.analyzeSymptoms(symptoms, age, existingConditions);
+  
+  res.json({
+    success: true,
+    data: result,
+    timestamp: new Date().toISOString()
+  });
+}));
 
 // GET /api/triage/guidelines - Get triage guidelines
 router.get('/guidelines', (req: Request, res: Response) => {

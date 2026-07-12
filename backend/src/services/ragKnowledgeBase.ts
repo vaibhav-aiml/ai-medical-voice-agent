@@ -1,4 +1,4 @@
-// RAG (Retrieval-Augmented Generation) Medical Knowledge Base
+// RAG (Retrieval-Augmented Generation) Medical Knowledge Base — Functional Module
 
 export interface MedicalKnowledge {
   id: string;
@@ -12,7 +12,6 @@ export interface MedicalKnowledge {
   confidence: number;
 }
 
-// Medical knowledge base (in production, this would be a vector database)
 const MEDICAL_KNOWLEDGE_BASE: MedicalKnowledge[] = [
   {
     id: '1',
@@ -178,77 +177,68 @@ const MEDICAL_KNOWLEDGE_BASE: MedicalKnowledge[] = [
   }
 ];
 
-export class RAGKnowledgeBase {
+// Exported functional methods
+export function searchKnowledge(symptoms: string, limit: number = 3): MedicalKnowledge[] {
+  const lowerSymptoms = symptoms.toLowerCase();
+  const scoredResults: { knowledge: MedicalKnowledge; score: number }[] = [];
   
-  // Search for relevant medical knowledge based on symptoms
-  searchKnowledge(symptoms: string, limit: number = 3): MedicalKnowledge[] {
-    const lowerSymptoms = symptoms.toLowerCase();
-    const scoredResults: { knowledge: MedicalKnowledge; score: number }[] = [];
+  for (const knowledge of MEDICAL_KNOWLEDGE_BASE) {
+    let score = 0;
     
-    for (const knowledge of MEDICAL_KNOWLEDGE_BASE) {
-      let score = 0;
-      
-      // Score based on symptom matching
-      for (const symptom of knowledge.symptoms) {
-        if (lowerSymptoms.includes(symptom.toLowerCase())) {
-          score += 10;
-        }
-      }
-      
-      // Score based on condition name matching
-      if (lowerSymptoms.includes(knowledge.condition.toLowerCase())) {
-        score += 20;
-      }
-      
-      // Score based on warning signs matching
-      for (const warning of knowledge.warningSigns) {
-        if (lowerSymptoms.includes(warning.toLowerCase())) {
-          score += 15;
-        }
-      }
-      
-      if (score > 0) {
-        scoredResults.push({ knowledge, score });
+    for (const symptom of knowledge.symptoms) {
+      if (lowerSymptoms.includes(symptom.toLowerCase())) {
+        score += 10;
       }
     }
     
-    // Sort by score (highest first) and return top results
-    scoredResults.sort((a, b) => b.score - a.score);
-    return scoredResults.slice(0, limit).map(r => r.knowledge);
-  }
-  
-  // Get condition-specific advice
-  getConditionAdvice(condition: string): MedicalKnowledge | undefined {
-    return MEDICAL_KNOWLEDGE_BASE.find(
-      k => k.condition.toLowerCase().includes(condition.toLowerCase())
-    );
-  }
-  
-  // Generate an enhanced response using RAG
-  generateEnhancedResponse(symptoms: string, userMessage: string): string {
-    const relevantKnowledge = this.searchKnowledge(symptoms, 2);
-    
-    if (relevantKnowledge.length === 0) {
-      return "I understand your concern. Based on the symptoms you've described, I recommend monitoring your condition. If symptoms worsen or persist, please consult a healthcare provider.";
+    if (lowerSymptoms.includes(knowledge.condition.toLowerCase())) {
+      score += 20;
     }
     
-    let response = "Based on medical literature, here's what I can share:\n\n";
-    
-    for (const knowledge of relevantKnowledge) {
-      response += `📚 **${knowledge.condition}**\n`;
-      response += `• Common symptoms: ${knowledge.symptoms.slice(0, 3).join(', ')}${knowledge.symptoms.length > 3 ? '...' : ''}\n`;
-      response += `• Self-care: ${knowledge.selfCare[0]}\n`;
-      response += `• ⚠️ When to see a doctor: ${knowledge.whenToSeeDoctor}\n\n`;
+    for (const warning of knowledge.warningSigns) {
+      if (lowerSymptoms.includes(warning.toLowerCase())) {
+        score += 15;
+      }
     }
     
-    response += "💡 **Important**: This information is for educational purposes and not a substitute for professional medical advice. Please consult a healthcare provider for proper diagnosis and treatment.";
-    
-    return response;
+    if (score > 0) {
+      scoredResults.push({ knowledge, score });
+    }
   }
   
-  // Get emergency guidance
-  getEmergencyGuidance(): string {
-    return `⚠️ **EMERGENCY GUIDANCE** ⚠️
+  scoredResults.sort((a, b) => b.score - a.score);
+  return scoredResults.slice(0, limit).map(r => r.knowledge);
+}
+
+export function getConditionAdvice(condition: string): MedicalKnowledge | undefined {
+  return MEDICAL_KNOWLEDGE_BASE.find(
+    k => k.condition.toLowerCase().includes(condition.toLowerCase())
+  );
+}
+
+export function generateEnhancedResponse(symptoms: string, userMessage: string): string {
+  const relevantKnowledge = searchKnowledge(symptoms, 2);
+  
+  if (relevantKnowledge.length === 0) {
+    return "I understand your concern. Based on the symptoms you've described, I recommend monitoring your condition. If symptoms worsen or persist, please consult a healthcare provider.";
+  }
+  
+  let response = "Based on medical literature, here's what I can share:\n\n";
+  
+  for (const knowledge of relevantKnowledge) {
+    response += `📚 **${knowledge.condition}**\n`;
+    response += `• Common symptoms: ${knowledge.symptoms.slice(0, 3).join(', ')}${knowledge.symptoms.length > 3 ? '...' : ''}\n`;
+    response += `• Self-care: ${knowledge.selfCare[0]}\n`;
+    response += `• ⚠️ When to see a doctor: ${knowledge.whenToSeeDoctor}\n\n`;
+  }
+  
+  response += "💡 **Important**: This information is for educational purposes and not a substitute for professional medical advice. Please consult a healthcare provider for proper diagnosis and treatment.";
+  
+  return response;
+}
+
+export function getEmergencyGuidance(): string {
+  return `⚠️ **EMERGENCY GUIDANCE** ⚠️
 
 If you or someone you know is experiencing a medical emergency:
 • Call 108 (Ambulance Services in India)
@@ -266,7 +256,12 @@ Signs of medical emergency include:
 • Suicidal thoughts or self-harm intentions
 
 Do not wait. Seek immediate medical attention.`;
-  }
 }
 
-export const ragKnowledgeBase = new RAGKnowledgeBase();
+// Backward-compatible default export object
+export const ragKnowledgeBase = {
+  searchKnowledge,
+  getConditionAdvice,
+  generateEnhancedResponse,
+  getEmergencyGuidance,
+};

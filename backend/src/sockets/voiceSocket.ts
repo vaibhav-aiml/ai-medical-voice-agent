@@ -1,15 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { Groq } from 'groq-sdk';
-import dotenv from 'dotenv';
-import path from 'path';
-
-// Force load .env before anything else
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-
-console.log('🔍 voiceSocket - GROQ_API_KEY:', process.env.GROQ_API_KEY ? '✅ Present' : '❌ Missing');
-if (process.env.GROQ_API_KEY) {
-  console.log('🔍 Key starts with:', process.env.GROQ_API_KEY.substring(0, 10) + '...');
-}
+import logger from '../utils/logger';
 
 // Initialize Groq only if API key exists
 let groq: Groq | null = null;
@@ -18,24 +9,21 @@ try {
     groq = new Groq({
       apiKey: process.env.GROQ_API_KEY,
     });
-    console.log('✅ Groq API initialized successfully');
+    logger.info('Groq API initialized successfully in voice socket');
   } else {
-    console.warn('⚠️ GROQ_API_KEY not set or invalid. AI responses will use fallback mode.');
-    console.warn('💡 To enable AI responses, add a valid GROQ_API_KEY to your .env file');
-    console.warn('💡 Get a free API key from: https://console.groq.com');
+    logger.warn('GROQ_API_KEY not set or invalid. AI responses will use fallback mode.');
   }
-} catch (error) {
-  console.error('❌ Failed to initialize Groq:', error);
+} catch (error: any) {
+  logger.error('Failed to initialize Groq client', { error: error.message });
 }
 
 export function setupVoiceSocket(io: Server) {
-  
   io.on('connection', (socket: Socket) => {
-    console.log('🔌 Client connected:', socket.id);
+    logger.debug('Client connected to socket', { socketId: socket.id });
     
     socket.on('join-consultation', (consultationId: string) => {
       socket.join(`consultation_${consultationId}`);
-      console.log(`📋 Client ${socket.id} joined consultation: ${consultationId}`);
+      logger.info(`Client joined consultation channel`, { socketId: socket.id, consultationId });
     });
     
     // Real-time streaming response with conversation history
@@ -49,24 +37,19 @@ export function setupVoiceSocket(io: Server) {
     }) => {
       const { consultationId, transcript, specialistType, userId, contextPrompt, conversationHistory } = data;
       
-      console.log(`🎤 Real-time streaming request from ${socket.id}`);
-      console.log(`📝 Transcript: ${transcript.substring(0, 100)}...`);
-      console.log(`👤 User ID: ${userId || 'anonymous'}`);
-      console.log(`📚 Context: ${contextPrompt ? 'Yes' : 'No'}`);
-      console.log(`💬 Conversation history length: ${conversationHistory?.length || 0}`);
+      logger.info(`Real-time streaming request from socket`, {
+        socketId: socket.id,
+        consultationId,
+        specialistType,
+        historyLength: conversationHistory?.length || 0,
+      });
       
-      // Build system prompt with context
       const systemPrompt = getSystemPrompt(specialistType, contextPrompt);
-      
-      // Build messages array with full conversation history
       const messages: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [
         { role: 'system', content: systemPrompt },
       ];
       
-      // Add conversation history if available (maintains context between messages)
       if (conversationHistory && conversationHistory.length > 0) {
-        console.log(`📜 Adding ${conversationHistory.length} history messages for context`);
-        // Add last 10 messages for context (5 exchanges)
         const recentHistory = conversationHistory.slice(-10);
         for (const msg of recentHistory) {
           if (msg.role === 'user' || msg.role === 'assistant') {
@@ -78,17 +61,12 @@ export function setupVoiceSocket(io: Server) {
         }
       }
       
-      // Add current user message
       messages.push({ role: 'user', content: transcript });
       
-      console.log(`📨 Total messages being sent to AI: ${messages.length}`);
-      
-      // If Groq is not available, use fallback response
       if (!groq) {
-        console.log('⚠️ Using fallback response (no API key)');
+        logger.warn('Groq client not available, using fallback response', { consultationId });
         const fallbackResponse = getFallbackResponse(transcript, specialistType, conversationHistory);
         
-        // Send as single response instead of streaming chunks
         socket.emit('ai-response-chunk', {
           chunk: fallbackResponse,
           consultationId,
@@ -99,15 +77,11 @@ export function setupVoiceSocket(io: Server) {
       }
       
       try {
-        console.log('🚀 Starting Groq streaming with conversation history...');
+        logger.info('Starting Groq streaming completion', { consultationId });
         
-        // ============================================================
-        // ✅ UPDATED: Using Groq's new recommended model
-        // Old: llama-3.3-70b-versatile (DEPRECATED)
-        // New: gpt-oss-120b (Groq's recommended replacement)
-        // ============================================================
+        // Revert to llama-3.3-70b-versatile as mandated
         const stream = await groq.chat.completions.create({
-          model: 'gpt-oss-120b',  // ✅ Groq OSS 120B - Recommended replacement
+          model: 'llama-3.3-70b-versatile',
           messages: messages as any,
           temperature: 0.7,
           max_tokens: 800,
@@ -130,7 +104,7 @@ export function setupVoiceSocket(io: Server) {
           }
         }
         
-        console.log(`✅ Streaming complete for ${consultationId}. Total chunks: ${chunkCount}, Response length: ${fullResponse.length}`);
+        logger.info(`Streaming complete`, { consultationId, chunkCount, responseLength: fullResponse.length });
         
         socket.emit('ai-response-chunk', {
           chunk: '',
@@ -140,8 +114,7 @@ export function setupVoiceSocket(io: Server) {
         });
         
       } catch (error: any) {
-        console.error('❌ Streaming error:', error.message);
-        // Send fallback response on error
+        logger.error('Streaming completion error', { consultationId, error: error.message });
         const fallbackResponse = getFallbackResponse(transcript, specialistType, conversationHistory);
         socket.emit('ai-response-chunk', {
           chunk: fallbackResponse,
@@ -156,7 +129,7 @@ export function setupVoiceSocket(io: Server) {
       }
     });
     
-    // Non-streaming with conversation history (for compatibility)
+    // Non-streaming with conversation history
     socket.on('get-ai-response', async (data: {
       consultationId: string;
       transcript: string;
@@ -166,18 +139,17 @@ export function setupVoiceSocket(io: Server) {
     }) => {
       const { consultationId, transcript, specialistType, userId, conversationHistory } = data;
       
-      console.log(`🤖 AI request from ${socket.id}`);
-      console.log(`📝 Transcript: ${transcript.substring(0, 100)}...`);
-      console.log(`💬 Conversation history length: ${conversationHistory?.length || 0}`);
+      logger.info(`Non-streaming AI request from socket`, {
+        socketId: socket.id,
+        consultationId,
+        specialistType,
+      });
       
       const systemPrompt = getSystemPrompt(specialistType);
-      
-      // Build messages array with full conversation history
       const messages: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [
         { role: 'system', content: systemPrompt },
       ];
       
-      // Add conversation history if available
       if (conversationHistory && conversationHistory.length > 0) {
         const recentHistory = conversationHistory.slice(-10);
         for (const msg of recentHistory) {
@@ -190,25 +162,18 @@ export function setupVoiceSocket(io: Server) {
         }
       }
       
-      // Add current user message
       messages.push({ role: 'user', content: transcript });
       
-      // If Groq is not available, use fallback
       if (!groq) {
-        console.log('⚠️ Using fallback response (no API key)');
+        logger.warn('Groq client not available, using fallback response', { consultationId });
         const response = getFallbackResponse(transcript, specialistType, conversationHistory);
         socket.emit('ai-response', { response, consultationId });
         return;
       }
       
       try {
-        // ============================================================
-        // ✅ UPDATED: Using Groq's new recommended model
-        // Old: llama-3.3-70b-versatile (DEPRECATED)
-        // New: gpt-oss-120b (Groq's recommended replacement)
-        // ============================================================
         const completion = await groq.chat.completions.create({
-          model: 'gpt-oss-120b',  // ✅ Groq OSS 120B - Recommended replacement
+          model: 'llama-3.3-70b-versatile',
           messages: messages as any,
           temperature: 0.7,
           max_tokens: 800,
@@ -216,14 +181,14 @@ export function setupVoiceSocket(io: Server) {
         
         const response = completion.choices[0]?.message?.content || 'I understand. Could you please provide more details about your symptoms?';
         
-        console.log(`✅ AI response sent for ${consultationId}. Length: ${response.length}`);
+        logger.info(`AI response sent`, { consultationId, responseLength: response.length });
         socket.emit('ai-response', {
           response,
           consultationId,
         });
         
       } catch (error: any) {
-        console.error('❌ AI response error:', error.message);
+        logger.error('Non-streaming completion error', { consultationId, error: error.message });
         const fallbackResponse = getFallbackResponse(transcript, specialistType, conversationHistory);
         socket.emit('ai-response', {
           response: fallbackResponse,
@@ -233,7 +198,7 @@ export function setupVoiceSocket(io: Server) {
     });
     
     socket.on('disconnect', () => {
-      console.log('🔌 Client disconnected:', socket.id);
+      logger.debug('Client disconnected from socket', { socketId: socket.id });
     });
   });
 }
@@ -267,7 +232,6 @@ Example of GOOD contextual response:
   };
   
   let prompt = basePrompts[specialistType] || basePrompts.general;
-  
   if (contextPrompt) {
     prompt += contextPrompt;
   }
@@ -278,7 +242,6 @@ Example of GOOD contextual response:
 function getFallbackResponse(symptoms: string, specialistType: string, conversationHistory?: Array<{role: string, content: string}>): string {
   const lowerQuestion = symptoms.toLowerCase();
   
-  // Extract previous symptoms from conversation history
   let previousSymptoms = '';
   let hasFever = false;
   let hasHeadache = false;
@@ -295,7 +258,6 @@ function getFallbackResponse(symptoms: string, specialistType: string, conversat
     }
   }
   
-  // Recovery time question
   if (lowerQuestion.includes('how much time') || lowerQuestion.includes('recover') || lowerQuestion.includes('how long') || lowerQuestion.includes('when will')) {
     if (hasFever && hasHeadache) {
       return `📅 **Recovery Timeline for Fever & Headache:**
@@ -353,7 +315,6 @@ Is there anything specific about your recovery I can help with?`;
 Would you like to share more about your symptoms for a more accurate estimate?`;
   }
   
-  // Medicine question
   if (lowerQuestion.includes('medicine') || lowerQuestion.includes('medication') || lowerQuestion.includes('should i take') || lowerQuestion.includes('what can i take')) {
     if (hasFever && hasHeadache) {
       return `💊 **Medications for Fever & Headache:**
@@ -429,7 +390,6 @@ Would you like to know when to seek medical care?`;
 Would you tell me more about your symptoms for better recommendations?`;
   }
   
-  // Default contextual response
   if (conversationHistory && conversationHistory.length > 2) {
     return `Based on our conversation, here's what I recommend:
 

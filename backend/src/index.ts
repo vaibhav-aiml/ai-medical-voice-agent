@@ -1,19 +1,24 @@
-import enhancedSymptomRoutes from './routes/enhanced-symptom.routes';
-import clinicRoutes from './routes/clinic.routes';
-import analyticsRoutes from './routes/analytics.routes';
-import enhancedReportRoutes from './routes/enhanced-report.routes';
-import reminderRoutes from './routes/reminder.routes';
+// Env validation must happen before anything else imports env vars
+import './config/env';
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import dotenv from 'dotenv';
 import path from 'path';
+
+// Import configs & utils
+import logger from './utils/logger';
+import { db } from './config/database';
+import { redis } from './config/redis';
 import { setupVoiceSocket } from './sockets/voiceSocket';
+import { errorHandler } from './middleware/errorHandler';
+import { globalLimiter, aiLimiter } from './middleware/rateLimiter';
+
+// Import routes
 import consultationRoutes from './routes/consultation.routes';
-import consultationDbRoutes from './routes/consultations.db.routes';
 import voiceRoutes from './routes/voice.routes';
 import reportRoutes from './routes/report.routes';
 import emailRoutes from './routes/email.routes';
@@ -22,26 +27,16 @@ import hipaaRoutes from './routes/hipaa';
 import triageRoutes from './routes/triage.routes';
 import ragRoutes from './routes/rag.routes';
 import conversationRoutes from './routes/conversation.routes';
-
-// Load environment variables - FIXED VERSION
-const envPath = path.resolve(process.cwd(), '.env');
-console.log(`📁 Loading .env from: ${envPath}`);
-
-const result = dotenv.config({ path: envPath });
-if (result.error) {
-  console.error('❌ Error loading .env file:', result.error.message);
-  console.log('⚠️ Using system environment variables only');
-} else {
-  console.log('✅ .env file loaded successfully');
-  console.log('📋 GROQ_API_KEY:', process.env.GROQ_API_KEY ? `✅ Present (${process.env.GROQ_API_KEY.substring(0, 10)}...)` : '❌ MISSING');
-  console.log('📋 EMAIL_USER:', process.env.EMAIL_USER || '❌ MISSING');
-  console.log('📋 DATABASE_URL:', process.env.DATABASE_URL ? '✅ Set' : '❌ Not set');
-}
+import reminderRoutes from './routes/reminder.routes';
+import enhancedReportRoutes from './routes/enhanced-report.routes';
+import analyticsRoutes from './routes/analytics.routes';
+import clinicRoutes from './routes/clinic.routes';
+import enhancedSymptomRoutes from './routes/enhanced-symptom.routes';
 
 const app = express();
 const httpServer = createServer(app);
 
-// Allowed origins for CORS - UPDATED with your Netlify URL
+// Allowed origins for CORS - exactly as specified
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -50,12 +45,12 @@ const allowedOrigins = [
   'https://ai-medical-voice-agent.netlify.app',
   'https://ai-medical-frontend.onrender.com',
   'https://medivoice-ai.netlify.app',
-  'https://majestic-speculoos-f73a91.netlify.app',  // Your current Netlify URL
-  /\.netlify\.app$/,  // Allow all Netlify subdomains
+  'https://majestic-speculoos-f73a91.netlify.app',
+  /\.netlify\.app$/,
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-console.log('✅ Allowed CORS origins:', allowedOrigins);
+logger.info('Configured CORS allowed origins', { allowedOrigins: allowedOrigins.map(o => o.toString()) });
 
 // Configure Socket.IO with CORS
 const io = new Server(httpServer, {
@@ -67,18 +62,28 @@ const io = new Server(httpServer, {
   transports: ['websocket', 'polling']
 });
 
-// Middleware
+// Security Middleware (Helmet with strict CSP)
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://clerk.accounts.dev"],
+      connectSrc: ["'self'", "wss://*", "https://*"],
+      imgSrc: ["'self'", "data:", "https://*"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
 }));
 
-// CORS middleware - Updated to handle regex patterns
+// CORS middleware
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    // Check if origin is allowed
     const isAllowed = allowedOrigins.some(allowed => {
       if (allowed instanceof RegExp) {
         return allowed.test(origin);
@@ -89,7 +94,7 @@ app.use(cors({
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.log('❌ CORS blocked origin:', origin);
+      logger.warn('CORS blocked origin', { origin });
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -98,32 +103,36 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
+// Rate limiting (Global)
+app.use(globalLimiter);
+
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Request logging middleware
+// Request logging middleware using Winston
 app.use((req, res, next) => {
-  console.log(`📝 ${req.method} ${req.path}`);
+  logger.info(`Request received`, { method: req.method, path: req.path, ip: req.ip });
   next();
 });
 
-// Routes
-app.use('/api/consultations', consultationRoutes);
-app.use('/api/consultations', consultationDbRoutes);
-app.use('/api/voice', voiceRoutes);
+// Routes with specific rate limiters applied to AI routes
+app.use('/api/consultations', aiLimiter, consultationRoutes);
+app.use('/api/voice', aiLimiter, voiceRoutes);
+app.use('/api/triage', aiLimiter, triageRoutes);
+app.use('/api/enhanced-symptom', aiLimiter, enhancedSymptomRoutes);
+
+// Other standard routes
 app.use('/api/reports', reportRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/hipaa', hipaaRoutes);
-app.use('/api/triage', triageRoutes);
 app.use('/api/rag', ragRoutes);
 app.use('/api/conversation', conversationRoutes);
 app.use('/api/reminder', reminderRoutes);
 app.use('/api/enhanced-report', enhancedReportRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/clinic', clinicRoutes);
-app.use('/api/enhanced-symptom', enhancedSymptomRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -136,9 +145,8 @@ app.get('/health', (req, res) => {
     services: {
       groq: !!process.env.GROQ_API_KEY,
       email: !!process.env.EMAIL_USER,
-      database: true,
-      analytics: true,
-      clinic: true
+      database: !!process.env.DATABASE_URL,
+      redis: !!redis,
     }
   });
 });
@@ -149,35 +157,11 @@ app.get('/', (req, res) => {
     name: 'AI Medical Voice Agent API',
     version: '1.0.0',
     status: 'running',
-    endpoints: {
-      health: 'GET /health',
-      consultations: 'GET/POST /api/consultations',
-      voice: 'POST /api/voice',
-      reports: 'GET /api/reports',
-      email: 'POST /api/email/send-report',
-      audit: 'POST /api/audit/log, GET /api/audit/logs',
-      hipaa: 'POST /api/hipaa/log, GET /api/hipaa/logs',
-      triage: 'POST /api/triage/analyze, GET /api/triage/guidelines',
-      rag: 'POST /api/rag/search, POST /api/rag/enhance',
-      conversation: 'GET /api/conversation/history/:userId, POST /api/conversation/session',
-      analytics: 'POST /api/analytics/dashboard, POST /api/analytics/trends, POST /api/analytics/symptoms',
-      clinic: 'POST /api/clinic/create, GET/POST /api/clinic/:clinicId/doctors, GET/POST /api/clinic/:clinicId/patients, GET/POST /api/clinic/:clinicId/appointments',
-      'enhanced-symptom': 'POST /api/enhanced-symptom/check'
-    }
   });
 });
 
 // Setup WebSocket handlers for voice
 setupVoiceSocket(io);
-
-// Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('❌ Error:', err.message);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    timestamp: new Date().toISOString()
-  });
-});
 
 // 404 handler
 app.use((req, res) => {
@@ -188,54 +172,52 @@ app.use((req, res) => {
   });
 });
 
+// Centralized error handler
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => {
-  console.log(`
-╔══════════════════════════════════════════════════════════════════════╗
-║     🚀 AI MEDICAL VOICE AGENT BACKEND                                ║
-╠══════════════════════════════════════════════════════════════════════╣
-║  Server: http://localhost:${PORT}                                      ║
-║  WebSocket: ws://localhost:${PORT}                                     ║
-║  Health: http://localhost:${PORT}/health                               ║
-╠══════════════════════════════════════════════════════════════════════╣
-║  Status: ✅ Running                                                   ║
-║  Database: ✅ Connected                                               ║
-║  WebSocket: ✅ Ready for voice                                        ║
-║  AI Service: ${process.env.GROQ_API_KEY ? '✅ Groq Ready' : '⚠️ Fallback Mode'}                       
-╠══════════════════════════════════════════════════════════════════════╣
-║  📋 API ROUTES:                                                       ║
-║     ✅ /api/consultations - Consultation management                   ║
-║     ✅ /api/voice - Voice consultation                                ║
-║     ✅ /api/reports - Medical reports                                 ║
-║     ✅ /api/email - Email notifications                               ║
-║     ✅ /api/audit - Audit logs                                        ║
-║     ✅ /api/hipaa - HIPAA compliance                                  ║
-║     ✅ /api/triage - Symptom triage                                   ║
-║     ✅ /api/rag - RAG search                                          ║
-║     ✅ /api/conversation - Chat history                               ║
-║     ✅ /api/reminder - Medication reminders                           ║
-║     ✅ /api/enhanced-report - Enhanced reports                        ║
-║     ✅ /api/analytics - Analytics dashboard                           ║
-║     ✅ /api/clinic - Clinic management                                ║
-║     ✅ /api/enhanced-symptom - Enhanced symptom checker               ║
-╚══════════════════════════════════════════════════════════════════════╝
-  `);
+const server = httpServer.listen(PORT, () => {
+  logger.info(`🚀 Server running on http://localhost:${PORT}`);
+  logger.info(`⚡ Health check available at http://localhost:${PORT}/health`);
 });
 
 // Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n🛑 Shutting down server...');
+const shutdown = (signal: string) => {
+  logger.info(`Received ${signal}. Shutting down server gracefully...`);
+  
+  // Close socket.io connections
   io.close(() => {
-    console.log('✅ WebSocket closed');
-    process.exit(0);
+    logger.info('WebSocket connections closed.');
+    
+    // Close http server
+    server.close(async () => {
+      logger.info('HTTP server closed.');
+      
+      // Close Redis connection if any
+      if (redis) {
+        await redis.quit();
+        logger.info('Redis connection closed.');
+      }
+      
+      process.exit(0);
+    });
   });
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+// Uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
+  // Force clean shutdown
+  process.exit(1);
 });
 
-process.on('SIGTERM', () => {
-  console.log('\n🛑 Shutting down server...');
-  io.close(() => {
-    console.log('✅ WebSocket closed');
-    process.exit(0);
+process.on('unhandledRejection', (reason: any) => {
+  logger.error('Unhandled Promise Rejection', {
+    reason: reason instanceof Error ? reason.message : reason,
+    stack: reason instanceof Error ? reason.stack : undefined
   });
 });
 

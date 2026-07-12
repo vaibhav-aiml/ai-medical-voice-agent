@@ -41,6 +41,7 @@ import ClinicDashboard from './components/ClinicDashboard';
 import EnhancedSymptomChecker from './components/EnhancedSymptomChecker';
 import { useLanguage } from './context/LanguageContext';
 import { useSubscription } from './context/SubscriptionContext';
+import { consultationService } from './services/consultationService';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
 import HIPAACompliance from './pages/HIPAACompliance';
 import CookiePolicy from './pages/CookiePolicy';
@@ -169,48 +170,50 @@ function AppContent() {
   useEffect(() => {
     if (userId) {
       setLoading(true);
-      try {
-        const savedConsultations = localStorage.getItem(`consultations_${userId}`);
-        if (savedConsultations) {
-          const parsed = JSON.parse(savedConsultations);
-          setConsultations(parsed);
-          updateStats(parsed);
-        } else {
-          const mockConsultations: ConsultationSession[] = [
-            {
-              id: '1',
-              specialistType: 'general',
-              specialistName: 'Dr. Sarah Wilson',
-              status: 'completed',
-              startedAt: new Date('2024-03-15T10:30:00'),
-              endedAt: new Date('2024-03-15T10:45:00'),
-              duration: 15,
-              symptoms: 'Headache and fever for 2 days',
-              notes: 'Recommended rest and hydration',
-            },
-            {
-              id: '2',
-              specialistType: 'orthopedic',
-              specialistName: 'Dr. James Chen',
-              status: 'completed',
-              startedAt: new Date('2024-03-10T14:00:00'),
-              endedAt: new Date('2024-03-10T14:20:00'),
-              duration: 20,
-              symptoms: 'Lower back pain when sitting',
-              notes: 'Suggested posture correction exercises',
-            },
-          ];
-          setConsultations(mockConsultations);
-          localStorage.setItem(`consultations_${userId}`, JSON.stringify(mockConsultations));
-          updateStats(mockConsultations);
-        }
-      } catch (error) {
-        console.error('Error loading consultations:', error);
-        setConsultations([]);
-        updateStats([]);
-      } finally {
-        setLoading(false);
-      }
+      consultationService.getUserConsultations(userId)
+        .then(data => {
+          if (data && data.length > 0) {
+            setConsultations(data as unknown as ConsultationSession[]);
+            updateStats(data as unknown as ConsultationSession[]);
+          } else {
+            const mockConsultations: ConsultationSession[] = [
+              {
+                id: '1',
+                specialistType: 'general',
+                specialistName: 'Dr. Sarah Wilson',
+                status: 'completed',
+                startedAt: new Date('2024-03-15T10:30:00'),
+                endedAt: new Date('2024-03-15T10:45:00'),
+                duration: 15,
+                symptoms: 'Headache and fever for 2 days',
+                notes: 'Recommended rest and hydration',
+              },
+              {
+                id: '2',
+                specialistType: 'orthopedic',
+                specialistName: 'Dr. James Chen',
+                status: 'completed',
+                startedAt: new Date('2024-03-10T14:00:00'),
+                endedAt: new Date('2024-03-10T14:20:00'),
+                duration: 20,
+                symptoms: 'Lower back pain when sitting',
+                notes: 'Suggested posture correction exercises',
+              },
+            ];
+            setConsultations(mockConsultations);
+            // Save mock data locally for write-through fallback
+            localStorage.setItem(`consultations_${userId}`, JSON.stringify(mockConsultations));
+            updateStats(mockConsultations);
+          }
+        })
+        .catch(error => {
+          console.error('Error loading consultations:', error);
+          setConsultations([]);
+          updateStats([]);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
   }, [userId, refreshKey]);
 
@@ -288,8 +291,9 @@ function AppContent() {
     const symptoms = userMessage?.content || manualSymptoms || 'Symptoms recorded during consultation';
     const specialistName = `${selectedSpecialist.charAt(0).toUpperCase() + selectedSpecialist.slice(1)} Specialist`;
     
-    const newConsultation: ConsultationSession = {
+    const newConsultation: any = {
       id: consultationId,
+      userId: getCurrentUserId(),
       specialistType: selectedSpecialist,
       specialistName: specialistName,
       status: 'completed',
@@ -300,13 +304,27 @@ function AppContent() {
       endedAt: new Date(),
     };
     
-    const existing = localStorage.getItem(`consultations_${userId}`);
-    const existingConsultations = existing ? JSON.parse(existing) : [];
-    const updatedConsultations = [newConsultation, ...existingConsultations];
-    localStorage.setItem(`consultations_${userId}`, JSON.stringify(updatedConsultations));
-    
-    setConsultations(updatedConsultations);
-    updateStats(updatedConsultations);
+    consultationService.saveConsultation(newConsultation)
+      .then(() => {
+        // Fetch latest list from DB/cache to update state
+        return consultationService.getUserConsultations(getCurrentUserId());
+      })
+      .then(updatedList => {
+        setConsultations(updatedList as unknown as ConsultationSession[]);
+        updateStats(updatedList as unknown as ConsultationSession[]);
+        setRefreshKey(prev => prev + 1);
+      })
+      .catch(error => {
+        console.error('Error saving consultation:', error);
+        // Fallback local update
+        const existing = localStorage.getItem(`consultations_${userId}`);
+        const existingConsultations = existing ? JSON.parse(existing) : [];
+        const updatedConsultations = [newConsultation, ...existingConsultations];
+        localStorage.setItem(`consultations_${userId}`, JSON.stringify(updatedConsultations));
+        setConsultations(updatedConsultations);
+        updateStats(updatedConsultations);
+        setRefreshKey(prev => prev + 1);
+      });
     
     setConsultationStarted(false);
     setSelectedSpecialist('');
@@ -316,7 +334,6 @@ function AppContent() {
     setTriageResult(null);
     setStreamingMessage('');
     setIsStreaming(false);
-    setRefreshKey(prev => prev + 1);
     
     alert(t('consultation.ended') || '✅ Consultation ended! Your report has been saved.');
   };

@@ -1,45 +1,53 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { db } from '../config/database';
-import { medicalReports, consultations } from '../db/schema/index';
+import { medicalReports, consultations, users } from '../db/schema/index';
+import { eq } from 'drizzle-orm';
+import { catchAsync } from '../utils/catchAsync';
+import { AppError } from '../utils/AppError';
 
 const router = Router();
 
 // Get report by consultation ID
-router.get('/consultation/:consultationId', async (req, res) => {
-  try {
-    const { consultationId } = req.params;
-    const report = await db.select()
-      .from(medicalReports)
-      .where({ consultationId });
-    
-    if (!report.length) {
-      return res.status(404).json({ error: 'Report not found' });
-    }
-    
-    res.json(report[0]);
-  } catch (error) {
-    console.error('Error fetching report:', error);
-    res.status(500).json({ error: 'Failed to fetch report' });
-  }
-});
-
-// Get all reports for a user
-router.get('/user/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const userReports = await db.select({
-      report: medicalReports,
-      consultation: consultations
-    })
+router.get('/consultation/:consultationId', catchAsync(async (req: Request, res: Response) => {
+  const { consultationId } = req.params;
+  const report = await db.select()
     .from(medicalReports)
-    .innerJoin(consultations, 'consultations.id', '=', 'medicalReports.consultationId')
-    .where({ 'consultations.userId': userId });
-    
-    res.json(userReports);
-  } catch (error) {
-    console.error('Error fetching reports:', error);
-    res.status(500).json({ error: 'Failed to fetch reports' });
+    .where(eq(medicalReports.consultationId, consultationId as string));
+  
+  if (!report.length) {
+    throw new AppError('Report not found', 404);
   }
-});
+  
+  res.json(report[0]);
+}));
+
+// Get all reports for a user (Clerk ID)
+router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.params; // Clerk ID
+  
+  // Find internal UUID for the Clerk user
+  const dbUser = await db.select().from(users).where(eq(users.clerkId, userId as string));
+  if (dbUser.length === 0) {
+    return res.json([]);
+  }
+
+  const userReports = await db.select({
+    id: medicalReports.id,
+    consultationId: medicalReports.consultationId,
+    symptoms: medicalReports.symptoms,
+    diagnosis: medicalReports.diagnosis,
+    recommendations: medicalReports.recommendations,
+    medications: medicalReports.medications,
+    followUpNeeded: medicalReports.followUpNeeded,
+    followUpDate: medicalReports.followUpDate,
+    reportUrl: medicalReports.reportUrl,
+    generatedAt: medicalReports.generatedAt,
+  })
+  .from(medicalReports)
+  .innerJoin(consultations, eq(consultations.id, medicalReports.consultationId))
+  .where(eq(consultations.userId, dbUser[0].id));
+  
+  res.json(userReports);
+}));
 
 export default router;
