@@ -1,0 +1,60 @@
+openapi: 3.0.0
+info:
+  title: MediVoice Translation API
+  description: API endpoints for clinical medical translation between multiple supported languages.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+paths:
+  /api/voice/translate:
+    post:
+      summary: Translate a clinical dialogue message
+      description: Translates medical questions, advice, or symptoms between a source language and a target language using clinical context-aware LLMs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+                - targetLang
+              properties:
+                text:
+                  type: string
+                  description: The text to translate
+                  example: "मुझे सिरदर्द और तेज बुखार है।"
+                targetLang:
+                  type: string
+                  description: Target ISO language code (e.g. en, hi, bn)
+                  example: "en"
+                sourceLang:
+                  type: string
+                  description: Optional source ISO language code. If omitted, defaults to en.
+                  example: "hi"
+      responses:
+        '200':
+          description: Translation completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      translatedText:
+                        type: string
+                        example: "I have a headache and high fever."
+                      sourceLang:
+                        type: string
+                        example: "hi"
+                      targetLang:
+                        type: string
+                        example: "en"
+        '400':
+          description: Request body validation failed

@@ -1,0 +1,39 @@
+{
+  "info": {
+    "name": "MediVoice Translation API Collection",
+    "description": "Postman API collection for checking translation routing payloads.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Translate Text (Hindi -> English)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"मुझे दो दिनों से सांस लेने में तकलीफ हो रही है।\",\n  \"targetLang\": \"en\",\n  \"sourceLang\": \"hi\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/voice/translate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "voice",
+            "translate"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

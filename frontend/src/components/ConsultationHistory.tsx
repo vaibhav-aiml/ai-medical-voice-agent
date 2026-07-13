@@ -6,6 +6,32 @@ interface Props {
   onNewConsultation: () => void;
 }
 
+const getEmotionEmoji = (emotion: string): string => {
+  const emojiMap: Record<string, string> = {
+    stress: '😰',
+    anxiety: '😟',
+    happiness: '😊',
+    sadness: '😢',
+    anger: '😠',
+    fear: '😨',
+    neutral: '😐',
+  };
+  return emojiMap[emotion] || '😐';
+};
+
+const getEmotionColor = (emotion: string): string => {
+  const colorMap: Record<string, string> = {
+    stress: '#f59e0b', // orange
+    anxiety: '#8b5cf6', // purple
+    happiness: '#10b981', // green
+    sadness: '#3b82f6', // blue
+    anger: '#ef4444', // red
+    fear: '#ec4899', // pink
+    neutral: '#6b7280', // gray
+  };
+  return colorMap[emotion] || '#6b7280';
+};
+
 export default function ConsultationHistory({ consultations, onViewReport, onNewConsultation }: Props) {
   const getStatusColor = (status: string) => {
     return status === 'completed' ? '#28a745' : '#ffc107';
@@ -63,6 +89,7 @@ export default function ConsultationHistory({ consultations, onViewReport, onNew
                 <th style={styles.th}>Specialist</th>
                 <th style={styles.th}>Symptoms</th>
                 <th style={styles.th}>Duration</th>
+                <th style={styles.th}>Emotion</th>
                 <th style={styles.th}>Status</th>
                 <th style={styles.th}>Action</th>
               </tr>
@@ -78,6 +105,25 @@ export default function ConsultationHistory({ consultations, onViewReport, onNew
                   </td>
                   <td style={styles.td}>{getSymptomsPreview(consultation.symptoms)}</td>
                   <td style={styles.td}>{formatDuration(consultation.duration)}</td>
+                  <td style={styles.td}>
+                    {consultation.emotion ? (
+                      <span style={{
+                        backgroundColor: getEmotionColor(consultation.emotion),
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}>
+                        {getEmotionEmoji(consultation.emotion)} {consultation.emotion.toUpperCase()}
+                      </span>
+                    ) : (
+                      <span style={{color: '#999', fontSize: '12px'}}>N/A</span>
+                    )}
+                  </td>
                   <td style={styles.td}>
                     <span style={{...styles.statusBadge, backgroundColor: getStatusColor(consultation.status)}}>
                       {consultation.status}

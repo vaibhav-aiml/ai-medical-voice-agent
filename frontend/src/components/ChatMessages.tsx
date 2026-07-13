@@ -34,6 +34,14 @@ export default function ChatMessages({
   const [processedMessages, setProcessedMessages] = useState<any[]>([]);
   const crisisHandledRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [expandedTranslations, setExpandedTranslations] = useState<Record<string, boolean>>({});
+
+  const toggleTranslation = (messageId: string) => {
+    setExpandedTranslations(prev => ({
+      ...prev,
+      [messageId]: !prev[messageId]
+    }));
+  };
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -191,7 +199,35 @@ export default function ChatMessages({
                     : new Date(message.timestamp).toLocaleTimeString()}
                 </small>
               </div>
-              <div style={styles.messageContent}>{message.displayContent}</div>
+              <div style={styles.messageContent}>
+                {message.translation ? (
+                  <>
+                    <p style={{ margin: 0 }}>
+                      {expandedTranslations[message.id] ? message.translation : message.content}
+                    </p>
+                    <button
+                      onClick={() => toggleTranslation(message.id)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: message.type === 'user' ? '#f3f4f6' : '#60a5fa',
+                        cursor: 'pointer',
+                        fontSize: '11px',
+                        padding: '4px 0 0 0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        textDecoration: 'underline',
+                        marginTop: '4px'
+                      }}
+                    >
+                      🌐 {expandedTranslations[message.id] ? 'Show Original' : 'Show Translation'}
+                    </button>
+                  </>
+                ) : (
+                  message.displayContent
+                )}
+              </div>
             </div>
           ))}
           

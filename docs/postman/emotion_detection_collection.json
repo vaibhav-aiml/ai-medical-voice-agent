@@ -1,0 +1,61 @@
+{
+  "info": {
+    "name": "MediVoice Emotion Detection API",
+    "description": "Postman collection for testing the MediVoice AI Medical Consultation Emotion Detection features.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Detect Patient Emotion",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"I feel so stressed out and anxious because of my persistent headaches.\",\n  \"consultationId\": \"d3b07384-d113-4ec3-a558-7c3078972b22\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/voice/detect-emotion",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "voice",
+            "detect-emotion"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Consultation Emotion History",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/voice/emotions/d3b07384-d113-4ec3-a558-7c3078972b22",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "voice",
+            "emotions",
+            "d3b07384-d113-4ec3-a558-7c3078972b22"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+openapi: 3.0.0
+info:
+  title: MediVoice Biometrics API
+  description: API endpoints for enrolling patient voice prints and verifying returning patients using speaker embeddings.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+paths:
+  /api/voice/biometrics/enroll:
+    post:
+      summary: Enroll patient voice biometric profile
+      description: Captures patient voice audio sample, extracts a 128-dimensional speaker embedding vector, and registers the user. Enforces uniqueness.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - audio
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  description: Unique UUID of the user
+                  example: "d3b07384-d113-4ec3-a558-7c3078972b22"
+                audio:
+                  type: string
+                  description: Base64-encoded WAV/audio byte string
+                  example: "UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="
+      responses:
+        '200':
+          description: Enrollment successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Voice profile enrolled successfully."
+        '400':
+          description: Duplicate enrollment or validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "User is already enrolled. Duplicate enrollment prevented."
+
+  /api/voice/biometrics/verify:
+    post:
+      summary: Verify patient voice identity
+      description: Compares a live audio clip against the registered speaker embedding using Cosine Similarity metrics.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - audio
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  description: Unique UUID of the user
+                  example: "d3b07384-d113-4ec3-a558-7c3078972b22"
+                audio:
+                  type: string
+                  description: Base64-encoded live verification audio clip
+                  example: "UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="
+      responses:
+        '200':
+          description: Verification successfully executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  isMatch:
+                    type: boolean
+                    example: true
+                  confidence:
+                    type: number
+                    example: 0.94
+                  message:
+                    type: string
+                    example: "Voice signature verified successfully."
+        '400':
+          description: Verification failure or unregistered profile

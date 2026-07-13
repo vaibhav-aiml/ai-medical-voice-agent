@@ -1,0 +1,123 @@
+openapi: 3.0.0
+info:
+  title: MediVoice Emotion Detection API
+  description: API endpoints for detecting clinical emotions (stress, anxiety, happiness, sadness, anger, fear, neutral) from text transcripts.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+paths:
+  /api/voice/detect-emotion:
+    post:
+      summary: Detect emotion from patient speech transcript
+      description: Performs NLP/LLM analysis on the provided clinical transcript to estimate patient emotions and update active voice session database records if a consultation ID is provided.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: The transcript text to classify
+                  example: "I am feeling extremely anxious and my chest is tight."
+                consultationId:
+                  type: string
+                  format: uuid
+                  description: Optional UUID of the active consultation to log emotion data
+                  example: "d3b07384-d113-4ec3-a558-7c3078972b22"
+      responses:
+        '200':
+          description: Emotion detected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      emotion:
+                        type: string
+                        enum: [stress, anxiety, happiness, sadness, anger, fear, neutral]
+                        example: "anxiety"
+                      confidence:
+                        type: number
+                        example: 0.85
+                      scores:
+                        type: object
+                        properties:
+                          stress:
+                            type: number
+                            example: 0.1
+                          anxiety:
+                            type: number
+                            example: 0.85
+                          happiness:
+                            type: number
+                            example: 0.0
+                          sadness:
+                            type: number
+                            example: 0.05
+                          anger:
+                            type: number
+                            example: 0.0
+                          fear:
+                            type: number
+                            example: 0.0
+                          neutral:
+                            type: number
+                            example: 0.0
+        '400':
+          description: Invalid input validation failure
+  /api/voice/emotions/{consultationId}:
+    get:
+      summary: Get historical emotion metrics for a consultation
+      description: Retrieves stored voice session emotion results for a specific consultation session ID.
+      parameters:
+        - name: consultationId
+          in: path
+          required: true
+          description: The UUID of the consultation
+          schema:
+            type: string
+            format: uuid
+          example: "d3b07384-d113-4ec3-a558-7c3078972b22"
+      responses:
+        '200':
+          description: List of session emotions returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        emotion:
+                          type: string
+                          example: "anxiety"
+                        emotionConfidence:
+                          type: string
+                          example: "0.85"
+                        emotionScores:
+                          type: object
+                        startedAt:
+                          type: string
+                          format: date-time
+        '404':
+          description: Consultation or voice session not found

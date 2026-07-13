@@ -13,6 +13,14 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
+export const voiceBiometrics = pgTable('voice_biometrics', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id).unique().notNull(),
+  voiceEmbedding: jsonb('voice_embedding').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 export const consultations = pgTable('consultations', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id),
@@ -38,6 +46,9 @@ export const voiceSessions = pgTable('voice_sessions', {
   transcript: jsonb('transcript').default([]),
   aiResponses: jsonb('ai_responses').default([]),
   audioUrl: text('audio_url'),
+  emotion: text('emotion'),
+  emotionConfidence: decimal('emotion_confidence'),
+  emotionScores: jsonb('emotion_scores').default({}),
   startedAt: timestamp('started_at').defaultNow(),
   endedAt: timestamp('ended_at'),
 }, (table) => [

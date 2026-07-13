@@ -40,6 +40,32 @@ const getSpeechRecognitionCode = (language: string): string => {
   return langMap[language] || 'en-US';
 };
 
+const getEmotionEmoji = (emotion: string): string => {
+  const emojiMap: Record<string, string> = {
+    stress: '😰',
+    anxiety: '😟',
+    happiness: '😊',
+    sadness: '😢',
+    anger: '😠',
+    fear: '😨',
+    neutral: '😐',
+  };
+  return emojiMap[emotion] || '😐';
+};
+
+const getEmotionColor = (emotion: string): string => {
+  const colorMap: Record<string, string> = {
+    stress: '#f59e0b', // orange
+    anxiety: '#8b5cf6', // purple
+    happiness: '#10b981', // green
+    sadness: '#3b82f6', // blue
+    anger: '#ef4444', // red
+    fear: '#ec4899', // pink
+    neutral: '#6b7280', // gray
+  };
+  return colorMap[emotion] || '#6b7280';
+};
+
 export default function VoiceRecorder({ consultationId, specialistType, onTranscriptUpdate, onAIResponse, onTriageResult, userId }: Props) {
   const { language, t } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
@@ -59,6 +85,53 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const socketRef = useRef<any>(null);
   const finalTranscriptRef = useRef<string>('');
   const accumulatedResponseRef = useRef<string>('');
+  const [detectedEmotion, setDetectedEmotion] = useState<string | null>(null);
+  const [emotionConfidence, setEmotionConfidence] = useState<number | null>(null);
+  const [biometricStatus, setBiometricStatus] = useState<string>(''); // '', 'verified', 'mismatch', 'unregistered'
+  const [biometricConfidence, setBiometricConfidence] = useState<number>(0);
+  const verifyRecorderRef = useRef<MediaRecorder | null>(null);
+  const verifyChunksRef = useRef<Blob[]>([]);
+  const [noiseCancellationEnabled, setNoiseCancellationEnabled] = useState(() => {
+    const saved = localStorage.getItem('noiseCancellationEnabled');
+    return saved !== 'false'; // default true
+  });
+
+  const getCleanAudioStream = (rawStream: MediaStream): MediaStream => {
+    if (!noiseCancellationEnabled) return rawStream;
+
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) {
+        console.warn('Web Audio API not supported in this browser');
+        return rawStream;
+      }
+
+      const audioCtx = new AudioContextClass();
+      const source = audioCtx.createMediaStreamSource(rawStream);
+
+      // 1. Highpass filter (cuts off frequencies below 100Hz: AC mains, rumbling)
+      const hpFilter = audioCtx.createBiquadFilter();
+      hpFilter.type = 'highpass';
+      hpFilter.frequency.value = 100;
+
+      // 2. Lowpass filter (cuts off frequencies above 3000Hz: high static hiss)
+      const lpFilter = audioCtx.createBiquadFilter();
+      lpFilter.type = 'lowpass';
+      lpFilter.frequency.value = 3000;
+
+      // Connect filters in series
+      const destination = audioCtx.createMediaStreamDestination();
+      source.connect(hpFilter);
+      hpFilter.connect(lpFilter);
+      lpFilter.connect(destination);
+
+      console.log('🔇 Real-time Web Audio DSP noise filters successfully activated (100Hz-3kHz)');
+      return destination.stream;
+    } catch (err) {
+      console.warn('Failed to build Web Audio DSP pipeline, falling back to raw stream:', err);
+      return rawStream;
+    }
+  };
 
   // Voice settings
   const [voiceSettings, setVoiceSettings] = useState(() => {
@@ -138,6 +211,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         userId,
         contextPrompt: contextPrompt || undefined,
         conversationHistory: conversationHistory,
+        language: language,
       });
       return true;
     }
@@ -308,6 +382,14 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       setIsStreaming(false);
       onAIResponse(t('error.server'), true);
     });
+
+    socketRef.current.on('emotion-detected', (data: any) => {
+      console.log('🎭 Emotion detected:', data);
+      if (data.emotion) {
+        setDetectedEmotion(data.emotion);
+        setEmotionConfidence(data.confidence);
+      }
+    });
     
     return () => {
       if (socketRef.current) {
@@ -315,6 +397,66 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       }
     };
   }, [consultationId, voiceSettings.autoSpeak, voiceSettings.enabled, speakResponse]);
+
+  const startVerificationRecording = async () => {
+    verifyChunksRef.current = [];
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const cleanStream = getCleanAudioStream(stream);
+      const mediaRecorder = new MediaRecorder(cleanStream);
+      verifyRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          verifyChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(verifyChunksRef.current, { type: 'audio/wav' });
+        stream.getTracks().forEach((track) => track.stop());
+
+        try {
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = async () => {
+            const base64Audio = (reader.result as string).split(',')[1];
+            const response = await fetch(`${API_URL}/voice/biometrics/verify`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId,
+                audio: base64Audio,
+              }),
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+              setBiometricStatus(data.isMatch ? 'verified' : 'mismatch');
+              setBiometricConfidence(data.confidence);
+            } else if (response.status === 400 && data.message.includes('No enrolled voice signature')) {
+              setBiometricStatus('unregistered');
+              setBiometricConfidence(0);
+            }
+          };
+        } catch (verifErr) {
+          console.error('Biometrics verify error:', verifErr);
+        }
+      };
+
+      mediaRecorder.start();
+
+      // Record first 3 seconds of speaker input for verification
+      setTimeout(() => {
+        if (mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+      }, 3000);
+    } catch (err) {
+      console.warn('Failed to start biometric verification recording:', err);
+    }
+  };
 
   const startVoiceRecording = () => {
     if (recognition) {
@@ -325,6 +467,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       setIsRecording(true);
       setIsProcessing(true);
       console.log('🎤 Voice recording started');
+      
+      // Start recording verification audio sample concurrently
+      startVerificationRecording();
     } else {
       alert(t('error.microphone'));
       setUseTextInput(true);
@@ -384,6 +529,58 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
               💬 {Math.floor(conversationHistory.length / 2)} exchanges
             </span>
           )}
+          {detectedEmotion && (
+            <span style={{
+              backgroundColor: getEmotionColor(detectedEmotion),
+              color: 'white',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}>
+              🎭 {getEmotionEmoji(detectedEmotion)} {detectedEmotion.toUpperCase()} {emotionConfidence ? `(${Math.round(emotionConfidence * 100)}%)` : ''}
+            </span>
+          )}
+          {biometricStatus && (
+            <span style={{
+              backgroundColor: biometricStatus === 'verified' ? '#10b981' : biometricStatus === 'mismatch' ? '#ef4444' : '#6b7280',
+              color: 'white',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}>
+              👤 {biometricStatus === 'verified' ? `VERIFIED (${Math.round(biometricConfidence * 100)}%)` : biometricStatus === 'mismatch' ? 'MISMATCHED VOICE' : 'UNREGISTERED VOICE'}
+            </span>
+          )}
+          <button
+            onClick={() => {
+              const newVal = !noiseCancellationEnabled;
+              setNoiseCancellationEnabled(newVal);
+              localStorage.setItem('noiseCancellationEnabled', newVal.toString());
+            }}
+            style={{
+              backgroundColor: noiseCancellationEnabled ? '#1e3a8a' : '#374151',
+              color: 'white',
+              border: 'none',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            🔇 Noise Cancellation: {noiseCancellationEnabled ? 'ON (100Hz-3kHz)' : 'OFF'}
+          </button>
         </div>
         
         <div style={styles.modeSelector}>

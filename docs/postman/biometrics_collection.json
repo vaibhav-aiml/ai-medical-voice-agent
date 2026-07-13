@@ -1,0 +1,71 @@
+{
+  "info": {
+    "name": "MediVoice Biometrics API Collection",
+    "description": "Postman API collection for testing patient voice biometric enrollment and verification endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Enroll Patient Voice Print",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"d3b07384-d113-4ec3-a558-7c3078972b22\",\n  \"audio\": \"UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/voice/biometrics/enroll",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "voice",
+            "biometrics",
+            "enroll"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Verify Returning Patient Voice Identity",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"d3b07384-d113-4ec3-a558-7c3078972b22\",\n  \"audio\": \"UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/voice/biometrics/verify",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "voice",
+            "biometrics",
+            "verify"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

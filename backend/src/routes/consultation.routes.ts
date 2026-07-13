@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../config/database';
-import { consultations, users } from '../db/schema/index';
+import { consultations, users, voiceSessions } from '../db/schema/index';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger';
@@ -114,12 +114,30 @@ router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
     return res.json([]);
   }
 
-  const userConsultations = await db.select()
-    .from(consultations)
-    .where(eq(consultations.userId, dbUser[0].id))
-    .orderBy(consultations.startedAt);
+  const rows = await db.select({
+    consultation: consultations,
+    voiceSession: {
+      emotion: voiceSessions.emotion,
+      emotionConfidence: voiceSessions.emotionConfidence,
+    }
+  })
+  .from(consultations)
+  .leftJoin(voiceSessions, eq(consultations.id, voiceSessions.consultationId))
+  .where(eq(consultations.userId, dbUser[0].id))
+  .orderBy(consultations.startedAt);
+
+  // Group by consultation ID to avoid duplicates (retaining latest session's emotion if multiple exist)
+  const uniqueConsultations = new Map<string, any>();
+  for (const row of rows) {
+    const cons = {
+      ...row.consultation,
+      emotion: row.voiceSession?.emotion || null,
+      emotionConfidence: row.voiceSession?.emotionConfidence || null,
+    };
+    uniqueConsultations.set(row.consultation.id, cons);
+  }
   
-  res.json(userConsultations);
+  res.json(Array.from(uniqueConsultations.values()));
 }));
 
 // Get single consultation by ID

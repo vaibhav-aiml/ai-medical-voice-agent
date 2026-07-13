@@ -18,6 +18,7 @@ import VoiceCustomization from './components/VoiceCustomization';
 import ProgressDashboard from './components/ProgressDashboard';
 import TwoFactorAuth from './components/TwoFactorAuth';
 import DataExport from './components/DataExport';
+import VoiceEnrollmentModal from './components/VoiceEnrollmentModal';
 import VideoConsultation from './components/VideoConsultation';
 import EnhancedDashboard from './components/EnhancedDashboard';
 import SpecialistSelector from './components/SpecialistSelector';
@@ -108,6 +109,7 @@ function AppContent() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showHealthGoals, setShowHealthGoals] = useState(false);
   const [showVoiceCustomization, setShowVoiceCustomization] = useState(false);
+  const [showVoiceBiometricsEnrollment, setShowVoiceBiometricsEnrollment] = useState(false);
   const [showProgressDashboard, setShowProgressDashboard] = useState(false);
   const [showTwoFactorAuth, setShowTwoFactorAuth] = useState(false);
   const [showDataExport, setShowDataExport] = useState(false);
@@ -565,6 +567,7 @@ function AppContent() {
           setShowDataExport={setShowDataExport}
           setShowTwoFactorAuth={setShowTwoFactorAuth}
           setShowAppointmentsList={setShowAppointmentsList}
+          setShowVoiceBiometricsEnrollment={setShowVoiceBiometricsEnrollment}
           onNewConsultation={handleNewConsultation}
           onUpgrade={() => setShowPricing(true)}
           onOpenReminders={handleOpenReminders}
@@ -981,6 +984,13 @@ function AppContent() {
             consultations={consultations}
             ratings={JSON.parse(localStorage.getItem('consultationRatings') || '{}')}
             onClose={() => setShowAnalytics(false)}
+          />
+        )}
+
+        {showVoiceBiometricsEnrollment && (
+          <VoiceEnrollmentModal 
+            onClose={() => setShowVoiceBiometricsEnrollment(false)}
+            userId={getCurrentUserId()}
           />
         )}
 

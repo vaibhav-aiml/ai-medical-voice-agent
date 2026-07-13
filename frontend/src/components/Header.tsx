@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { 
   Menu, ChevronDown, Home, LayoutDashboard, FileText, Calendar, Plus, 
   Sparkles, Activity, Heart, Shield, Download, CreditCard, Settings, 
-  TrendingUp, Target, Bell, User 
+  TrendingUp, Target, Bell, User, Mic
 } from 'lucide-react';
 import ProfileDropdown from './ProfileDropdown';
 
@@ -18,6 +18,7 @@ interface Props {
   setShowDataExport: (show: boolean) => void;
   setShowTwoFactorAuth: (show: boolean) => void;
   setShowAppointmentsList: (show: boolean) => void;
+  setShowVoiceBiometricsEnrollment: (show: boolean) => void;
   onNewConsultation: () => void;
   onUpgrade: () => void;
   onOpenReminders?: () => void;
@@ -36,6 +37,7 @@ export default function Header({
   setShowDataExport,
   setShowTwoFactorAuth,
   setShowAppointmentsList,
+  setShowVoiceBiometricsEnrollment,
   onNewConsultation,
   onUpgrade,
   onOpenReminders,
@@ -72,6 +74,7 @@ export default function Header({
     { icon: <TrendingUp size={18} />, label: 'Progress Dashboard', onClick: () => setShowProgressDashboard(true) },
     { icon: <Download size={18} />, label: 'Export Data', onClick: () => setShowDataExport(true) },
     { icon: <Shield size={18} />, label: '2FA Settings', onClick: () => setShowTwoFactorAuth(true) },
+    { icon: <Mic size={18} />, label: 'Voice Biometrics', onClick: () => setShowVoiceBiometricsEnrollment(true) },
   ];
 
   return (

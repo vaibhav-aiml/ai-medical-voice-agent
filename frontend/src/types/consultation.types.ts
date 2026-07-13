@@ -11,6 +11,9 @@ export interface Message {
   type: 'user' | 'ai';
   content: string;
   timestamp: Date;
+  translation?: string;
+  sourceLanguage?: string;
+  targetLanguage?: string;
 }
 
 export interface ConsultationSession {
@@ -23,6 +26,8 @@ export interface ConsultationSession {
   duration?: number;
   symptoms?: string;
   notes?: string;
+  emotion?: string;
+  emotionConfidence?: number;
 }
 
 export interface MedicalReport {

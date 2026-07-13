@@ -1,6 +1,131 @@
 import { Server, Socket } from 'socket.io';
 import { Groq } from 'groq-sdk';
 import logger from '../utils/logger';
+import { db } from '../config/database';
+import { voiceSessions } from '../db/schema/index';
+import { eq } from 'drizzle-orm';
+import { detectEmotionFromSpeech } from '../services/emotionService';
+import { translateText } from '../services/translationService';
+
+
+// Helper to asynchronously run emotion detection and update database + socket
+async function handleSocketEmotionDetection(socket: Socket, transcript: string, consultationId: string) {
+  try {
+    logger.info('Performing socket-based emotion detection', { consultationId });
+    const emotionResult = await detectEmotionFromSpeech(transcript);
+    
+    // Emit emotion details back to client
+    socket.emit('emotion-detected', {
+      consultationId,
+      ...emotionResult
+    });
+    
+    // Save to database session
+    const sessions = await db.select()
+      .from(voiceSessions)
+      .where(eq(voiceSessions.consultationId, consultationId));
+      
+    if (sessions.length > 0) {
+      const latestSession = sessions[sessions.length - 1];
+      await db.update(voiceSessions)
+        .set({
+          emotion: emotionResult.emotion,
+          emotionConfidence: emotionResult.confidence.toString(),
+          emotionScores: emotionResult.scores,
+        })
+        .where(eq(voiceSessions.id, latestSession.id));
+      logger.info('Updated emotion on latest voice session via socket', { sessionId: latestSession.id, emotion: emotionResult.emotion });
+    } else {
+      await db.insert(voiceSessions).values({
+        consultationId,
+        emotion: emotionResult.emotion,
+        emotionConfidence: emotionResult.confidence.toString(),
+        emotionScores: emotionResult.scores,
+        transcript: [{ role: 'user', content: transcript, timestamp: new Date().toISOString() }],
+      });
+      logger.info('Created voice session with emotion via socket', { consultationId, emotion: emotionResult.emotion });
+    }
+  } catch (error: any) {
+    logger.error('Failed in handleSocketEmotionDetection', { error: error.message, consultationId });
+  }
+}
+
+// Helper to asynchronously translate dialogue, save to DB, and emit translations
+async function saveTranscriptWithTranslation(
+  socket: Socket,
+  consultationId: string,
+  transcript: string,
+  fullResponse: string,
+  language: string
+) {
+  try {
+    let translatedTranscript = '';
+    let translatedAIResponse = '';
+    
+    if (language && language !== 'en') {
+      logger.info('Translating transcript and response', { language, consultationId });
+      const tUser = await translateText(transcript, 'en', language);
+      translatedTranscript = tUser.translatedText;
+      
+      const tAI = await translateText(fullResponse, 'en', language);
+      translatedAIResponse = tAI.translatedText;
+    }
+
+    const userMessage = {
+      id: `msg_${Date.now()}_user`,
+      role: 'user',
+      content: transcript,
+      translation: translatedTranscript || undefined,
+      sourceLanguage: language,
+      targetLanguage: 'en',
+      timestamp: new Date().toISOString()
+    };
+
+    const aiMessage = {
+      id: `msg_${Date.now()}_ai`,
+      role: 'assistant',
+      content: fullResponse,
+      translation: translatedAIResponse || undefined,
+      sourceLanguage: language,
+      targetLanguage: 'en',
+      timestamp: new Date().toISOString()
+    };
+
+    const sessions = await db.select()
+      .from(voiceSessions)
+      .where(eq(voiceSessions.consultationId, consultationId as string));
+
+    if (sessions.length > 0) {
+      const latestSession = sessions[sessions.length - 1];
+      const existingTranscript = Array.isArray(latestSession.transcript) ? latestSession.transcript : [];
+      const existingAIResponses = Array.isArray(latestSession.aiResponses) ? latestSession.aiResponses : [];
+
+      await db.update(voiceSessions)
+        .set({
+          transcript: [...existingTranscript, userMessage],
+          aiResponses: [...existingAIResponses, aiMessage],
+        })
+        .where(eq(voiceSessions.id, latestSession.id));
+      logger.info('Saved translated dialog turns to existing voice session', { sessionId: latestSession.id });
+    } else {
+      await db.insert(voiceSessions).values({
+        consultationId: consultationId as string,
+        transcript: [userMessage],
+        aiResponses: [aiMessage],
+      });
+      logger.info('Created new voice session to save translated dialogue turns', { consultationId });
+    }
+
+    // Emit translations to client
+    socket.emit('translation-complete', {
+      consultationId,
+      userMessage,
+      aiMessage
+    });
+  } catch (error: any) {
+    logger.error('Failed in saveTranscriptWithTranslation', { error: error.message, consultationId });
+  }
+}
 
 // Initialize Groq only if API key exists
 let groq: Groq | null = null;
@@ -34,17 +159,22 @@ export function setupVoiceSocket(io: Server) {
       userId?: string;
       contextPrompt?: string;
       conversationHistory?: Array<{role: string, content: string}>;
+      language?: string;
     }) => {
-      const { consultationId, transcript, specialistType, userId, contextPrompt, conversationHistory } = data;
+      const { consultationId, transcript, specialistType, userId, contextPrompt, conversationHistory, language = 'en' } = data;
       
       logger.info(`Real-time streaming request from socket`, {
         socketId: socket.id,
         consultationId,
         specialistType,
         historyLength: conversationHistory?.length || 0,
+        language
       });
+
+      // Async emotion detection in background
+      handleSocketEmotionDetection(socket, transcript, consultationId);
       
-      const systemPrompt = getSystemPrompt(specialistType, contextPrompt);
+      const systemPrompt = getSystemPrompt(specialistType, contextPrompt, language);
       const messages: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [
         { role: 'system', content: systemPrompt },
       ];
@@ -73,6 +203,7 @@ export function setupVoiceSocket(io: Server) {
           isComplete: true,
           fullResponse: fallbackResponse,
         });
+        saveTranscriptWithTranslation(socket, consultationId, transcript, fallbackResponse, language);
         return;
       }
       
@@ -112,6 +243,7 @@ export function setupVoiceSocket(io: Server) {
           isComplete: true,
           fullResponse,
         });
+        saveTranscriptWithTranslation(socket, consultationId, transcript, fullResponse, language);
         
       } catch (error: any) {
         logger.error('Streaming completion error', { consultationId, error: error.message });
@@ -126,6 +258,7 @@ export function setupVoiceSocket(io: Server) {
           error: 'Failed to generate response, using fallback',
           consultationId,
         });
+        saveTranscriptWithTranslation(socket, consultationId, transcript, fallbackResponse, language);
       }
     });
     
@@ -136,16 +269,21 @@ export function setupVoiceSocket(io: Server) {
       specialistType: string;
       userId?: string;
       conversationHistory?: Array<{role: string, content: string}>;
+      language?: string;
     }) => {
-      const { consultationId, transcript, specialistType, userId, conversationHistory } = data;
+      const { consultationId, transcript, specialistType, userId, conversationHistory, language = 'en' } = data;
       
       logger.info(`Non-streaming AI request from socket`, {
         socketId: socket.id,
         consultationId,
         specialistType,
+        language
       });
+
+      // Async emotion detection in background
+      handleSocketEmotionDetection(socket, transcript, consultationId);
       
-      const systemPrompt = getSystemPrompt(specialistType);
+      const systemPrompt = getSystemPrompt(specialistType, undefined, language);
       const messages: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [
         { role: 'system', content: systemPrompt },
       ];
@@ -168,6 +306,7 @@ export function setupVoiceSocket(io: Server) {
         logger.warn('Groq client not available, using fallback response', { consultationId });
         const response = getFallbackResponse(transcript, specialistType, conversationHistory);
         socket.emit('ai-response', { response, consultationId });
+        saveTranscriptWithTranslation(socket, consultationId, transcript, response, language);
         return;
       }
       
@@ -186,6 +325,7 @@ export function setupVoiceSocket(io: Server) {
           response,
           consultationId,
         });
+        saveTranscriptWithTranslation(socket, consultationId, transcript, response, language);
         
       } catch (error: any) {
         logger.error('Non-streaming completion error', { consultationId, error: error.message });
@@ -194,6 +334,7 @@ export function setupVoiceSocket(io: Server) {
           response: fallbackResponse,
           consultationId,
         });
+        saveTranscriptWithTranslation(socket, consultationId, transcript, fallbackResponse, language);
       }
     });
     
@@ -203,7 +344,20 @@ export function setupVoiceSocket(io: Server) {
   });
 }
 
-function getSystemPrompt(specialistType: string, contextPrompt?: string): string {
+const languageNames: Record<string, string> = {
+  en: 'English',
+  hi: 'Hindi',
+  bn: 'Bengali',
+  ta: 'Tamil',
+  te: 'Telugu',
+  mr: 'Marathi',
+  gu: 'Gujarati',
+  kn: 'Kannada',
+  ml: 'Malayalam',
+  pa: 'Punjabi',
+};
+
+function getSystemPrompt(specialistType: string, contextPrompt?: string, language: string = 'en'): string {
   const basePrompts: Record<string, string> = {
     general: `You are a compassionate General Physician AI. 
 
@@ -234,6 +388,11 @@ Example of GOOD contextual response:
   let prompt = basePrompts[specialistType] || basePrompts.general;
   if (contextPrompt) {
     prompt += contextPrompt;
+  }
+
+  if (language && language !== 'en') {
+    const langName = languageNames[language] || language;
+    prompt += `\n\nIMPORTANT: The patient's preferred language is ${langName}. You MUST write your entire response in ${langName}. Do not respond in English.`;
   }
   
   return prompt;
