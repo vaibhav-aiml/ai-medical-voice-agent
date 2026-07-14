@@ -22,7 +22,7 @@ router.post('/medication', validate(createMedicationSchema), catchAsync(async (r
   if (req.body.userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot create medications for other users', 403);
   }
-  const result = reminderService.addMedication(req.body);
+  const result = await reminderService.addMedication(req.body);
   res.json({ success: true, data: result });
 }));
 
@@ -32,7 +32,7 @@ router.get('/medications/:userId', catchAsync(async (req: Request, res: Response
   if (userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot access other users\' medication records', 403);
   }
-  const result = reminderService.getUserMedications(userId);
+  const result = await reminderService.getUserMedications(userId);
   res.json({ success: true, data: result });
 }));
 
@@ -40,7 +40,7 @@ router.put('/medication/:id', validate(updateMedicationSchema), catchAsync(async
   const id = getParam(req.params.id);
   const authenticatedUserId = (req as any).userId;
   
-  const medication = reminderService.getMedicationById(id);
+  const medication = await reminderService.getMedicationById(id);
   if (!medication) {
     throw new AppError('Medication not found', 404);
   }
@@ -48,7 +48,7 @@ router.put('/medication/:id', validate(updateMedicationSchema), catchAsync(async
     throw new AppError('Forbidden: Cannot modify other users\' medication records', 403);
   }
 
-  const result = reminderService.updateMedication(id, req.body);
+  const result = await reminderService.updateMedication(id, req.body);
   res.json({ success: true, data: result });
 }));
 
@@ -56,7 +56,7 @@ router.delete('/medication/:id', catchAsync(async (req: Request, res: Response) 
   const id = getParam(req.params.id);
   const authenticatedUserId = (req as any).userId;
 
-  const medication = reminderService.getMedicationById(id);
+  const medication = await reminderService.getMedicationById(id);
   if (!medication) {
     throw new AppError('Medication not found', 404);
   }
@@ -64,7 +64,7 @@ router.delete('/medication/:id', catchAsync(async (req: Request, res: Response) 
     throw new AppError('Forbidden: Cannot delete other users\' medication records', 403);
   }
 
-  const result = reminderService.deleteMedication(id);
+  const result = await reminderService.deleteMedication(id);
   res.json({ success: true, data: result });
 }));
 
@@ -82,7 +82,7 @@ router.post('/preferences', catchAsync(async (req: Request, res: Response) => {
   // Validate the inner preferences object using Zod schema
   const parsedPrefs = setPreferencesSchema.parse(preferences || {});
   
-  const result = reminderService.setUserPreferences(userId, parsedPrefs);
+  const result = await reminderService.setUserPreferences(userId, parsedPrefs);
   res.json({ success: true, data: result });
 }));
 
@@ -92,7 +92,7 @@ router.get('/preferences/:userId', catchAsync(async (req: Request, res: Response
   if (userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot access other users\' preferences', 403);
   }
-  const result = reminderService.getUserPreferences(userId);
+  const result = await reminderService.getUserPreferences(userId);
   res.json({ success: true, data: result });
 }));
 
@@ -107,7 +107,7 @@ router.post('/acknowledge', catchAsync(async (req: Request, res: Response) => {
     throw new AppError('Forbidden: Cannot acknowledge reminders for other users', 403);
   }
 
-  const result = reminderService.acknowledgeReminder(reminderId, userId);
+  const result = await reminderService.acknowledgeReminder(reminderId, userId);
   res.json({ success: true, data: result });
 }));
 
@@ -117,7 +117,7 @@ router.get('/stats/:userId', catchAsync(async (req: Request, res: Response) => {
   if (userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot access other users\' stats', 403);
   }
-  const result = reminderService.getReminderStats(userId);
+  const result = await reminderService.getReminderStats(userId);
   res.json({ success: true, data: result });
 }));
 

@@ -1,13 +1,11 @@
 import { Medication, ReminderLog, UserNotificationPreference } from '../models/Reminder';
 import nodemailer from 'nodemailer';
 import logger from '../utils/logger';
+import { db } from '../config/database';
+import { dbMedications, dbReminderLogs, dbUserPreferences } from '../db/schema/index';
+import { eq, and } from 'drizzle-orm';
 
-// In-memory storage
-const medications: Map<string, Medication> = new Map();
-const reminderLogs: Map<string, ReminderLog[]> = new Map();
-const userPreferences: Map<string, UserNotificationPreference> = new Map();
-
-// Store active timeouts
+// Store active timeouts in-memory for active runtime execution
 const activeTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
 let emailTransporter: nodemailer.Transporter | null = null;
@@ -44,19 +42,16 @@ function clearRemindersForMedication(medicationId: string): void {
 }
 
 async function logReminder(medication: Medication, status: string, channel: string): Promise<void> {
-  const log: ReminderLog = {
-    id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+  const logId = `log_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  await db.insert(dbReminderLogs).values({
+    id: logId,
     reminderId: medication.id,
     userId: medication.userId,
     scheduledTime: new Date(),
     sentTime: new Date(),
     status: status as any,
     channel: channel as any,
-  };
-  
-  const userLogs = reminderLogs.get(medication.userId) || [];
-  userLogs.push(log);
-  reminderLogs.set(medication.userId, userLogs);
+  });
 }
 
 function formatReminderMessage(medication: Medication): string {
@@ -68,7 +63,7 @@ async function sendReminder(medication: Medication): Promise<void> {
     initEmailTransporter();
   }
   
-  const prefs = userPreferences.get(medication.userId);
+  const prefs = await getUserPreferences(medication.userId);
   
   if (!prefs || !prefs.emailEnabled || !prefs.emailAddress) {
     logger.warn(`No email preferences configured for user ${medication.userId}`);
@@ -143,73 +138,156 @@ function scheduleAllRemindersForMedication(medication: Medication): void {
   }
 }
 
-// Exported pure functions
-export function addMedication(medication: any): Medication {
+export async function addMedication(medication: any): Promise<Medication> {
   if (!emailTransporter) {
     initEmailTransporter();
   }
   
+  const id = medication.id || `med_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   const newMedication: Medication = {
-    id: `med_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+    id,
     userId: medication.userId,
     name: medication.name,
     dosage: medication.dosage,
     frequency: medication.frequency || 'daily',
     times: medication.times || ['09:00'],
-    startDate: new Date(),
+    startDate: medication.startDate ? new Date(medication.startDate) : new Date(),
+    endDate: medication.endDate ? new Date(medication.endDate) : undefined,
+    quantity: medication.quantity,
+    refillReminder: medication.refillReminder || false,
+    refillThreshold: medication.refillThreshold,
+    notes: medication.notes,
     active: true,
     createdAt: new Date(),
     updatedAt: new Date(),
-    notes: medication.notes,
   };
-  medications.set(newMedication.id, newMedication);
+  
+  await db.insert(dbMedications).values({
+    id: newMedication.id,
+    userId: newMedication.userId,
+    name: newMedication.name,
+    dosage: newMedication.dosage,
+    frequency: newMedication.frequency,
+    times: newMedication.times,
+    daysOfWeek: medication.daysOfWeek || null,
+    startDate: newMedication.startDate,
+    endDate: newMedication.endDate || null,
+    quantity: newMedication.quantity || null,
+    refillReminder: newMedication.refillReminder,
+    refillThreshold: newMedication.refillThreshold || null,
+    notes: newMedication.notes || null,
+    active: newMedication.active,
+    createdAt: newMedication.createdAt,
+    updatedAt: newMedication.updatedAt,
+  });
   
   scheduleAllRemindersForMedication(newMedication);
   logger.info(`Added medication: ${newMedication.name} for user ${newMedication.userId}`);
   return newMedication;
 }
 
-export function getMedicationById(id: string): Medication | null {
-  return medications.get(id) || null;
+export async function getMedicationById(id: string): Promise<Medication | null> {
+  const rows = await db.select().from(dbMedications).where(eq(dbMedications.id, id)).limit(1);
+  if (rows.length === 0) return null;
+  
+  const row = rows[0];
+  return {
+    id: row.id,
+    userId: row.userId,
+    name: row.name,
+    dosage: row.dosage,
+    frequency: row.frequency as any,
+    times: row.times as string[],
+    daysOfWeek: row.daysOfWeek as number[] | undefined,
+    startDate: row.startDate,
+    endDate: row.endDate || undefined,
+    quantity: row.quantity || undefined,
+    refillReminder: row.refillReminder,
+    refillThreshold: row.refillThreshold || undefined,
+    notes: row.notes || undefined,
+    active: row.active,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
 }
 
-export function getUserMedications(userId: string): Medication[] {
-  const result: Medication[] = [];
-  for (const med of medications.values()) {
-    if (med.userId === userId && med.active) {
-      result.push(med);
-    }
-  }
-  return result;
+export async function getUserMedications(userId: string): Promise<Medication[]> {
+  const rows = await db.select().from(dbMedications).where(
+    and(
+      eq(dbMedications.userId, userId),
+      eq(dbMedications.active, true)
+    )
+  );
+  
+  return rows.map(row => ({
+    id: row.id,
+    userId: row.userId,
+    name: row.name,
+    dosage: row.dosage,
+    frequency: row.frequency as any,
+    times: row.times as string[],
+    daysOfWeek: row.daysOfWeek as number[] | undefined,
+    startDate: row.startDate,
+    endDate: row.endDate || undefined,
+    quantity: row.quantity || undefined,
+    refillReminder: row.refillReminder,
+    refillThreshold: row.refillThreshold || undefined,
+    notes: row.notes || undefined,
+    active: row.active,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }));
 }
 
-export function updateMedication(id: string, updates: any): Medication | null {
-  const med = medications.get(id);
+export async function updateMedication(id: string, updates: any): Promise<Medication | null> {
+  const med = await getMedicationById(id);
   if (!med) return null;
   
   clearRemindersForMedication(id);
   
   const updated = { ...med, ...updates, updatedAt: new Date() };
-  medications.set(id, updated);
   
+  await db.update(dbMedications)
+    .set({
+      name: updated.name,
+      dosage: updated.dosage,
+      frequency: updated.frequency,
+      times: updated.times,
+      daysOfWeek: updated.daysOfWeek || null,
+      startDate: updated.startDate,
+      endDate: updated.endDate || null,
+      quantity: updated.quantity || null,
+      refillReminder: updated.refillReminder,
+      refillThreshold: updated.refillThreshold || null,
+      notes: updated.notes || null,
+      active: updated.active,
+      updatedAt: updated.updatedAt,
+    })
+    .where(eq(dbMedications.id, id));
+    
   scheduleAllRemindersForMedication(updated);
   return updated;
 }
 
-export function deleteMedication(id: string): boolean {
-  const med = medications.get(id);
+export async function deleteMedication(id: string): Promise<boolean> {
+  const med = await getMedicationById(id);
   if (!med) return false;
   
   clearRemindersForMedication(id);
   
-  med.active = false;
-  medications.set(id, med);
+  await db.update(dbMedications)
+    .set({
+      active: false,
+      updatedAt: new Date()
+    })
+    .where(eq(dbMedications.id, id));
+    
   logger.info(`Deleted medication: ${med.name}`);
   return true;
 }
 
-export function setUserPreferences(userId: string, prefs: any): UserNotificationPreference {
-  const existing = userPreferences.get(userId) || {
+export async function setUserPreferences(userId: string, prefs: any): Promise<UserNotificationPreference> {
+  const existing = await getUserPreferences(userId) || {
     userId,
     emailEnabled: false,
     smsEnabled: false,
@@ -219,29 +297,79 @@ export function setUserPreferences(userId: string, prefs: any): UserNotification
   };
   
   const updated = { ...existing, ...prefs };
-  userPreferences.set(userId, updated);
-  logger.info(`Updated preferences for user ${userId}: email=${updated.emailEnabled}, address=${updated.emailAddress}`);
+  
+  await db.insert(dbUserPreferences)
+    .values({
+      userId: updated.userId,
+      emailEnabled: updated.emailEnabled,
+      emailAddress: updated.emailAddress || null,
+      smsEnabled: updated.smsEnabled,
+      phoneNumber: updated.phoneNumber || null,
+      whatsappEnabled: updated.whatsappEnabled,
+      pushEnabled: updated.pushEnabled,
+      reminderTime: updated.reminderTime,
+    })
+    .onConflictDoUpdate({
+      target: dbUserPreferences.userId,
+      set: {
+        emailEnabled: updated.emailEnabled,
+        emailAddress: updated.emailAddress || null,
+        smsEnabled: updated.smsEnabled,
+        phoneNumber: updated.phoneNumber || null,
+        whatsappEnabled: updated.whatsappEnabled,
+        pushEnabled: updated.pushEnabled,
+        reminderTime: updated.reminderTime,
+      }
+    });
+    
+  logger.info(`Updated preferences for user ${userId}: email=${updated.emailEnabled}`);
   return updated;
 }
 
-export function getUserPreferences(userId: string): UserNotificationPreference | null {
-  return userPreferences.get(userId) || null;
+export async function getUserPreferences(userId: string): Promise<UserNotificationPreference | null> {
+  const rows = await db.select().from(dbUserPreferences).where(eq(dbUserPreferences.userId, userId)).limit(1);
+  if (rows.length === 0) return null;
+  
+  const row = rows[0];
+  return {
+    userId: row.userId,
+    emailEnabled: row.emailEnabled,
+    emailAddress: row.emailAddress || undefined,
+    smsEnabled: row.smsEnabled,
+    phoneNumber: row.phoneNumber || undefined,
+    whatsappEnabled: row.whatsappEnabled,
+    pushEnabled: row.pushEnabled,
+    reminderTime: row.reminderTime,
+  };
 }
 
-export function acknowledgeReminder(reminderId: string, userId: string): boolean {
-  const logs = reminderLogs.get(userId) || [];
-  const log = logs.find(l => l.reminderId === reminderId);
-  if (log && log.status === 'sent') {
-    log.status = 'acknowledged';
-    log.acknowledgedTime = new Date();
+export async function acknowledgeReminder(reminderId: string, userId: string): Promise<boolean> {
+  const rows = await db.select()
+    .from(dbReminderLogs)
+    .where(
+      and(
+        eq(dbReminderLogs.reminderId, reminderId),
+        eq(dbReminderLogs.userId, userId),
+        eq(dbReminderLogs.status, 'sent')
+      )
+    )
+    .limit(1);
+    
+  if (rows.length > 0) {
+    await db.update(dbReminderLogs)
+      .set({
+        status: 'acknowledged',
+        acknowledgedTime: new Date()
+      })
+      .where(eq(dbReminderLogs.id, rows[0].id));
     logger.info(`Reminder acknowledged: ${reminderId}`);
     return true;
   }
   return false;
 }
 
-export function getReminderStats(userId: string): any {
-  const logs = reminderLogs.get(userId) || [];
+export async function getReminderStats(userId: string): Promise<any> {
+  const logs = await db.select().from(dbReminderLogs).where(eq(dbReminderLogs.userId, userId));
   const total = logs.length;
   const acknowledged = logs.filter(l => l.status === 'acknowledged').length;
   const missed = logs.filter(l => l.status === 'missed').length;
@@ -253,23 +381,39 @@ export function getReminderStats(userId: string): any {
   };
 }
 
-export function rescheduleAllReminders(): void {
+export async function rescheduleAllReminders(): Promise<void> {
   logger.info('Rescheduling all reminders...');
-  for (const medication of medications.values()) {
-    if (medication.active) {
-      scheduleAllRemindersForMedication(medication);
-    }
+  const rows = await db.select().from(dbMedications).where(eq(dbMedications.active, true));
+  for (const row of rows) {
+    const medication: Medication = {
+      id: row.id,
+      userId: row.userId,
+      name: row.name,
+      dosage: row.dosage,
+      frequency: row.frequency as any,
+      times: row.times as string[],
+      daysOfWeek: row.daysOfWeek as number[] | undefined,
+      startDate: row.startDate,
+      endDate: row.endDate || undefined,
+      quantity: row.quantity || undefined,
+      refillReminder: row.refillReminder,
+      refillThreshold: row.refillThreshold || undefined,
+      notes: row.notes || undefined,
+      active: row.active,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
+    scheduleAllRemindersForMedication(medication);
   }
 }
 
 export async function forceSendReminder(medicationId: string): Promise<boolean> {
-  const medication = medications.get(medicationId);
+  const medication = await getMedicationById(medicationId);
   if (!medication) return false;
   await sendReminder(medication);
   return true;
 }
 
-// Backward-compatible default export object
 export const reminderService = {
   addMedication,
   getMedicationById,
