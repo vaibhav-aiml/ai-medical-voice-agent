@@ -6,6 +6,7 @@ import { voiceSessions } from '../db/schema/index';
 import { eq } from 'drizzle-orm';
 import { detectEmotionFromSpeech } from '../services/emotionService';
 import { translateText } from '../services/translationService';
+import { phiService } from '../services/phiService';
 
 
 // Helper to asynchronously run emotion detection and update database + socket
@@ -208,12 +209,21 @@ export function setupVoiceSocket(io: Server) {
       }
       
       try {
+        // Redact PHI from messages before sending to Groq/OpenAI
+        const redactedMessages = await Promise.all(messages.map(async (msg) => {
+          if (msg.role === 'user') {
+            const cleanContent = await phiService.prepareTextForAI(msg.content, 'socket-user', consultationId);
+            return { ...msg, content: cleanContent };
+          }
+          return msg;
+        }));
+
         logger.info('Starting Groq streaming completion', { consultationId });
         
         // Revert to llama-3.3-70b-versatile as mandated
         const stream = await groq.chat.completions.create({
           model: 'llama-3.3-70b-versatile',
-          messages: messages as any,
+          messages: redactedMessages as any,
           temperature: 0.7,
           max_tokens: 800,
           stream: true,
@@ -311,9 +321,18 @@ export function setupVoiceSocket(io: Server) {
       }
       
       try {
+        // Redact PHI from messages before sending to Groq/OpenAI
+        const redactedMessages = await Promise.all(messages.map(async (msg) => {
+          if (msg.role === 'user') {
+            const cleanContent = await phiService.prepareTextForAI(msg.content, 'socket-user', consultationId);
+            return { ...msg, content: cleanContent };
+          }
+          return msg;
+        }));
+
         const completion = await groq.chat.completions.create({
           model: 'llama-3.3-70b-versatile',
-          messages: messages as any,
+          messages: redactedMessages as any,
           temperature: 0.7,
           max_tokens: 800,
         });

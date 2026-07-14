@@ -1,6 +1,7 @@
 import { OpenAI } from 'openai';
 import Groq from 'groq-sdk';
 import logger from '../utils/logger';
+import { phiService } from './phiService';
 
 let groq: Groq | null = null;
 let openai: OpenAI | null = null;
@@ -139,6 +140,7 @@ Your output must be JSON matching this TypeScript structure:
 }`;
 
   try {
+    const cleanText = await phiService.prepareTextForAI(text, 'emotion-system', 'emotion-session');
     let responseText = '';
 
     if (aiProvider === 'groq' && groq) {
@@ -146,7 +148,7 @@ Your output must be JSON matching this TypeScript structure:
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Patient text to analyze: "${text}"` }
+          { role: 'user', content: `Patient text to analyze: "${cleanText}"` }
         ],
         temperature: 0.2,
         max_tokens: 300,
@@ -158,7 +160,7 @@ Your output must be JSON matching this TypeScript structure:
         model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Patient text to analyze: "${text}"` }
+          { role: 'user', content: `Patient text to analyze: "${cleanText}"` }
         ],
         temperature: 0.2,
         max_tokens: 300,

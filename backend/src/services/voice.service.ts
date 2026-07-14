@@ -4,6 +4,7 @@ import Groq from 'groq-sdk';
 import { db } from '../config/database';
 import { voiceSessions } from '../db/schema/index';
 import logger from '../utils/logger';
+import { phiService } from './phiService';
 
 // Module-scoped state (replaces class instance properties)
 let assemblyAI: AssemblyAI;
@@ -200,6 +201,15 @@ export async function getAIResponse(transcript: string, specialistType: string, 
     }))
   ];
 
+  // Redact PHI from messages before sending to Groq/OpenAI
+  const redactedMessages = await Promise.all(messages.map(async (msg) => {
+    if (msg.role === 'user') {
+      const cleanContent = await phiService.prepareTextForAI(msg.content, 'assessment-system', 'assessment-session');
+      return { ...msg, content: cleanContent };
+    }
+    return msg;
+  }));
+
   logger.info(`Sending ${messages.length} messages to ${aiProvider}`);
 
   try {
@@ -208,7 +218,7 @@ export async function getAIResponse(transcript: string, specialistType: string, 
     if (aiProvider === 'groq' && groq) {
       const completion = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
-        messages: messages as any,
+        messages: redactedMessages as any,
         temperature: 0.7,
         max_tokens: 500,
       });
@@ -217,7 +227,7 @@ export async function getAIResponse(transcript: string, specialistType: string, 
     } else if (openai) {
       const completion = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
-        messages: messages as any,
+        messages: redactedMessages as any,
         temperature: 0.7,
         max_tokens: 500,
       });
@@ -256,6 +266,9 @@ export async function processVoiceStream(audioBuffer: Buffer, consultationId: st
 export async function generateMedicalReport(consultationId: string, transcript: string, aiResponses: string) {
   if (!useMockAI && (groq || openai)) {
     try {
+      const cleanTranscript = await phiService.prepareTextForAI(transcript, 'report-generator', consultationId);
+      const cleanResponses = await phiService.prepareTextForAI(aiResponses, 'report-generator', consultationId);
+
       let responseText = '';
       
       if (groq) {
@@ -268,7 +281,7 @@ export async function generateMedicalReport(consultationId: string, transcript: 
             },
             { 
               role: 'user', 
-              content: `Consultation Transcript: ${transcript}\n\nAI Doctor Responses: ${aiResponses}`
+              content: `Consultation Transcript: ${cleanTranscript}\n\nAI Doctor Responses: ${cleanResponses}`
             }
           ],
           temperature: 0.5,
@@ -285,7 +298,7 @@ export async function generateMedicalReport(consultationId: string, transcript: 
             },
             { 
               role: 'user', 
-              content: `Consultation Transcript: ${transcript}\n\nAI Doctor Responses: ${aiResponses}`
+              content: `Consultation Transcript: ${cleanTranscript}\n\nAI Doctor Responses: ${cleanResponses}`
             }
           ],
           temperature: 0.5,

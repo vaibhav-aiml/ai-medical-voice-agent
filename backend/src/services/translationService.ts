@@ -1,6 +1,7 @@
 import { OpenAI } from 'openai';
 import Groq from 'groq-sdk';
 import logger from '../utils/logger';
+import { phiService } from './phiService';
 
 let groq: Groq | null = null;
 let openai: OpenAI | null = null;
@@ -91,6 +92,7 @@ Ensure high clinical accuracy and natural medical syntax.
 Provide ONLY the raw translated text. Do NOT include any explanations, introduction, context, quotes, or markdown wrappers.`;
 
   try {
+    const cleanText = await phiService.prepareTextForAI(text, 'translation-system', 'translation-session');
     let translatedText = '';
 
     if (aiProvider === 'groq' && groq) {
@@ -98,7 +100,7 @@ Provide ONLY the raw translated text. Do NOT include any explanations, introduct
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: text }
+          { role: 'user', content: cleanText }
         ],
         temperature: 0.1,
         max_tokens: 600
@@ -109,7 +111,7 @@ Provide ONLY the raw translated text. Do NOT include any explanations, introduct
         model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: text }
+          { role: 'user', content: cleanText }
         ],
         temperature: 0.1,
         max_tokens: 600
