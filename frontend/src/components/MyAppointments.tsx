@@ -127,12 +127,12 @@ const styles = {
   title: {
     fontSize: '24px',
     marginBottom: '20px',
-    color: '#333',
+    color: 'var(--text-primary)',
   },
   loading: {
     textAlign: 'center' as const,
     padding: '40px',
-    color: '#666',
+    color: 'var(--text-secondary)',
   },
   emptyState: {
     textAlign: 'center' as const,
@@ -148,11 +148,11 @@ const styles = {
     gap: '15px',
   },
   appointmentCard: {
-    background: 'white',
+    background: 'var(--bg-card)',
     borderRadius: '10px',
     padding: '20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    border: '1px solid #eee',
+    boxShadow: 'var(--card-shadow)',
+    border: '1px solid var(--border-color)',
   },
   cardHeader: {
     display: 'flex',
@@ -160,7 +160,7 @@ const styles = {
     gap: '15px',
     marginBottom: '15px',
     paddingBottom: '15px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border-color)',
   },
   specialistIcon: {
     fontSize: '32px',
@@ -168,12 +168,12 @@ const styles = {
   specialistName: {
     margin: 0,
     fontSize: '18px',
-    color: '#333',
+    color: 'var(--text-primary)',
   },
   specialistType: {
     margin: '5px 0 0',
     fontSize: '12px',
-    color: '#666',
+    color: 'var(--text-secondary)',
     textTransform: 'capitalize' as const,
   },
   statusBadge: {
@@ -191,7 +191,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     padding: '8px 0',
-    borderBottom: '1px solid #f0f0f0',
+    borderBottom: '1px solid var(--border-light)',
   },
   cancelButton: {
     width: '100%',

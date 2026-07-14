@@ -41,6 +41,7 @@ import EnhancedReportViewer from './components/EnhancedReportViewer';
 import DoctorAnalyticsDashboard from './components/DoctorAnalyticsDashboard';
 import ClinicDashboard from './components/ClinicDashboard';
 import EnhancedSymptomChecker from './components/EnhancedSymptomChecker';
+import FHIRConnector from './components/FHIRConnector';
 import { useLanguage } from './context/LanguageContext';
 import { useSubscription } from './context/SubscriptionContext';
 import { consultationService } from './services/consultationService';
@@ -153,6 +154,7 @@ function AppContent() {
   
   // Enhanced Symptom Checker state
   const [showEnhancedSymptomChecker, setShowEnhancedSymptomChecker] = useState(false);
+  const [showFHIRConnector, setShowFHIRConnector] = useState(false);
 
   // Get current session ID
   const getCurrentSessionId = () => {
@@ -568,6 +570,7 @@ function AppContent() {
           setShowTwoFactorAuth={setShowTwoFactorAuth}
           setShowAppointmentsList={setShowAppointmentsList}
           setShowVoiceBiometricsEnrollment={setShowVoiceBiometricsEnrollment}
+          setShowFHIRConnector={setShowFHIRConnector}
           onNewConsultation={handleNewConsultation}
           onUpgrade={() => setShowPricing(true)}
           onOpenReminders={handleOpenReminders}
@@ -1021,6 +1024,13 @@ function AppContent() {
         {showProgressDashboard && <ProgressDashboard onClose={() => setShowProgressDashboard(false)} />}
         {showTwoFactorAuth && <TwoFactorAuth onClose={() => setShowTwoFactorAuth(false)} />}
         {showDataExport && <DataExport onClose={() => setShowDataExport(false)} />}
+        {showFHIRConnector && (
+          <FHIRConnector 
+            userId={getCurrentUserId()} 
+            consultations={consultations} 
+            onClose={() => setShowFHIRConnector(false)} 
+          />
+        )}
         {showVideoConsultation && selectedVideoConsultation && (
           <VideoConsultation
             consultationId={selectedVideoConsultation.id}

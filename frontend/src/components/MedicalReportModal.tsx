@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Download, Mail, X, MessageCircle } from 'lucide-react';
+import { Download, Mail, X, MessageCircle, Database } from 'lucide-react';
 import { generateCompletePDFReport, generateMockCompleteReport } from '../utils/pdfGenerator';
 import EmailReportModal from './EmailReportModal';
 import WhatsAppButton from './WhatsAppButton';
 import WhatsAppShareModal from './WhatsAppShareModal';
 import { WhatsAppTemplates } from '../services/whatsapp.service';
+import EMRExportModal from './EMRExportModal';
 
 interface Props {
   consultationId: string;
@@ -20,6 +21,7 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
   const [generatedPdfData, setGeneratedPdfData] = useState<string>('');
   const [reportData, setReportData] = useState<any>(null);
   const [showWhatsAppShare, setShowWhatsAppShare] = useState(false); // Only declare once
+  const [showEMRExport, setShowEMRExport] = useState(false);
 
   const handleGeneratePDF = async () => {
     setIsGenerating(true);
@@ -134,12 +136,19 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
               <Mail size={16} />
               <span>{isGenerating ? 'Preparing...' : 'Email Report'}</span>
             </button>
-            <button 
+             <button 
               onClick={() => setShowWhatsAppShare(true)} 
               style={styles.whatsappButton}
             >
               <MessageCircle size={16} />
               <span>Share on WhatsApp</span>
+            </button>
+            <button 
+              onClick={() => setShowEMRExport(true)} 
+              style={styles.emrButton}
+            >
+              <Database size={16} />
+              <span>EMR Export</span>
             </button>
           </div>
         </div>
@@ -160,11 +169,18 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
         />
       )}
 
-      {showWhatsAppShare && (
+       {showWhatsAppShare && (
         <WhatsAppShareModal
           message={getWhatsAppMessage()}
           title="Share Consultation Summary"
           onClose={() => setShowWhatsAppShare(false)}
+        />
+      )}
+
+      {showEMRExport && (
+        <EMRExportModal
+          consultationId={consultationId}
+          onClose={() => setShowEMRExport(false)}
         />
       )}
     </>
@@ -340,6 +356,22 @@ const styles = {
     gap: '8px',
     padding: '10px',
     background: '#25D366',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    fontSize: '14px',
+    transition: 'all 0.2s ease',
+  },
+  emrButton: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '10px',
+    background: '#3b82f6',
     color: 'white',
     border: 'none',
     borderRadius: '10px',

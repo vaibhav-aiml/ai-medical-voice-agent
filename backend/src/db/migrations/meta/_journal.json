@@ -8,6 +8,20 @@
       "when": 1783948334794,
       "tag": "0000_nifty_night_nurse",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784032212592,
+      "tag": "0001_add_fhir_connections",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784032747006,
+      "tag": "0002_add_fhir_sync_logs",
+      "breakpoints": true
     }
   ]
 }

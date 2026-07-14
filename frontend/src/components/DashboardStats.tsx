@@ -46,11 +46,12 @@ const styles = {
     gap: '20px',
   },
   statCard: {
-    background: 'white',
+    background: 'var(--bg-card)',
     padding: '20px',
     borderRadius: '10px',
     textAlign: 'center' as const,
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    boxShadow: 'var(--card-shadow)',
+    border: '1px solid var(--border-color)',
   },
   statIcon: {
     fontSize: '32px',
@@ -64,6 +65,6 @@ const styles = {
   },
   statLabel: {
     fontSize: '14px',
-    color: '#666',
+    color: 'var(--text-secondary)',
   },
 };

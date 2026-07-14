@@ -33,6 +33,10 @@ import enhancedReportRoutes from './routes/enhanced-report.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import clinicRoutes from './routes/clinic.routes';
 import enhancedSymptomRoutes from './routes/enhanced-symptom.routes';
+import fhirRoutes from './routes/fhir.routes';
+import hl7Routes from './routes/hl7.routes';
+import emrRoutes from './routes/emr.routes';
+import interopRoutes from './routes/interop.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -110,6 +114,7 @@ app.use(globalLimiter);
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.text({ type: ['text/plain', 'application/hl7-v2'], limit: '10mb' }));
 
 // Request logging middleware using Winston
 app.use((req, res, next) => {
@@ -134,6 +139,10 @@ app.use('/api/reminder', reminderRoutes);
 app.use('/api/enhanced-report', requireAuth, enhancedReportRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/clinic', requireAuth, clinicRoutes);
+app.use('/api/fhir', fhirRoutes);
+app.use('/api/hl7', hl7Routes);
+app.use('/api/emr', requireAuth, emrRoutes);
+app.use('/api/interop', requireAuth, interopRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

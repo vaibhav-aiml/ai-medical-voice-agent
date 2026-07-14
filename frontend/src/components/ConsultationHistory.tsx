@@ -150,10 +150,11 @@ export default function ConsultationHistory({ consultations, onViewReport, onNew
 
 const styles = {
   container: {
-    background: 'white',
+    background: 'var(--bg-card)',
     borderRadius: '10px',
     padding: '20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    boxShadow: 'var(--card-shadow)',
+    border: '1px solid var(--border-color)',
   },
   header: {
     display: 'flex',
@@ -165,7 +166,7 @@ const styles = {
   },
   title: {
     fontSize: '24px',
-    color: '#333',
+    color: 'var(--text-primary)',
     margin: 0,
   },
   newButton: {
@@ -203,19 +204,19 @@ const styles = {
     borderCollapse: 'collapse' as const,
   },
   tableHeader: {
-    background: '#f8f9fa',
+    background: 'var(--bg-primary)',
   },
   th: {
     padding: '12px',
     textAlign: 'left' as const,
     fontWeight: 'bold',
-    color: '#666',
-    borderBottom: '2px solid #dee2e6',
+    color: 'var(--text-secondary)',
+    borderBottom: '2px solid var(--border-color)',
   },
   td: {
     padding: '12px',
-    borderBottom: '1px solid #dee2e6',
-    color: '#333',
+    borderBottom: '1px solid var(--border-color)',
+    color: 'var(--text-primary)',
   },
   tableRow: {
     transition: 'background 0.3s',
