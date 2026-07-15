@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
+import { useAuth } from '@clerk/clerk-react';
 import { BACKEND_URL, API_URL } from '../config/api';
 
 interface StreamingChatProps {
@@ -10,6 +11,7 @@ interface StreamingChatProps {
 }
 
 export default function StreamingChat({ consultationId, specialistType, userId, onMessageUpdate }: StreamingChatProps) {
+  const { getToken } = useAuth();
   const [isReceivingStream, setIsReceivingStream] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
@@ -41,6 +43,14 @@ export default function StreamingChat({ consultationId, specialistType, userId, 
     socketRef.current = io(BACKEND_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
+      auth: (cb) => {
+        getToken()
+          .then((token) => cb({ token }))
+          .catch((err) => {
+            console.error('Failed to get Clerk token for Socket.IO:', err);
+            cb({ token: null });
+          });
+      }
     });
     
     socketRef.current.on('connect', () => {
@@ -51,7 +61,11 @@ export default function StreamingChat({ consultationId, specialistType, userId, 
     
     socketRef.current.on('connect_error', (error: any) => {
       console.error('WebSocket error:', error);
-      setConnectionStatus('Connection failed');
+      if (error.message && (error.message.includes('Authentication') || error.message.includes('Token') || error.message.includes('auth'))) {
+        setConnectionStatus('Authentication Failed');
+      } else {
+        setConnectionStatus('Connection failed');
+      }
     });
     
     socketRef.current.on('ai-response-chunk', (data: any) => {

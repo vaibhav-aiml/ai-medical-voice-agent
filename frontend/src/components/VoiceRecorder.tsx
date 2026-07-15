@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
+import { useAuth } from '@clerk/clerk-react';
 import { BACKEND_URL, API_URL } from '../config/api';
 import TriageDisplay from './TriageDisplay';
 import { useLanguage } from '../context/LanguageContext';
@@ -69,6 +70,7 @@ const getEmotionColor = (emotion: string): string => {
 
 export default function VoiceRecorder({ consultationId, specialistType, onTranscriptUpdate, onAIResponse, onTriageResult, userId, initialHistory }: Props) {
   const { language, t } = useLanguage();
+  const { getToken } = useAuth();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -344,7 +346,15 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      timeout: 20000
+      timeout: 20000,
+      auth: (cb) => {
+        getToken()
+          .then((token) => cb({ token }))
+          .catch((err) => {
+            console.error('Failed to get Clerk token for Socket.IO:', err);
+            cb({ token: null });
+          });
+      }
     });
     
     socketRef.current.on('connect', () => {
@@ -355,7 +365,11 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     
     socketRef.current.on('connect_error', (error: any) => {
       console.error('❌ WebSocket connection error:', error.message);
-      setConnectionStatus('Connection failed');
+      if (error.message && (error.message.includes('Authentication') || error.message.includes('Token') || error.message.includes('auth'))) {
+        setConnectionStatus('Authentication Failed');
+      } else {
+        setConnectionStatus('Connection failed');
+      }
       setIsProcessing(false);
     });
     
@@ -560,8 +574,18 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       <div style={styles.container}>
         <div style={styles.statusBar}>
           <span>🔌 {t('consultation.websocket')}: </span>
-          <span style={connectionStatus === 'Connected' ? styles.statusConnected : styles.statusDisconnected}>
-            {connectionStatus === 'Connected' ? t('consultation.connected') : t('consultation.disconnected')}
+          <span style={
+            connectionStatus === 'Connected'
+              ? styles.statusConnected
+              : connectionStatus === 'Authentication Failed'
+              ? styles.statusAuthFailed
+              : styles.statusDisconnected
+          }>
+            {connectionStatus === 'Connected'
+              ? t('consultation.connected')
+              : connectionStatus === 'Authentication Failed'
+              ? 'Authentication Failed'
+              : t('consultation.disconnected')}
           </span>
           <span style={styles.voiceStatus}>
             {voiceSettings.enabled ? t('consultation.voiceOn') : t('consultation.voiceOff')}
@@ -767,6 +791,10 @@ const styles = {
   },
   statusConnected: {
     color: 'green',
+    fontWeight: 'bold',
+  },
+  statusAuthFailed: {
+    color: '#f59e0b', // Amber/orange for auth failure warning
     fontWeight: 'bold',
   },
   statusDisconnected: {
