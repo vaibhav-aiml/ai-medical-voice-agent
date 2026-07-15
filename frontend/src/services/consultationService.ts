@@ -104,6 +104,19 @@ export const consultationService = {
     }
   },
 
+  /**
+   * Get voice session dialogue transcript for a consultation.
+   */
+  async getVoiceSession(consultationId: string): Promise<any> {
+    try {
+      const response = await axios.get(`${API_URL}/voice/session/${consultationId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching voice session transcript:', error);
+      return null;
+    }
+  },
+
   // ---- Private helpers for localStorage cache ----
 
   _getFromLocalCache(userId: string): ConsultationData[] {

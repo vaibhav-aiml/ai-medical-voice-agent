@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/clerk-react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { useState } from 'react';
+import LoadingScreen from './LoadingScreen';
 
 interface Props {
   children: React.ReactNode;
@@ -11,12 +12,7 @@ export default function AuthGuard({ children }: Props) {
   const [isSignUp, setIsSignUp] = useState(false);
 
   if (!isLoaded) {
-    return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.loader}></div>
-        <p>Loading...</p>
-      </div>
-    );
+    return <LoadingScreen message="Checking authentication..." />;
   }
 
   if (!isSignedIn) {

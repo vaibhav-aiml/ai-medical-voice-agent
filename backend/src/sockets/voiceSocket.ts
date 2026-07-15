@@ -277,7 +277,35 @@ export function setupVoiceSocket(io: Server) {
       // Async emotion detection in background
       handleSocketEmotionDetection(socket, transcript, consultationId);
       
-      const systemPrompt = getSystemPrompt(specialistType, contextPrompt, language);
+      // Load user's past consultations as medical background context
+      let pastConsultationsContext = '';
+      if (userId && userId !== 'dev-user-123') {
+        try {
+          const dbUser = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+          if (dbUser.length > 0) {
+            const pastConsultationsList = await db.select()
+              .from(consultations)
+              .where(eq(consultations.userId, dbUser[0].id))
+              .orderBy(consultations.startedAt)
+              .limit(5); // Load up to 5 past sessions
+              
+            if (pastConsultationsList.length > 0) {
+              pastConsultationsContext = pastConsultationsList.map((c, idx) => {
+                return `Session ${idx + 1} (${c.specialistType} - ${c.status}): Symptoms: ${c.symptoms}. Notes: ${c.notes || 'N/A'}`;
+              }).join('\n');
+            }
+          }
+        } catch (pastErr: any) {
+          logger.warn('Failed to load past consultations for context', { userId, error: pastErr.message });
+        }
+      }
+
+      const baseSystemPrompt = getSystemPrompt(specialistType, contextPrompt, language);
+      let systemPrompt = baseSystemPrompt;
+      if (pastConsultationsContext) {
+        systemPrompt += `\n\nPatient Past Medical Consultation History:\n${pastConsultationsContext}\nUse this history to maintain context and remember previous discussions with the patient when relevant.`;
+      }
+
       const messages: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [
         { role: 'system', content: systemPrompt },
       ];

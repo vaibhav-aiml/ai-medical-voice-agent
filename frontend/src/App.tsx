@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import axios from 'axios';
 import { 
@@ -9,45 +9,49 @@ import {
 } from 'lucide-react';
 import AuthGuard from './components/AuthGuard';
 import Header from './components/Header';
-import SymptomChecker from './components/SymptomChecker';
-import HealthTips from './components/HealthTips';
-import EmergencyContacts from './components/EmergencyContacts';
-import ConsultationRating from './components/ConsultationRating';
-import HealthGoals from './components/HealthGoals';
-import VoiceCustomization from './components/VoiceCustomization';
-import ProgressDashboard from './components/ProgressDashboard';
-import TwoFactorAuth from './components/TwoFactorAuth';
-import DataExport from './components/DataExport';
-import VoiceEnrollmentModal from './components/VoiceEnrollmentModal';
-import VideoConsultation from './components/VideoConsultation';
-import EnhancedDashboard from './components/EnhancedDashboard';
-import SpecialistSelector from './components/SpecialistSelector';
-import VoiceRecorder from './components/VoiceRecorder';
-import ChatMessages from './components/ChatMessages';
-import ConsultationHistory from './components/ConsultationHistory';
-import MedicalReportModal from './components/MedicalReportModal';
-import AppointmentBooking from './components/AppointmentBooking';
-import MyAppointments from './components/MyAppointments';
 import Footer from './components/Footer';
-import PricingPlans from './components/PricingPlans';
 import SkeletonLoader from './components/SkeletonLoader';
-import AboutUs from './pages/AboutUs';
-import ContactUs from './pages/ContactUs';
-import TermsConditions from './pages/TermsConditions';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import VoiceConsultationPage from './pages/VoiceConsultation';
-import MedicationReminder from './components/MedicationReminder';
-import EnhancedReportViewer from './components/EnhancedReportViewer';
-import DoctorAnalyticsDashboard from './components/DoctorAnalyticsDashboard';
-import ClinicDashboard from './components/ClinicDashboard';
-import EnhancedSymptomChecker from './components/EnhancedSymptomChecker';
-import FHIRConnector from './components/FHIRConnector';
 import { useLanguage } from './context/LanguageContext';
 import { useSubscription } from './context/SubscriptionContext';
 import { consultationService } from './services/consultationService';
 import { Message, ConsultationSession, DashboardStats } from './types/consultation.types';
-import HIPAACompliance from './pages/HIPAACompliance';
-import CookiePolicy from './pages/CookiePolicy';
+
+// Lazy load components and pages for bundle optimization
+const SymptomChecker = lazy(() => import('./components/SymptomChecker'));
+const HealthTips = lazy(() => import('./components/HealthTips'));
+const EmergencyContacts = lazy(() => import('./components/EmergencyContacts'));
+const ConsultationRating = lazy(() => import('./components/ConsultationRating'));
+const HealthGoals = lazy(() => import('./components/HealthGoals'));
+const VoiceCustomization = lazy(() => import('./components/VoiceCustomization'));
+const ProgressDashboard = lazy(() => import('./components/ProgressDashboard'));
+const TwoFactorAuth = lazy(() => import('./components/TwoFactorAuth'));
+const DataExport = lazy(() => import('./components/DataExport'));
+const VoiceEnrollmentModal = lazy(() => import('./components/VoiceEnrollmentModal'));
+const VideoConsultation = lazy(() => import('./components/VideoConsultation'));
+const EnhancedDashboard = lazy(() => import('./components/EnhancedDashboard'));
+const SpecialistSelector = lazy(() => import('./components/SpecialistSelector'));
+const VoiceRecorder = lazy(() => import('./components/VoiceRecorder'));
+const ChatMessages = lazy(() => import('./components/ChatMessages'));
+const ConsultationHistory = lazy(() => import('./components/ConsultationHistory'));
+const MedicalReportModal = lazy(() => import('./components/MedicalReportModal'));
+const AppointmentBooking = lazy(() => import('./components/AppointmentBooking'));
+const MyAppointments = lazy(() => import('./components/MyAppointments'));
+const PricingPlans = lazy(() => import('./components/PricingPlans'));
+const MedicationReminder = lazy(() => import('./components/MedicationReminder'));
+const EnhancedReportViewer = lazy(() => import('./components/EnhancedReportViewer'));
+const DoctorAnalyticsDashboard = lazy(() => import('./components/DoctorAnalyticsDashboard'));
+const ClinicDashboard = lazy(() => import('./components/ClinicDashboard'));
+const EnhancedSymptomChecker = lazy(() => import('./components/EnhancedSymptomChecker'));
+const FHIRConnector = lazy(() => import('./components/FHIRConnector'));
+
+// Pages
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const VoiceConsultationPage = lazy(() => import('./pages/VoiceConsultation'));
+const HIPAACompliance = lazy(() => import('./pages/HIPAACompliance'));
+const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
 
 function AppContent() {
   const { userId, getToken } = useAuth();
@@ -214,13 +218,40 @@ function AppContent() {
 
   useEffect(() => {
     if (userId) {
-      setLoading(true);
+      // 1. Try to load from localStorage cache first
+      let cachedData: ConsultationSession[] = [];
+      try {
+        const saved = localStorage.getItem(`consultations_${userId}`);
+        if (saved) {
+          cachedData = JSON.parse(saved);
+        }
+      } catch (err) {
+        console.error('Failed to parse cached consultations', err);
+      }
+
+      if (cachedData.length > 0) {
+        // We have cache! Render immediately and do not block the page with a skeleton loader.
+        setConsultations(cachedData);
+        updateStats(cachedData);
+        setLoading(false);
+      } else {
+        // No cache: show the loading skeleton
+        setLoading(true);
+      }
+
+      // 2. Fetch fresh data from the API in the background (or foreground if no cache)
       consultationService.getUserConsultations(userId)
         .then(data => {
           if (data && data.length > 0) {
-            setConsultations(data as unknown as ConsultationSession[]);
-            updateStats(data as unknown as ConsultationSession[]);
-          } else {
+            // Only update state if data has changed (to avoid unnecessary re-renders)
+            const serializedData = JSON.stringify(data);
+            const serializedCache = JSON.stringify(cachedData);
+            if (serializedData !== serializedCache) {
+              setConsultations(data as unknown as ConsultationSession[]);
+              updateStats(data as unknown as ConsultationSession[]);
+            }
+          } else if (cachedData.length === 0) {
+            // Fallback mock data if server returned nothing and we had no cache
             const mockConsultations: ConsultationSession[] = [
               {
                 id: '1',
@@ -246,15 +277,16 @@ function AppContent() {
               },
             ];
             setConsultations(mockConsultations);
-            // Save mock data locally for write-through fallback
             localStorage.setItem(`consultations_${userId}`, JSON.stringify(mockConsultations));
             updateStats(mockConsultations);
           }
         })
         .catch(error => {
           console.error('Error loading consultations:', error);
-          setConsultations([]);
-          updateStats([]);
+          if (cachedData.length === 0) {
+            setConsultations([]);
+            updateStats([]);
+          }
         })
         .finally(() => {
           setLoading(false);
@@ -273,6 +305,17 @@ function AppContent() {
     });
   };
 
+  const generateUUID = () => {
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
   const startConsultation = async () => {
     if (!selectedSpecialist) {
       alert(t('errors.selectSpecialist') || 'Please select a specialist first');
@@ -288,7 +331,7 @@ function AppContent() {
       }
     }
 
-    const newId = `consult_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const newId = generateUUID();
     setConsultationId(newId);
     setConsultationStarted(true);
     setMessages([]);
@@ -388,6 +431,53 @@ function AppContent() {
     if (consultation) {
       setSelectedConsultation(consultation);
       setShowReportModal(true);
+    }
+  };
+
+  const handleResumeConsultation = async (consultId: string) => {
+    try {
+      setShowReportModal(false);
+      setSelectedConsultation(null);
+      
+      const sessionData = await consultationService.getVoiceSession(consultId);
+      let loadedMessages: Message[] = [];
+      
+      if (sessionData && sessionData.success && sessionData.data) {
+        const voiceSession = sessionData.data;
+        const userMsgs = Array.isArray(voiceSession.transcript) ? voiceSession.transcript : [];
+        const aiMsgs = Array.isArray(voiceSession.aiResponses) ? voiceSession.aiResponses : [];
+        
+        loadedMessages = [
+          ...userMsgs.map((m: any) => ({
+            id: m.id || `msg_${Math.random()}_user`,
+            type: 'user' as const,
+            content: m.content,
+            timestamp: new Date(m.timestamp || Date.now())
+          })),
+          ...aiMsgs.map((m: any) => ({
+            id: m.id || `msg_${Math.random()}_ai`,
+            type: 'ai' as const,
+            content: m.content,
+            timestamp: new Date(m.timestamp || Date.now())
+          }))
+        ].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      }
+      
+      const consultation = consultations.find(c => c.id === consultId);
+      if (consultation) {
+        setConsultationId(consultId);
+        setSelectedSpecialist(consultation.specialistType);
+        setMessages(loadedMessages);
+        setConsultationStarted(true);
+        setManualSymptoms(consultation.symptoms || '');
+        setTriageResult(null);
+        setStreamingMessage('');
+        setIsStreaming(false);
+        setCurrentPage('consultation');
+      }
+    } catch (err) {
+      console.error('Error resuming consultation:', err);
+      alert('Failed to resume consultation. Starting a fresh session instead.');
     }
   };
 
@@ -546,13 +636,13 @@ function AppContent() {
     return <SkeletonLoader />;
   }
 
-  if (currentLegalPage === 'about') return <AboutUs />;
-  if (currentLegalPage === 'contact') return <ContactUs />;
-  if (currentLegalPage === 'terms') return <TermsConditions />;
-  if (currentLegalPage === 'privacy') return <PrivacyPolicy />;
-  if (currentServicePage === 'voice-consultation') return <VoiceConsultationPage />;
-  if (currentLegalPage === 'hipaa') return <HIPAACompliance />;
-  if (currentLegalPage === 'cookies') return <CookiePolicy />;
+  if (currentLegalPage === 'about') return <Suspense fallback={<SkeletonLoader />}><AboutUs /></Suspense>;
+  if (currentLegalPage === 'contact') return <Suspense fallback={<SkeletonLoader />}><ContactUs /></Suspense>;
+  if (currentLegalPage === 'terms') return <Suspense fallback={<SkeletonLoader />}><TermsConditions /></Suspense>;
+  if (currentLegalPage === 'privacy') return <Suspense fallback={<SkeletonLoader />}><PrivacyPolicy /></Suspense>;
+  if (currentServicePage === 'voice-consultation') return <Suspense fallback={<SkeletonLoader />}><VoiceConsultationPage /></Suspense>;
+  if (currentLegalPage === 'hipaa') return <Suspense fallback={<SkeletonLoader />}><HIPAACompliance /></Suspense>;
+  if (currentLegalPage === 'cookies') return <Suspense fallback={<SkeletonLoader />}><CookiePolicy /></Suspense>;
 
   return (
     <AuthGuard>
@@ -843,7 +933,9 @@ function AppContent() {
 
         {currentPage === 'dashboard' && (
           <div style={styles.pageContainer}>
-            <EnhancedDashboard consultations={consultations} stats={stats} />
+            <Suspense fallback={<SkeletonLoader />}>
+              <EnhancedDashboard consultations={consultations} stats={stats} />
+            </Suspense>
             <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button 
                 onClick={() => setShowAnalytics(true)} 
@@ -870,7 +962,9 @@ function AppContent() {
             </div>
             {!consultationStarted ? (
               <div style={styles.setupSection}>
-                <SpecialistSelector selectedSpecialist={selectedSpecialist} onSelect={setSelectedSpecialist} />
+                <Suspense fallback={<SkeletonLoader />}>
+                  <SpecialistSelector selectedSpecialist={selectedSpecialist} onSelect={setSelectedSpecialist} />
+                </Suspense>
                 <button onClick={startConsultation} disabled={!selectedSpecialist} style={styles.startConsultButton}>{t('consultation.startWith')} {selectedSpecialist || t('consultation.selectedSpecialist')}</button>
               </div>
             ) : (
@@ -879,24 +973,32 @@ function AppContent() {
                   <div style={styles.specialistBadge}>{getSpecialistIcon(selectedSpecialist)}<span>{selectedSpecialist} {t('consultation.specialist') || 'Specialist'}</span></div>
                   <button onClick={endConsultation} style={styles.endButton}>{t('consultation.endConsultation')}</button>
                 </div>
-                <VoiceRecorder 
-                  consultationId={consultationId} 
-                  specialistType={selectedSpecialist} 
-                  onTranscriptUpdate={handleTranscriptUpdate} 
-                  onAIResponse={handleAIResponse}
-                  onTriageResult={setTriageResult}
-                  userId={getCurrentUserId()}
-                />
+                <Suspense fallback={<SkeletonLoader />}>
+                  <VoiceRecorder 
+                    consultationId={consultationId} 
+                    specialistType={selectedSpecialist} 
+                    onTranscriptUpdate={handleTranscriptUpdate} 
+                    onAIResponse={handleAIResponse}
+                    onTriageResult={setTriageResult}
+                    userId={getCurrentUserId()}
+                    initialHistory={messages.map(m => ({
+                      role: m.type === 'user' ? 'user' : 'assistant',
+                      content: m.content
+                    }))}
+                  />
+                </Suspense>
                 
-                <ChatMessages 
-                  messages={messages}
-                  onAddMessage={addMessage}
-                  sessionId={getCurrentSessionId()}
-                  userId={getCurrentUserId()}
-                  triageResult={triageResult}
-                  streamingMessage={streamingMessage}
-                  isStreaming={isStreaming}
-                />
+                <Suspense fallback={<div>Loading Chat...</div>}>
+                  <ChatMessages 
+                    messages={messages}
+                    onAddMessage={addMessage}
+                    sessionId={getCurrentSessionId()}
+                    userId={getCurrentUserId()}
+                    triageResult={triageResult}
+                    streamingMessage={streamingMessage}
+                    isStreaming={isStreaming}
+                  />
+                </Suspense>
               </div>
             )}
           </div>
@@ -949,10 +1051,12 @@ function AppContent() {
 
         {/* Enhanced Symptom Checker Modal */}
         {showEnhancedSymptomChecker && (
-          <EnhancedSymptomChecker 
-            onClose={() => setShowEnhancedSymptomChecker(false)}
-            onStartConsultation={handleSymptomCheckerConsultation}
-          />
+          <Suspense fallback={null}>
+            <EnhancedSymptomChecker 
+              onClose={() => setShowEnhancedSymptomChecker(false)}
+              onStartConsultation={handleSymptomCheckerConsultation}
+            />
+          </Suspense>
         )}
 
         {/* Regular Symptom Checker Modal (for backward compatibility) */}
@@ -960,41 +1064,51 @@ function AppContent() {
           <div style={styles.modalOverlay}>
             <div style={styles.modalContent}>
               <button onClick={() => setShowSymptomChecker(false)} style={styles.modalClose}><X size={18} /></button>
-              <SymptomChecker onClose={() => setShowSymptomChecker(false)} />
+              <Suspense fallback={<div>Loading...</div>}>
+                <SymptomChecker onClose={() => setShowSymptomChecker(false)} />
+              </Suspense>
             </div>
           </div>
         )}
 
         {/* Medication Reminder Modal */}
         {showReminders && (
-          <MedicationReminder 
-            userId={getCurrentUserId()} 
-            onClose={() => setShowReminders(false)} 
-          />
+          <Suspense fallback={null}>
+            <MedicationReminder 
+              userId={getCurrentUserId()} 
+              onClose={() => setShowReminders(false)} 
+            />
+          </Suspense>
         )}
 
         {/* Enhanced Report Modal */}
         {showEnhancedReport && selectedReportData && (
-          <EnhancedReportViewer 
-            consultationData={selectedReportData} 
-            onClose={() => setShowEnhancedReport(false)} 
-          />
+          <Suspense fallback={null}>
+            <EnhancedReportViewer 
+              consultationData={selectedReportData} 
+              onClose={() => setShowEnhancedReport(false)} 
+            />
+          </Suspense>
         )}
 
         {/* Doctor Analytics Dashboard Modal */}
         {showAnalytics && (
-          <DoctorAnalyticsDashboard 
-            consultations={consultations}
-            ratings={JSON.parse(localStorage.getItem('consultationRatings') || '{}')}
-            onClose={() => setShowAnalytics(false)}
-          />
+          <Suspense fallback={null}>
+            <DoctorAnalyticsDashboard 
+              consultations={consultations}
+              ratings={JSON.parse(localStorage.getItem('consultationRatings') || '{}')}
+              onClose={() => setShowAnalytics(false)}
+            />
+          </Suspense>
         )}
 
         {showVoiceBiometricsEnrollment && (
-          <VoiceEnrollmentModal 
-            onClose={() => setShowVoiceBiometricsEnrollment(false)}
-            userId={getCurrentUserId()}
-          />
+          <Suspense fallback={null}>
+            <VoiceEnrollmentModal 
+              onClose={() => setShowVoiceBiometricsEnrollment(false)}
+              userId={getCurrentUserId()}
+            />
+          </Suspense>
         )}
 
         {/* Clinic Dashboard Modal */}
@@ -1002,58 +1116,114 @@ function AppContent() {
           <div style={styles.modalOverlayFull}>
             <div style={styles.modalFullContent}>
               <button onClick={() => setShowClinicDashboard(false)} style={styles.modalCloseBtn}>×</button>
-              <ClinicDashboard clinicId={currentClinicId} />
+              <Suspense fallback={<div style={{ padding: '40px', color: '#fff', textAlign: 'center' }}>Loading Clinic...</div>}>
+                <ClinicDashboard clinicId={currentClinicId} />
+              </Suspense>
             </div>
           </div>
         )}
 
-        {showReportModal && selectedConsultation && <MedicalReportModal consultationId={selectedConsultation.id} specialistType={selectedConsultation.specialistType} symptoms={selectedConsultation.symptoms || 'No symptoms recorded'} onClose={() => setShowReportModal(false)} />}
-        {showAppointmentModal && currentConsultationForAppointment && <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} patientName={getUserName()} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert(t('appointments.booked') || '✅ Appointment booked successfully!'); }} />}
-        {showHealthTips && <HealthTips onClose={() => setShowHealthTips(false)} />}
-        {showEmergencyContacts && <EmergencyContacts onClose={() => setShowEmergencyContacts(false)} />}
-        {showRatingModal && selectedRatingConsultation && (
-          <ConsultationRating
-            consultationId={selectedRatingConsultation.id}
-            consultationTitle={`${t('reports.consultationWith')} ${selectedRatingConsultation.specialistName}`}
-            onClose={() => setShowRatingModal(false)}
-            onSubmit={handleRatingSubmit}
-          />
+        {showReportModal && selectedConsultation && (
+          <Suspense fallback={null}>
+            <MedicalReportModal 
+              consultationId={selectedConsultation.id} 
+              specialistType={selectedConsultation.specialistType} 
+              symptoms={selectedConsultation.symptoms || 'No symptoms recorded'} 
+              onClose={() => setShowReportModal(false)} 
+              onResume={() => handleResumeConsultation(selectedConsultation.id)}
+            />
+          </Suspense>
         )}
-        {showHealthGoals && <HealthGoals onClose={() => setShowHealthGoals(false)} />}
-        {showVoiceCustomization && <VoiceCustomization onClose={() => setShowVoiceCustomization(false)} />}
-        {showProgressDashboard && <ProgressDashboard onClose={() => setShowProgressDashboard(false)} />}
-        {showTwoFactorAuth && <TwoFactorAuth onClose={() => setShowTwoFactorAuth(false)} />}
-        {showDataExport && <DataExport onClose={() => setShowDataExport(false)} />}
+        {showAppointmentModal && currentConsultationForAppointment && (
+          <Suspense fallback={null}>
+            <AppointmentBooking consultationId={currentConsultationForAppointment.id} specialistType={currentConsultationForAppointment.specialistType} specialistName={currentConsultationForAppointment.specialistName} patientName={getUserName()} onClose={() => setShowAppointmentModal(false)} onBooked={(apt) => { console.log('Appointment booked:', apt); setShowAppointmentModal(false); alert(t('appointments.booked') || '✅ Appointment booked successfully!'); }} />
+          </Suspense>
+        )}
+        {showHealthTips && (
+          <Suspense fallback={null}>
+            <HealthTips onClose={() => setShowHealthTips(false)} />
+          </Suspense>
+        )}
+        {showEmergencyContacts && (
+          <Suspense fallback={null}>
+            <EmergencyContacts onClose={() => setShowEmergencyContacts(false)} />
+          </Suspense>
+        )}
+        {showRatingModal && selectedRatingConsultation && (
+          <Suspense fallback={null}>
+            <ConsultationRating
+              consultationId={selectedRatingConsultation.id}
+              consultationTitle={`${t('reports.consultationWith')} ${selectedRatingConsultation.specialistName}`}
+              onClose={() => setShowRatingModal(false)}
+              onSubmit={handleRatingSubmit}
+            />
+          </Suspense>
+        )}
+        {showHealthGoals && (
+          <Suspense fallback={null}>
+            <HealthGoals onClose={() => setShowHealthGoals(false)} />
+          </Suspense>
+        )}
+        {showVoiceCustomization && (
+          <Suspense fallback={null}>
+            <VoiceCustomization onClose={() => setShowVoiceCustomization(false)} />
+          </Suspense>
+        )}
+        {showProgressDashboard && (
+          <Suspense fallback={null}>
+            <ProgressDashboard onClose={() => setShowProgressDashboard(false)} />
+          </Suspense>
+        )}
+        {showTwoFactorAuth && (
+          <Suspense fallback={null}>
+            <TwoFactorAuth onClose={() => setShowTwoFactorAuth(false)} />
+          </Suspense>
+        )}
+        {showDataExport && (
+          <Suspense fallback={null}>
+            <DataExport onClose={() => setShowDataExport(false)} />
+          </Suspense>
+        )}
         {showFHIRConnector && (
-          <FHIRConnector 
-            userId={getCurrentUserId()} 
-            consultations={consultations} 
-            onClose={() => setShowFHIRConnector(false)} 
-          />
+          <Suspense fallback={null}>
+            <FHIRConnector 
+              userId={getCurrentUserId()} 
+              consultations={consultations} 
+              onClose={() => setShowFHIRConnector(false)} 
+            />
+          </Suspense>
         )}
         {showVideoConsultation && selectedVideoConsultation && (
-          <VideoConsultation
-            consultationId={selectedVideoConsultation.id}
-            specialistName={selectedVideoConsultation.specialistName}
-            specialistType={selectedVideoConsultation.specialistType}
-            onClose={() => setShowVideoConsultation(false)}
-            onEndCall={() => {
-              setShowVideoConsultation(false);
-              alert(t('consultation.videoEnded') || 'Video consultation ended. A report will be generated.');
-            }}
-          />
+          <Suspense fallback={null}>
+            <VideoConsultation
+              consultationId={selectedVideoConsultation.id}
+              specialistName={selectedVideoConsultation.specialistName}
+              specialistType={selectedVideoConsultation.specialistType}
+              onClose={() => setShowVideoConsultation(false)}
+              onEndCall={() => {
+                setShowVideoConsultation(false);
+                alert(t('consultation.videoEnded') || 'Video consultation ended. A report will be generated.');
+              }}
+            />
+          </Suspense>
         )}
         
         {showAppointmentsList && (
           <div style={styles.modalOverlay}>
             <div style={styles.modalContent}>
               <button onClick={() => setShowAppointmentsList(false)} style={styles.modalClose}><X size={18} /></button>
-              <MyAppointments />
+              <Suspense fallback={<div>Loading...</div>}>
+                <MyAppointments />
+              </Suspense>
             </div>
           </div>
         )}
 
-        {showPricing && <PricingPlans onClose={() => setShowPricing(false)} />}
+        {showPricing && (
+          <Suspense fallback={null}>
+            <PricingPlans onClose={() => setShowPricing(false)} />
+          </Suspense>
+        )}
         
         <Footer 
           setCurrentPage={handleFooterNavigation}

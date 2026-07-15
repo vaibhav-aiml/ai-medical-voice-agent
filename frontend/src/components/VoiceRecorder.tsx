@@ -11,6 +11,7 @@ interface Props {
   onAIResponse: (response: string, isComplete?: boolean) => void;
   onTriageResult?: (result: any) => void;
   userId?: string;
+  initialHistory?: Array<{role: string, content: string}>;
 }
 
 interface TriageResult {
@@ -66,7 +67,7 @@ const getEmotionColor = (emotion: string): string => {
   return colorMap[emotion] || '#6b7280';
 };
 
-export default function VoiceRecorder({ consultationId, specialistType, onTranscriptUpdate, onAIResponse, onTriageResult, userId }: Props) {
+export default function VoiceRecorder({ consultationId, specialistType, onTranscriptUpdate, onAIResponse, onTriageResult, userId, initialHistory }: Props) {
   const { language, t } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -81,13 +82,26 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [contextPrompt, setContextPrompt] = useState('');
-  const [conversationHistory, setConversationHistory] = useState<{role: string, content: string}[]>([]);
+  const [conversationHistory, setConversationHistory] = useState<{role: string, content: string}[]>(() => initialHistory || []);
   const socketRef = useRef<any>(null);
   const finalTranscriptRef = useRef<string>('');
   const accumulatedResponseRef = useRef<string>('');
   const [detectedEmotion, setDetectedEmotion] = useState<string | null>(null);
   const [emotionConfidence, setEmotionConfidence] = useState<number | null>(null);
   const [biometricStatus, setBiometricStatus] = useState<string>(''); // '', 'verified', 'mismatch', 'unregistered'
+  
+  // Sync history when resuming
+  useEffect(() => {
+    if (initialHistory && initialHistory.length > 0) {
+      setConversationHistory(initialHistory);
+    }
+  }, [initialHistory]);
+
+  // Ref to track isProcessing state dynamically inside callbacks without stale closures
+  const isProcessingRef = useRef(isProcessing);
+  useEffect(() => {
+    isProcessingRef.current = isProcessing;
+  }, [isProcessing]);
   const [biometricConfidence, setBiometricConfidence] = useState<number>(0);
   const verifyRecorderRef = useRef<MediaRecorder | null>(null);
   const verifyChunksRef = useRef<Blob[]>([]);
@@ -198,6 +212,15 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     window.speechSynthesis.speak(utterance);
   }, [voiceSettings.enabled, voiceSettings.rate, voiceSettings.pitch, voiceSettings.volume, voiceSettings.voice]);
 
+  // Refs to sync voiceSettings and speakResponse callback to prevent socket recreation
+  const voiceSettingsRef = useRef(voiceSettings);
+  const speakResponseRef = useRef(speakResponse);
+
+  useEffect(() => {
+    voiceSettingsRef.current = voiceSettings;
+    speakResponseRef.current = speakResponse;
+  }, [voiceSettings, speakResponse]);
+
   // Get AI response with streaming and conversation history
   const getAIResponseStream = (symptoms: string) => {
     if (socketRef.current && socketRef.current.connected) {
@@ -294,11 +317,12 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       
       recognitionInstance.onend = () => {
         console.log('Recognition ended');
-        if (finalTranscriptRef.current && !isProcessing) {
+        if (finalTranscriptRef.current && !isProcessingRef.current) {
           const userMessage = { role: 'user', content: finalTranscriptRef.current };
           setConversationHistory(prev => [...prev, userMessage]);
           
           onTranscriptUpdate(finalTranscriptRef.current);
+          setIsProcessing(true);
           getAIResponseStream(finalTranscriptRef.current);
           analyzeSymptomsForTriage(finalTranscriptRef.current);
         }
@@ -332,6 +356,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     socketRef.current.on('connect_error', (error: any) => {
       console.error('❌ WebSocket connection error:', error.message);
       setConnectionStatus('Connection failed');
+      setIsProcessing(false);
     });
     
     // Handle streaming responses with conversation history
@@ -346,8 +371,12 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         onAIResponse(accumulatedResponseRef.current, true);
         accumulatedResponseRef.current = '';
         setStreamingText('');
-        if (voiceSettings.autoSpeak && voiceSettings.enabled) {
-          speakResponse(data.fullResponse || accumulatedResponseRef.current);
+        if (voiceSettingsRef.current.autoSpeak && voiceSettingsRef.current.enabled) {
+          try {
+            speakResponseRef.current(data.fullResponse || accumulatedResponseRef.current);
+          } catch (speechErr) {
+            console.error('Speech synthesis error:', speechErr);
+          }
         }
         setIsProcessing(false);
       } else if (data.chunk) {
@@ -366,8 +395,12 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       if (data.response) {
         setConversationHistory(prev => [...prev, { role: 'assistant', content: data.response }]);
         onAIResponse(data.response, true);
-        if (voiceSettings.autoSpeak && voiceSettings.enabled) {
-          speakResponse(data.response);
+        if (voiceSettingsRef.current.autoSpeak && voiceSettingsRef.current.enabled) {
+          try {
+            speakResponseRef.current(data.response);
+          } catch (speechErr) {
+            console.error('Speech synthesis error:', speechErr);
+          }
         }
       }
       setIsProcessing(false);
@@ -381,6 +414,20 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       setIsProcessing(false);
       setIsStreaming(false);
       onAIResponse(t('error.server'), true);
+    });
+    
+    socketRef.current.on('error-event', (data: any) => {
+      console.error('❌ Server error event:', data.message);
+      setIsProcessing(false);
+      setIsStreaming(false);
+      onAIResponse(data.message || t('error.server'), true);
+    });
+
+    socketRef.current.on('rate-limit-exceeded', (data: any) => {
+      console.error('❌ Server rate limit exceeded:', data.message);
+      setIsProcessing(false);
+      setIsStreaming(false);
+      onAIResponse(data.message || 'Rate limit exceeded. Please try again later.', true);
     });
 
     socketRef.current.on('emotion-detected', (data: any) => {
@@ -396,7 +443,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         socketRef.current.disconnect();
       }
     };
-  }, [consultationId, voiceSettings.autoSpeak, voiceSettings.enabled, speakResponse]);
+  }, [consultationId]);
 
   const startVerificationRecording = async () => {
     verifyChunksRef.current = [];
@@ -465,7 +512,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       accumulatedResponseRef.current = '';
       recognition.start();
       setIsRecording(true);
-      setIsProcessing(true);
       console.log('🎤 Voice recording started');
       
       // Start recording verification audio sample concurrently
@@ -494,6 +540,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       setTranscript(manualText);
       onTranscriptUpdate(manualText);
       accumulatedResponseRef.current = '';
+      setIsProcessing(true);
       getAIResponseStream(manualText);
       analyzeSymptomsForTriage(manualText);
       setManualText('');
@@ -682,7 +729,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
               <button 
                 onClick={sendTextMessage}
                 style={styles.sendButton}
-                disabled={!manualText.trim() || isProcessing || isAnalyzing}
+                disabled={!manualText.trim() || isProcessing || isAnalyzing || isRecording}
               >
                 {isProcessing ? t('ai.thinking') : t('consultation.sendToAI')}
               </button>

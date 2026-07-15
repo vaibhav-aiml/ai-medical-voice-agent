@@ -13,9 +13,10 @@ interface Props {
   symptoms: string;
   patientName?: string;
   onClose: () => void;
+  onResume?: () => void;
 }
 
-export default function MedicalReportModal({ consultationId, specialistType, symptoms, patientName = "Patient", onClose }: Props) {
+export default function MedicalReportModal({ consultationId, specialistType, symptoms, patientName = "Patient", onClose, onResume }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [generatedPdfData, setGeneratedPdfData] = useState<string>('');
@@ -120,6 +121,15 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
             <button onClick={onClose} style={styles.cancelButton}>
               Cancel
             </button>
+            {onResume && (
+              <button 
+                onClick={onResume} 
+                style={{ ...styles.downloadButton, backgroundColor: '#8b5cf6' }}
+              >
+                <MessageCircle size={16} />
+                <span>Resume Chat</span>
+              </button>
+            )}
             <button 
               onClick={handleGeneratePDF} 
               style={styles.downloadButton}

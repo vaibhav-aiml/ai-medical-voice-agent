@@ -89,6 +89,24 @@ router.get('/emotions/:consultationId', catchAsync(async (req: Request, res: Res
   });
 }));
 
+// Get the voice session details (including transcript and AI responses) for a consultation ID
+router.get('/session/:consultationId', catchAsync(async (req: Request, res: Response) => {
+  const { consultationId } = req.params;
+
+  const sessions = await db.select()
+    .from(voiceSessions)
+    .where(eq(voiceSessions.consultationId, consultationId as string));
+
+  if (!sessions.length) {
+    throw new AppError('No voice sessions found for this consultation', 404);
+  }
+
+  res.json({
+    success: true,
+    data: sessions[0]
+  });
+}));
+
 // Translate text
 router.post('/translate', validate(translateTextSchema), catchAsync(async (req: Request, res: Response) => {
   const { text, targetLang, sourceLang } = req.body;

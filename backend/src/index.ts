@@ -17,6 +17,7 @@ import { setupVoiceSocket } from './sockets/voiceSocket';
 import { errorHandler } from './middleware/errorHandler';
 import { globalLimiter, aiLimiter } from './middleware/rateLimiter';
 import { requireAuth } from './middleware/auth';
+import { startKeepAwake, stopKeepAwake } from './services/keepAwakeService';
 
 // Import routes
 import consultationRoutes from './routes/consultation.routes';
@@ -189,11 +190,13 @@ const PORT = process.env.PORT || 3000;
 const server = httpServer.listen(PORT, () => {
   logger.info(`🚀 Server running on http://localhost:${PORT}`);
   logger.info(`⚡ Health check available at http://localhost:${PORT}/health`);
+  startKeepAwake();
 });
 
 // Graceful shutdown
 const shutdown = (signal: string) => {
   logger.info(`Received ${signal}. Shutting down server gracefully...`);
+  stopKeepAwake();
   
   // Close socket.io connections
   io.close(() => {

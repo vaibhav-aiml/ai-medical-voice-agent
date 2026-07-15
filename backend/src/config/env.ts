@@ -24,6 +24,8 @@ const envSchema = z.object({
   EMAIL_USER: z.string().optional(),
   EMAIL_PASS: z.string().optional(),
   FRONTEND_URL: z.string().optional(),
+  KEEP_AWAKE_URL: z.string().optional(),
+  KEEP_AWAKE_INTERVAL: z.string().default('840000'), // 14 minutes in milliseconds
 });
 
 export type Env = z.infer<typeof envSchema>;
