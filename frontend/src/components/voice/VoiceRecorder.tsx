@@ -469,24 +469,28 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
           const reader = new FileReader();
           reader.readAsDataURL(audioBlob);
           reader.onloadend = async () => {
-            const base64Audio = (reader.result as string).split(',')[1];
-            const response = await fetch(`${API_URL}/voice/biometrics/verify`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                userId,
-                audio: base64Audio,
-              }),
-            });
-            const data = await response.json();
-            if (response.ok && data.success) {
-              setBiometricStatus(data.isMatch ? 'verified' : 'mismatch');
-              setBiometricConfidence(data.confidence);
-            } else if (response.status === 400 && data.message.includes('No enrolled voice signature')) {
-              setBiometricStatus('unregistered');
-              setBiometricConfidence(0);
+            try {
+              const base64Audio = (reader.result as string).split(',')[1];
+              const response = await fetch(`${API_URL}/voice/biometrics/verify`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  userId,
+                  audio: base64Audio,
+                }),
+              });
+              const data = await response.json();
+              if (response.ok && data.success) {
+                setBiometricStatus(data.isMatch ? 'verified' : 'mismatch');
+                setBiometricConfidence(data.confidence);
+              } else if (response.status === 400 && data.message && data.message.includes('No enrolled voice signature')) {
+                setBiometricStatus('unregistered');
+                setBiometricConfidence(0);
+              }
+            } catch (asyncErr) {
+              console.error('Asynchronous biometrics verify failed:', asyncErr);
             }
           };
         } catch (verifErr) {

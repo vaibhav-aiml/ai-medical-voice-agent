@@ -1,5 +1,5 @@
 import { db } from '../config/database';
-import { voiceBiometrics } from '../db/schema';
+import { voiceBiometrics, users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { extractVoiceEmbedding, calculateCosineSimilarity } from '../utils/audioProcessor';
 import logger from '../utils/logger';
@@ -33,14 +33,35 @@ export async function enrollVoiceTemplate(userId: string, audioBuffer: Buffer): 
       return { success: false, message: 'Invalid or missing audio buffer.' };
     }
 
+    let internalUserId = userId;
+    const userList = await db.select()
+      .from(users)
+      .where(eq(users.clerkId, userId))
+      .limit(1);
+      
+    if (userList.length === 0) {
+      if (process.env.NODE_ENV !== 'production' && userId === 'dev-user-123') {
+        const allUsers = await db.select().from(users).limit(1);
+        if (allUsers.length > 0) {
+          internalUserId = allUsers[0].id;
+        } else {
+          return { success: false, message: 'No users found in database to map dev-user-123.' };
+        }
+      } else {
+        return { success: false, message: 'User profile not found in database.' };
+      }
+    } else {
+      internalUserId = userList[0].id;
+    }
+
     // Check if the user is already enrolled to prevent duplicates proactively
     const existing = await db
       .select()
       .from(voiceBiometrics)
-      .where(eq(voiceBiometrics.userId, userId));
+      .where(eq(voiceBiometrics.userId, internalUserId));
 
     if (existing.length > 0) {
-      logger.warn('User already enrolled for voice biometrics', { userId });
+      logger.warn('User already enrolled for voice biometrics', { userId: internalUserId });
       return { success: false, message: 'User is already enrolled. Duplicate enrollment prevented.' };
     }
 
@@ -49,11 +70,11 @@ export async function enrollVoiceTemplate(userId: string, audioBuffer: Buffer): 
 
     // Save to database
     await db.insert(voiceBiometrics).values({
-      userId,
+      userId: internalUserId,
       voiceEmbedding: embedding,
     });
 
-    logger.info('Voice profile enrolled successfully', { userId });
+    logger.info('Voice profile enrolled successfully', { userId: internalUserId });
     return {
       success: true,
       message: 'Voice profile enrolled successfully.',
@@ -82,14 +103,35 @@ export async function verifyVoiceTemplate(userId: string, audioBuffer: Buffer): 
       return { success: false, isMatch: false, confidence: 0, message: 'Invalid or missing audio buffer.' };
     }
 
+    let internalUserId = userId;
+    const userList = await db.select()
+      .from(users)
+      .where(eq(users.clerkId, userId))
+      .limit(1);
+      
+    if (userList.length === 0) {
+      if (process.env.NODE_ENV !== 'production' && userId === 'dev-user-123') {
+        const allUsers = await db.select().from(users).limit(1);
+        if (allUsers.length > 0) {
+          internalUserId = allUsers[0].id;
+        } else {
+          return { success: false, isMatch: false, confidence: 0, message: 'No users found in database to map dev-user-123.' };
+        }
+      } else {
+        return { success: false, isMatch: false, confidence: 0, message: 'User profile not found in database.' };
+      }
+    } else {
+      internalUserId = userList[0].id;
+    }
+
     // Retrieve enrolled embedding
     const records = await db
       .select()
       .from(voiceBiometrics)
-      .where(eq(voiceBiometrics.userId, userId));
+      .where(eq(voiceBiometrics.userId, internalUserId));
 
     if (records.length === 0) {
-      logger.warn('Voice profile not found for verification', { userId });
+      logger.warn('Voice profile not found for verification', { userId: internalUserId });
       return {
         success: false,
         isMatch: false,
@@ -107,7 +149,7 @@ export async function verifyVoiceTemplate(userId: string, audioBuffer: Buffer): 
     const isMatch = confidence >= SIMILARITY_THRESHOLD;
 
     logger.info('Voice verification completed', {
-      userId,
+      userId: internalUserId,
       isMatch,
       confidence,
     });
