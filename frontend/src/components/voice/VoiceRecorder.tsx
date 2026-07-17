@@ -70,6 +70,15 @@ const getEmotionColor = (emotion: string): string => {
 export default function VoiceRecorder({ consultationId, specialistType, onTranscriptUpdate, onAIResponse, onTriageResult, userId, initialHistory }: Props) {
   const { language, t } = useLanguage();
   const { socket, connectionStatus } = useVoiceSocket(consultationId);
+
+  // Stabilize callbacks to prevent socket listener re-registrations on every render cycle
+  const onAIResponseRef = useRef(onAIResponse);
+  const tRef = useRef(t);
+  useEffect(() => {
+    onAIResponseRef.current = onAIResponse;
+    tRef.current = t;
+  }, [onAIResponse, t]);
+
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -310,19 +319,25 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       recognitionInstance.onerror = (event: any) => {
         console.error('Recognition error:', event.error);
         if (event.error === 'not-allowed') {
-          alert(t('error.microphone'));
+          alert(t('errors.microphone'));
         }
       };
       
       recognitionInstance.onend = () => {
         console.log('Recognition ended');
+        setIsRecording(false);
         if (finalTranscriptRef.current && !isProcessingRef.current) {
           const userMessage = { role: 'user', content: finalTranscriptRef.current };
           setConversationHistory(prev => [...prev, userMessage]);
           
           onTranscriptUpdate(finalTranscriptRef.current);
           setIsProcessing(true);
-          getAIResponseStream(finalTranscriptRef.current);
+          const sent = getAIResponseStream(finalTranscriptRef.current);
+          if (!sent) {
+            console.error('Failed to send streaming request via socket - socket disconnected');
+            setIsProcessing(false);
+            onAIResponse(t('errors.server') || 'Server connection lost. Please try again.', true);
+          }
           analyzeSymptomsForTriage(finalTranscriptRef.current);
         }
       };
@@ -332,7 +347,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.log('Web Speech API not supported');
       setUseTextInput(true);
     }
-  }, [language]);   // WebSocket event listeners
+  }, [language]);
+
+  // WebSocket event listeners
   useEffect(() => {
     if (!socket) return;
     
@@ -344,7 +361,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         const assistantMessage = { role: 'assistant', content: accumulatedResponseRef.current };
         setConversationHistory(prev => [...prev, assistantMessage]);
         
-        onAIResponse(accumulatedResponseRef.current, true);
+        onAIResponseRef.current(accumulatedResponseRef.current, true);
         accumulatedResponseRef.current = '';
         setStreamingText('');
         if (voiceSettingsRef.current.autoSpeak && voiceSettingsRef.current.enabled) {
@@ -361,7 +378,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         }
         accumulatedResponseRef.current += data.chunk;
         setStreamingText(accumulatedResponseRef.current);
-        onAIResponse(data.chunk, false);
+        onAIResponseRef.current(data.chunk, false);
       }
     };
     
@@ -369,7 +386,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.log('🤖 AI Response from Groq:', data);
       if (data.response) {
         setConversationHistory(prev => [...prev, { role: 'assistant', content: data.response }]);
-        onAIResponse(data.response, true);
+        onAIResponseRef.current(data.response, true);
         if (voiceSettingsRef.current.autoSpeak && voiceSettingsRef.current.enabled) {
           try {
             speakResponseRef.current(data.response);
@@ -388,21 +405,21 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.error('Streaming error:', error);
       setIsProcessing(false);
       setIsStreaming(false);
-      onAIResponse(t('error.server'), true);
+      onAIResponseRef.current(tRef.current('errors.server') || 'Server error. Please try again.', true);
     };
     
     const handleErrorEvent = (data: any) => {
       console.error('❌ Server error event:', data.message);
       setIsProcessing(false);
       setIsStreaming(false);
-      onAIResponse(data.message || t('error.server'), true);
+      onAIResponseRef.current(data.message || tRef.current('errors.server') || 'Server error. Please try again.', true);
     };
 
     const handleRateLimit = (data: any) => {
       console.error('❌ Server rate limit exceeded:', data.message);
       setIsProcessing(false);
       setIsStreaming(false);
-      onAIResponse(data.message || 'Rate limit exceeded. Please try again later.', true);
+      onAIResponseRef.current(data.message || 'Rate limit exceeded. Please try again later.', true);
     };
 
     const handleEmotion = (data: any) => {
@@ -428,7 +445,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       socket.off('rate-limit-exceeded', handleRateLimit);
       socket.off('emotion-detected', handleEmotion);
     };
-  }, [socket, onAIResponse, t]);
+  }, [socket]);
 
   const startVerificationRecording = async () => {
     verifyChunksRef.current = [];
@@ -502,7 +519,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       // Start recording verification audio sample concurrently
       startVerificationRecording();
     } else {
-      alert(t('error.microphone'));
+      alert(t('errors.microphone'));
       setUseTextInput(true);
     }
   };
@@ -526,7 +543,12 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       onTranscriptUpdate(manualText);
       accumulatedResponseRef.current = '';
       setIsProcessing(true);
-      getAIResponseStream(manualText);
+      const sent = getAIResponseStream(manualText);
+      if (!sent) {
+        console.error('Failed to send text request via socket - socket disconnected');
+        setIsProcessing(false);
+        onAIResponse(t('errors.server') || 'Server connection lost. Please try again.', true);
+      }
       analyzeSymptomsForTriage(manualText);
       setManualText('');
     }
