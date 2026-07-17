@@ -117,6 +117,24 @@ export const consultationService = {
     }
   },
 
+  /**
+   * Start a new consultation on the backend.
+   */
+  async startConsultation(userId: string, specialistType: string, email?: string, name?: string): Promise<any> {
+    try {
+      const response = await axios.post(`${API_URL}/consultations/start`, {
+        userId,
+        specialistType,
+        email,
+        name,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error starting consultation on backend:', error);
+      throw error;
+    }
+  },
+
   // ---- Private helpers for localStorage cache ----
 
   _getFromLocalCache(userId: string): ConsultationData[] {

@@ -264,8 +264,30 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const newId = generateUUID();
-    setConsultationId(newId);
+    let consultationIdToUse = '';
+    try {
+      const curUserId = getCurrentUserId();
+      const email = user?.emailAddresses[0]?.emailAddress || undefined;
+      const name = user?.fullName || undefined;
+
+      const response = await consultationService.startConsultation(
+        curUserId,
+        selectedSpecialist,
+        email,
+        name
+      );
+
+      if (response && response.success && response.consultation) {
+        consultationIdToUse = response.consultation.id;
+      } else {
+        consultationIdToUse = generateUUID();
+      }
+    } catch (error) {
+      console.error('Failed to start consultation on backend, using local ID fallback:', error);
+      consultationIdToUse = generateUUID();
+    }
+
+    setConsultationId(consultationIdToUse);
     setConsultationStarted(true);
     setMessages([]);
     setManualSymptoms('');

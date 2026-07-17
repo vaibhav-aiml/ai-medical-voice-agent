@@ -76,7 +76,22 @@ router.post('/save', validate(saveConsultationSchema), catchAsync(async (req: Re
     duration: formattedDuration,
     startedAt: startedAt ? new Date(startedAt) : new Date(),
     endedAt: endedAt ? new Date(endedAt) : null,
-  }).returning();
+  })
+  .onConflictDoUpdate({
+    target: consultations.id,
+    set: {
+      userId: internalUserId,
+      specialistType: specialistType || 'general',
+      specialistName: specialistName || null,
+      status: status || 'completed',
+      symptoms: symptoms || '',
+      notes: notes || '',
+      duration: formattedDuration,
+      startedAt: startedAt ? new Date(startedAt) : new Date(),
+      endedAt: endedAt ? new Date(endedAt) : null,
+    }
+  })
+  .returning();
   
   logger.info(`Saved consultation: ${consultation[0].id} for user: ${userId}`);
   res.json({ success: true, consultation: consultation[0] });
