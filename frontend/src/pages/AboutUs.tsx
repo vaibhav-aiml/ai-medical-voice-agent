@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
-import BackButton from '../components/BackButton';
+import BackButton from '../components/shared/BackButton';
 
 const AboutUs: React.FC = () => {
   // Team members data - Updated with your team
@@ -153,7 +153,7 @@ const AboutUs: React.FC = () => {
       <style>{`
         .about-us-container {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-          color: #333;
+          color: var(--text-primary);
         }
 
         .container {
@@ -185,20 +185,20 @@ const AboutUs: React.FC = () => {
         /* Story Section */
         .story-section {
           padding: 80px 20px;
-          background: #f8fafc;
+          background: var(--bg-primary);
         }
 
         .story-section h2 {
           text-align: center;
           font-size: 36px;
           margin-bottom: 40px;
-          color: #1e293b;
+          color: var(--text-primary);
         }
 
         .story-section p {
           font-size: 18px;
           line-height: 1.8;
-          color: #475569;
+          color: var(--text-secondary);
           margin-bottom: 24px;
           max-width: 800px;
           margin-left: auto;
@@ -208,7 +208,7 @@ const AboutUs: React.FC = () => {
         /* Mission Section */
         .mission-section {
           padding: 80px 20px;
-          background: white;
+          background: var(--bg-secondary);
         }
 
         .mission-section .container {
@@ -224,12 +224,12 @@ const AboutUs: React.FC = () => {
           border-radius: 20px;
           text-align: center;
           transition: transform 0.3s ease, box-shadow 0.3s ease;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+          box-shadow: var(--card-shadow);
         }
 
         .mission-card:hover, .vision-card:hover {
           transform: translateY(-8px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+          box-shadow: var(--card-shadow-hover);
         }
 
         .mission-card h3, .vision-card h3 {
@@ -246,14 +246,14 @@ const AboutUs: React.FC = () => {
         /* Team Section */
         .team-section {
           padding: 80px 20px;
-          background: #f8fafc;
+          background: var(--bg-primary);
         }
 
         .team-section h2 {
           text-align: center;
           font-size: 36px;
           margin-bottom: 50px;
-          color: #1e293b;
+          color: var(--text-primary);
         }
 
         .team-grid {
@@ -263,19 +263,19 @@ const AboutUs: React.FC = () => {
         }
 
         .team-card {
-          background: white;
+          background: var(--bg-card);
           border-radius: 20px;
           padding: 32px;
           text-align: center;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+          box-shadow: var(--card-shadow);
           transition: all 0.3s ease;
-          border: 1px solid #e2e8f0;
+          border: 1px solid var(--border-color);
         }
 
         .team-card:hover {
           transform: translateY(-5px);
-          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-          border-color: #3b82f6;
+          box-shadow: var(--card-shadow-hover);
+          border-color: var(--button-primary);
         }
 
         .team-icon {
@@ -295,11 +295,11 @@ const AboutUs: React.FC = () => {
         .team-card h3 {
           font-size: 22px;
           margin-bottom: 8px;
-          color: #1e293b;
+          color: var(--text-primary);
         }
 
         .team-role {
-          color: #3b82f6;
+          color: var(--button-primary);
           font-weight: 600;
           margin-bottom: 16px;
           font-size: 14px;
@@ -307,7 +307,7 @@ const AboutUs: React.FC = () => {
         }
 
         .team-bio {
-          color: #64748b;
+          color: var(--text-secondary);
           font-size: 14px;
           line-height: 1.7;
           margin-bottom: 24px;
@@ -321,34 +321,34 @@ const AboutUs: React.FC = () => {
         }
 
         .social-links a {
-          color: #94a3b8;
+          color: var(--text-muted);
           transition: all 0.3s ease;
           display: inline-flex;
           align-items: center;
         }
 
         .social-links a:hover {
-          color: #3b82f6;
+          color: var(--button-primary);
           transform: translateY(-2px);
         }
 
         /* Values Section - Professional */
         .values-section {
           padding: 80px 20px;
-          background: white;
+          background: var(--bg-secondary);
         }
 
         .values-section h2 {
           text-align: center;
           font-size: 36px;
           margin-bottom: 16px;
-          color: #1e293b;
+          color: var(--text-primary);
         }
 
         .values-subtitle {
           text-align: center;
           font-size: 18px;
-          color: #64748b;
+          color: var(--text-secondary);
           margin-bottom: 60px;
         }
 
@@ -361,16 +361,16 @@ const AboutUs: React.FC = () => {
         .value-card {
           text-align: center;
           padding: 40px 24px;
-          background: #f8fafc;
+          background: var(--bg-card);
           border-radius: 20px;
           transition: all 0.3s ease;
-          border: 1px solid #e2e8f0;
+          border: 1px solid var(--border-color);
         }
 
         .value-card:hover {
           transform: translateY(-5px);
-          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-          border-color: #3b82f6;
+          box-shadow: var(--card-shadow-hover);
+          border-color: var(--button-primary);
         }
 
         .value-icon {
@@ -381,12 +381,12 @@ const AboutUs: React.FC = () => {
         .value-card h4 {
           font-size: 20px;
           margin-bottom: 16px;
-          color: #1e293b;
+          color: var(--text-primary);
           font-weight: 600;
         }
 
         .value-card p {
-          color: #64748b;
+          color: var(--text-secondary);
           line-height: 1.7;
           font-size: 15px;
         }

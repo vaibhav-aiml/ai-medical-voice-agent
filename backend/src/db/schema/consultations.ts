@@ -1,0 +1,51 @@
+import { pgTable, text, timestamp, uuid, jsonb, boolean, decimal, index } from 'drizzle-orm/pg-core';
+import { users } from './users';
+
+export const consultations = pgTable('consultations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id),
+  specialistType: text('specialist_type').notNull(),
+  specialistName: text('specialist_name'), // stores the display name of the specialist
+  status: text('status').default('active'),
+  symptoms: text('symptoms'),
+  notes: text('notes'),
+  startedAt: timestamp('started_at').defaultNow(),
+  endedAt: timestamp('ended_at'),
+  duration: decimal('duration'),
+  audioRecordingUrl: text('audio_recording_url'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => [
+  index('idx_consultations_user_id').on(table.userId),
+  index('idx_consultations_status').on(table.status),
+  index('idx_consultations_started_at').on(table.startedAt),
+]);
+
+export const voiceSessions = pgTable('voice_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  consultationId: uuid('consultation_id').references(() => consultations.id),
+  transcript: jsonb('transcript').default([]),
+  aiResponses: jsonb('ai_responses').default([]),
+  audioUrl: text('audio_url'),
+  emotion: text('emotion'),
+  emotionConfidence: decimal('emotion_confidence'),
+  emotionScores: jsonb('emotion_scores').default({}),
+  startedAt: timestamp('started_at').defaultNow(),
+  endedAt: timestamp('ended_at'),
+}, (table) => [
+  index('idx_voice_sessions_consultation_id').on(table.consultationId),
+]);
+
+export const medicalReports = pgTable('medical_reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  consultationId: uuid('consultation_id').references(() => consultations.id),
+  symptoms: jsonb('symptoms'),
+  diagnosis: text('diagnosis'),
+  recommendations: jsonb('recommendations'),
+  medications: jsonb('medications'),
+  followUpNeeded: boolean('follow_up_needed').default(false),
+  followUpDate: timestamp('follow_up_date'),
+  reportUrl: text('report_url'),
+  generatedAt: timestamp('generated_at').defaultNow(),
+}, (table) => [
+  index('idx_medical_reports_consultation_id').on(table.consultationId),
+]);

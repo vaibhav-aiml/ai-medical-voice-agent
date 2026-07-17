@@ -1,0 +1,247 @@
+import { ConsultationSession } from '../../types/consultation.types';
+
+interface Props {
+  consultations: ConsultationSession[];
+  onViewReport: (consultationId: string) => void;
+  onNewConsultation: () => void;
+}
+
+const getEmotionEmoji = (emotion: string): string => {
+  const emojiMap: Record<string, string> = {
+    stress: '😰',
+    anxiety: '😟',
+    happiness: '😊',
+    sadness: '😢',
+    anger: '😠',
+    fear: '😨',
+    neutral: '😐',
+  };
+  return emojiMap[emotion] || '😐';
+};
+
+const getEmotionColor = (emotion: string): string => {
+  const colorMap: Record<string, string> = {
+    stress: '#f59e0b', // orange
+    anxiety: '#8b5cf6', // purple
+    happiness: '#10b981', // green
+    sadness: '#3b82f6', // blue
+    anger: '#ef4444', // red
+    fear: '#ec4899', // pink
+    neutral: '#6b7280', // gray
+  };
+  return colorMap[emotion] || '#6b7280';
+};
+
+export default function ConsultationHistory({ consultations, onViewReport, onNewConsultation }: Props) {
+  const getStatusColor = (status: string) => {
+    return status === 'completed' ? '#28a745' : '#ffc107';
+  };
+
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatDuration = (minutes?: number) => {
+    if (!minutes) return 'N/A';
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  const getSymptomsPreview = (symptoms: string | undefined) => {
+    if (!symptoms) return 'No symptoms recorded';
+    if (symptoms.length > 50) {
+      return symptoms.substring(0, 50) + '...';
+    }
+    return symptoms;
+  };
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2 style={styles.title}>Consultation History</h2>
+        <button onClick={onNewConsultation} style={styles.newButton}>
+          + New Consultation
+        </button>
+      </div>
+
+      {consultations.length === 0 ? (
+        <div style={styles.emptyState}>
+          <div style={styles.emptyIcon}>📭</div>
+          <p>No consultations yet</p>
+          <button onClick={onNewConsultation} style={styles.emptyButton}>
+            Start Your First Consultation
+          </button>
+        </div>
+      ) : (
+        <div style={styles.tableContainer}>
+          <table style={styles.table}>
+            <thead>
+              <tr style={styles.tableHeader}>
+                <th style={styles.th}>Date</th>
+                <th style={styles.th}>Specialist</th>
+                <th style={styles.th}>Symptoms</th>
+                <th style={styles.th}>Duration</th>
+                <th style={styles.th}>Emotion</th>
+                <th style={styles.th}>Status</th>
+                <th style={styles.th}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {consultations.map((consultation) => (
+                <tr key={consultation.id} style={styles.tableRow}>
+                  <td style={styles.td}>{formatDate(consultation.startedAt)}</td>
+                  <td style={styles.td}>
+                    <span style={styles.specialistBadge}>
+                      {consultation.specialistName || consultation.specialistType}
+                    </span>
+                  </td>
+                  <td style={styles.td}>{getSymptomsPreview(consultation.symptoms)}</td>
+                  <td style={styles.td}>{formatDuration(consultation.duration)}</td>
+                  <td style={styles.td}>
+                    {consultation.emotion ? (
+                      <span style={{
+                        backgroundColor: getEmotionColor(consultation.emotion),
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}>
+                        {getEmotionEmoji(consultation.emotion)} {consultation.emotion.toUpperCase()}
+                      </span>
+                    ) : (
+                      <span style={{color: '#999', fontSize: '12px'}}>N/A</span>
+                    )}
+                  </td>
+                  <td style={styles.td}>
+                    <span style={{...styles.statusBadge, backgroundColor: getStatusColor(consultation.status)}}>
+                      {consultation.status}
+                    </span>
+                  </td>
+                  <td style={styles.td}>
+                    <button 
+                      onClick={() => onViewReport(consultation.id)}
+                      style={styles.viewButton}
+                      disabled={consultation.status !== 'completed'}
+                    >
+                      View Report
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    background: 'var(--bg-card)',
+    borderRadius: '10px',
+    padding: '20px',
+    boxShadow: 'var(--card-shadow)',
+    border: '1px solid var(--border-color)',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '20px',
+    flexWrap: 'wrap' as const,
+    gap: '10px',
+  },
+  title: {
+    fontSize: '24px',
+    color: 'var(--text-primary)',
+    margin: 0,
+  },
+  newButton: {
+    padding: '10px 20px',
+    background: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+  },
+  emptyState: {
+    textAlign: 'center' as const,
+    padding: '60px 20px',
+  },
+  emptyIcon: {
+    fontSize: '64px',
+    marginBottom: '20px',
+  },
+  emptyButton: {
+    marginTop: '20px',
+    padding: '12px 24px',
+    background: '#667eea',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '16px',
+  },
+  tableContainer: {
+    overflowX: 'auto' as const,
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse' as const,
+  },
+  tableHeader: {
+    background: 'var(--bg-primary)',
+  },
+  th: {
+    padding: '12px',
+    textAlign: 'left' as const,
+    fontWeight: 'bold',
+    color: 'var(--text-secondary)',
+    borderBottom: '2px solid var(--border-color)',
+  },
+  td: {
+    padding: '12px',
+    borderBottom: '1px solid var(--border-color)',
+    color: 'var(--text-primary)',
+  },
+  tableRow: {
+    transition: 'background 0.3s',
+  },
+  specialistBadge: {
+    background: '#e7f3ff',
+    color: '#0066cc',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '12px',
+  },
+  statusBadge: {
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    color: 'white',
+    textTransform: 'capitalize' as const,
+  },
+  viewButton: {
+    padding: '6px 12px',
+    background: '#667eea',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '12px',
+  },
+};
