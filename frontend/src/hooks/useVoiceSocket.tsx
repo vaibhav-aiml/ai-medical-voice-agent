@@ -43,6 +43,11 @@ export function useVoiceSocket(consultationId: string) {
       socketInstance.emit('join-consultation', consultationId);
     });
 
+    socketInstance.on('disconnect', (reason) => {
+      console.warn('🔌 WebSocket disconnected:', reason);
+      setConnectionStatus(`Disconnected (${reason})`);
+    });
+
     socketInstance.on('connect_error', (error: any) => {
       console.error('❌ WebSocket connection error:', error.message || error);
       if (error.message && (error.message.includes('Authentication') || error.message.includes('Token') || error.message.includes('auth'))) {

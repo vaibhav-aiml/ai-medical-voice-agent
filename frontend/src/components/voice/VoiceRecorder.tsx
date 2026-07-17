@@ -336,7 +336,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
           if (!sent) {
             console.error('Failed to send streaming request via socket - socket disconnected');
             setIsProcessing(false);
-            onAIResponse(t('errors.server') || 'Server connection lost. Please try again.', true);
+            onAIResponse('WebSocket connection is not active. Please wait or refresh.', true);
           }
           analyzeSymptomsForTriage(finalTranscriptRef.current);
         }
@@ -547,7 +547,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       if (!sent) {
         console.error('Failed to send text request via socket - socket disconnected');
         setIsProcessing(false);
-        onAIResponse(t('errors.server') || 'Server connection lost. Please try again.', true);
+        onAIResponse('WebSocket connection is not active. Please wait or refresh.', true);
       }
       analyzeSymptomsForTriage(manualText);
       setManualText('');
@@ -565,6 +565,23 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   return (
     <>
       <div style={styles.container}>
+        {((connectionStatus !== 'Connected' && connectionStatus !== 'Connecting...') || (socket && !socket.connected && connectionStatus !== 'Connecting...')) && (
+          <div style={{
+            padding: '12px 16px',
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fca5a5',
+            borderRadius: '12px',
+            color: '#991b1b',
+            fontSize: '13px',
+            marginBottom: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontWeight: 500
+          }}>
+            ⚠️ WebSocket is currently inactive: <strong>{connectionStatus}</strong> (Socket connected: {socket && socket.connected ? 'Yes' : 'No'}). Please wait or refresh.
+          </div>
+        )}
         <div style={styles.statusBar}>
           <span>🔌 {t('consultation.websocket')}: </span>
           <span style={
