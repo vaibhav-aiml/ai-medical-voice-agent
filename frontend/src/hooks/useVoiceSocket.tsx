@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useAuth } from '@clerk/clerk-react';
 import { BACKEND_URL } from '../config/api';
@@ -7,6 +7,12 @@ export function useVoiceSocket(consultationId: string) {
   const { getToken } = useAuth();
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
   const [socket, setSocket] = useState<Socket | null>(null);
+
+  // Store getToken in a ref to avoid reconnecting Socket.IO client when Clerk token updates or hook reference changes
+  const getTokenRef = useRef(getToken);
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
 
   useEffect(() => {
     if (!consultationId) return;
@@ -20,7 +26,7 @@ export function useVoiceSocket(consultationId: string) {
       reconnectionDelay: 1000,
       timeout: 20000,
       auth: (cb) => {
-        getToken()
+        getTokenRef.current()
           .then((token) => cb({ token }))
           .catch((err) => {
             console.error('Failed to get Clerk token for Socket.IO:', err);
@@ -51,7 +57,7 @@ export function useVoiceSocket(consultationId: string) {
       socketInstance.disconnect();
       setSocket(null);
     };
-  }, [consultationId, getToken]);
+  }, [consultationId]);
 
   return {
     socket,
