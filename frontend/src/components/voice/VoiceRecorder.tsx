@@ -69,15 +69,27 @@ const getEmotionColor = (emotion: string): string => {
 
 export default function VoiceRecorder({ consultationId, specialistType, onTranscriptUpdate, onAIResponse, onTriageResult, userId, initialHistory }: Props) {
   const { language, t } = useLanguage();
-  const { socket, connectionStatus } = useVoiceSocket(consultationId);
+  const { socket, socketRef, connectionStatus, sendMessage } = useVoiceSocket(consultationId);
 
   // Stabilize callbacks to prevent socket listener re-registrations on every render cycle
   const onAIResponseRef = useRef(onAIResponse);
+  const onTranscriptUpdateRef = useRef(onTranscriptUpdate);
   const tRef = useRef(t);
   useEffect(() => {
     onAIResponseRef.current = onAIResponse;
+    onTranscriptUpdateRef.current = onTranscriptUpdate;
     tRef.current = t;
-  }, [onAIResponse, t]);
+  }, [onAIResponse, onTranscriptUpdate, t]);
+
+  // Refs for values accessed inside speech recognition callbacks to prevent stale closures.
+  // The speech recognition onend callback is created once (per language change) and would
+  // otherwise capture stale values of these props/state.
+  const consultationIdRef = useRef(consultationId);
+  const specialistTypeRef = useRef(specialistType);
+  const userIdRef = useRef(userId);
+  const contextPromptRef = useRef('');
+  const conversationHistoryRef = useRef<{role: string, content: string}[]>(initialHistory || []);
+  const languageRef = useRef(language);
 
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -90,8 +102,21 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState('');
-  const [contextPrompt, setContextPrompt] = useState('');
-  const [conversationHistory, setConversationHistory] = useState<{role: string, content: string}[]>(() => initialHistory || []);
+  const [contextPrompt, _setContextPrompt] = useState('');
+  // Wrapper that keeps both state and ref in sync
+  const setContextPrompt = useCallback((val: string) => {
+    _setContextPrompt(val);
+    contextPromptRef.current = val;
+  }, []);
+  const [conversationHistory, _setConversationHistory] = useState<{role: string, content: string}[]>(() => initialHistory || []);
+  // Wrapper that keeps both state and ref in sync
+  const setConversationHistory = useCallback((updater: React.SetStateAction<{role: string, content: string}[]>) => {
+    _setConversationHistory(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      conversationHistoryRef.current = next;
+      return next;
+    });
+  }, []);
   const finalTranscriptRef = useRef<string>('');
   const accumulatedResponseRef = useRef<string>('');
   const [detectedEmotion, setDetectedEmotion] = useState<string | null>(null);
@@ -103,7 +128,13 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     if (initialHistory && initialHistory.length > 0) {
       setConversationHistory(initialHistory);
     }
-  }, [initialHistory]);
+  }, [initialHistory, setConversationHistory]);
+
+  // Keep prop/state refs in sync so speech callbacks always have latest values
+  useEffect(() => { consultationIdRef.current = consultationId; }, [consultationId]);
+  useEffect(() => { specialistTypeRef.current = specialistType; }, [specialistType]);
+  useEffect(() => { userIdRef.current = userId; }, [userId]);
+  useEffect(() => { languageRef.current = language; }, [language]);
 
   // Ref to track isProcessing state dynamically inside callbacks without stale closures
   const isProcessingRef = useRef(isProcessing);
@@ -229,25 +260,32 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     speakResponseRef.current = speakResponse;
   }, [voiceSettings, speakResponse]);
 
-  // Get AI response with streaming and conversation history
-  const getAIResponseStream = (symptoms: string) => {
-    if (socket && socket.connected) {
-      console.log('📤 Sending streaming request to Groq AI:', symptoms);
-      console.log('📚 Conversation history length:', conversationHistory.length);
-      
-      socket.emit('get-ai-response-stream', {
-        consultationId,
-        transcript: symptoms,
-        specialistType,
-        userId,
-        contextPrompt: contextPrompt || undefined,
-        conversationHistory: conversationHistory,
-        language: language,
-      });
-      return true;
+  // Get AI response with streaming and conversation history.
+  // Uses refs to read the latest values, making it safe to call from speech recognition callbacks.
+  const getAIResponseStream = useCallback((symptoms: string, source: 'voice' | 'text' = 'voice'): boolean => {
+    const currentSocket = socketRef.current;
+    console.log(`📤 [${source}] Attempting to send streaming request. Socket:`, currentSocket?.id, 'Connected:', currentSocket?.connected);
+    console.log('📚 Conversation history length:', conversationHistoryRef.current.length);
+
+    const payload = {
+      consultationId: consultationIdRef.current,
+      transcript: symptoms,
+      specialistType: specialistTypeRef.current,
+      userId: userIdRef.current,
+      contextPrompt: contextPromptRef.current || undefined,
+      conversationHistory: conversationHistoryRef.current,
+      language: languageRef.current,
+      source, // For backend logging
+    };
+
+    const sent = sendMessage('get-ai-response-stream', payload);
+    if (sent) {
+      console.log(`✅ [${source}] Streaming request sent successfully for consultation:`, consultationIdRef.current);
+    } else {
+      console.error(`❌ [${source}] Failed to send streaming request — socket not connected`);
     }
-    return false;
-  };
+    return sent;
+  }, [sendMessage]);
 
   // Analyze symptoms for triage
   const analyzeSymptomsForTriage = async (symptoms: string) => {
@@ -289,7 +327,10 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Initialize speech recognition with multi-language support
+  // Initialize speech recognition with multi-language support.
+  // IMPORTANT: All values accessed inside onresult/onerror/onend callbacks MUST use refs,
+  // because this useEffect only re-runs when `language` changes. Using state/prop variables
+  // directly would capture stale values (the root cause of the original bug).
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
@@ -300,7 +341,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       // Set language based on selected language
       const speechLang = getSpeechRecognitionCode(language);
       recognitionInstance.lang = speechLang;
-      console.log(`🎤 Speech recognition language set to: ${speechLang} (${language})`);
+      console.log(`🎤 [VoiceRecorder] Speech recognition language set to: ${speechLang} (${language})`);
       
       recognitionInstance.onresult = (event: any) => {
         let finalTranscript = '';
@@ -312,33 +353,44 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         if (finalTranscript) {
           finalTranscriptRef.current = finalTranscript;
           setTranscript(finalTranscript);
-          console.log('Final transcript:', finalTranscript);
+          console.log('🎤 [VoiceRecorder] Final transcript captured:', finalTranscript);
         }
       };
       
       recognitionInstance.onerror = (event: any) => {
-        console.error('Recognition error:', event.error);
+        console.error('🎤 [VoiceRecorder] Recognition error:', event.error);
         if (event.error === 'not-allowed') {
-          alert(t('errors.microphone'));
+          alert(tRef.current('errors.microphone'));
         }
       };
       
+      // This is the critical callback that was previously broken due to stale closures.
+      // It now reads ALL values from refs, ensuring it always has the latest socket,
+      // consultationId, specialistType, etc.
       recognitionInstance.onend = () => {
-        console.log('Recognition ended');
+        console.log('🎤 [VoiceRecorder] Recognition ended. Transcript:', finalTranscriptRef.current);
+        console.log('🔌 [VoiceRecorder] Socket state at onend — ref:', socketRef.current?.id, 'connected:', socketRef.current?.connected);
         setIsRecording(false);
         if (finalTranscriptRef.current && !isProcessingRef.current) {
-          const userMessage = { role: 'user', content: finalTranscriptRef.current };
+          const spokenText = finalTranscriptRef.current;
+          const userMessage = { role: 'user', content: spokenText };
           setConversationHistory(prev => [...prev, userMessage]);
           
-          onTranscriptUpdate(finalTranscriptRef.current);
+          // Use ref to call onTranscriptUpdate with latest callback
+          onTranscriptUpdateRef.current(spokenText);
           setIsProcessing(true);
-          const sent = getAIResponseStream(finalTranscriptRef.current);
+
+          // getAIResponseStream reads from refs internally, so it's safe here
+          const sent = getAIResponseStream(spokenText, 'voice');
           if (!sent) {
-            console.error('Failed to send streaming request via socket - socket disconnected');
+            console.error('❌ [VoiceRecorder] Voice message failed — socket not connected. socketRef:', socketRef.current);
             setIsProcessing(false);
-            onAIResponse('WebSocket connection is not active. Please wait or refresh.', true);
+            onAIResponseRef.current(
+              tRef.current('errors.server') || 'Connection lost. Please wait for reconnection or refresh the page.',
+              true
+            );
           }
-          analyzeSymptomsForTriage(finalTranscriptRef.current);
+          analyzeSymptomsForTriage(spokenText);
         }
       };
       
@@ -347,7 +399,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.log('Web Speech API not supported');
       setUseTextInput(true);
     }
-  }, [language]);
+  }, [language, getAIResponseStream, setConversationHistory]);
 
   // WebSocket event listeners
   useEffect(() => {
@@ -538,7 +590,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
 
   const sendTextMessage = () => {
     if (manualText.trim()) {
-      console.log('📤 Sending text message:', manualText);
+      console.log('📤 [VoiceRecorder] Sending text message:', manualText);
       
       const userMessage = { role: 'user', content: manualText };
       setConversationHistory(prev => [...prev, userMessage]);
@@ -547,11 +599,14 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       onTranscriptUpdate(manualText);
       accumulatedResponseRef.current = '';
       setIsProcessing(true);
-      const sent = getAIResponseStream(manualText);
+      const sent = getAIResponseStream(manualText, 'text');
       if (!sent) {
-        console.error('Failed to send text request via socket - socket disconnected');
+        console.error('❌ [VoiceRecorder] Text message failed — socket not connected');
         setIsProcessing(false);
-        onAIResponse('WebSocket connection is not active. Please wait or refresh.', true);
+        onAIResponse(
+          t('errors.server') || 'Connection lost. Please wait for reconnection or refresh the page.',
+          true
+        );
       }
       analyzeSymptomsForTriage(manualText);
       setManualText('');

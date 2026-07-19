@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BACKEND_URL } from '../../config/api';
 import { 
   Users, Calendar, Stethoscope, Building2, Settings, 
   Layout, X, Plus, Search, Edit, Trash2, CheckCircle, 
@@ -57,7 +58,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Get API URL from environment variable
-  const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
+  const API_URL = BACKEND_URL;
 
   // Load data from API with localStorage fallback
   useEffect(() => {
@@ -68,12 +69,17 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     setLoading(true);
     setError(null);
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+    
     try {
       // Try to fetch from API first
       const [doctorsRes, appointmentsRes] = await Promise.all([
-        fetch(`${API_URL}/api/clinic/${clinicId}/doctors`).catch(() => null),
-        fetch(`${API_URL}/api/clinic/${clinicId}/appointments`).catch(() => null)
+        fetch(`${API_URL}/api/clinic/${clinicId}/doctors`, { signal: controller.signal }).catch(() => null),
+        fetch(`${API_URL}/api/clinic/${clinicId}/appointments`, { signal: controller.signal }).catch(() => null)
       ]);
+
+      clearTimeout(timeoutId);
 
       if (doctorsRes && doctorsRes.ok) {
         const doctorsData = await doctorsRes.json();
@@ -96,8 +102,9 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
       // Load patients from localStorage (since no API endpoint)
       loadLocalPatients();
       
-    } catch (error) {
-      console.error('Error fetching from API, using localStorage:', error);
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      console.warn('Error fetching from API or timeout, using localStorage:', error.message || error);
       loadLocalData();
     } finally {
       setLoading(false);

@@ -20,8 +20,9 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
     contextPrompt?: string;
     conversationHistory?: Array<{role: string, content: string}>;
     language?: string;
+    source?: 'voice' | 'text'; // Frontend indicates whether this came from voice or text mode
   }) => {
-    const { consultationId, transcript, specialistType, userId, contextPrompt, conversationHistory, language = 'en' } = data;
+    const { consultationId, transcript, specialistType, userId, contextPrompt, conversationHistory, language = 'en', source = 'unknown' } = data;
     
     const allowed = socketRateLimiter.consume(socket.data.userId || 'dev-user-123', socket.id, 'get-ai-response-stream');
     if (!allowed) {
@@ -40,6 +41,9 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
       socketId: socket.id,
       consultationId,
       specialistType,
+      userId: userId || socket.data.userId,
+      source,
+      transcriptLength: transcript?.length || 0,
       historyLength: conversationHistory?.length || 0,
       language
     });

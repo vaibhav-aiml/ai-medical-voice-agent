@@ -5,6 +5,7 @@ import { useLanguage } from './LanguageContext';
 import { useSubscription } from './SubscriptionContext';
 import { consultationService } from '../services/consultationService';
 import { Message, ConsultationSession, DashboardStats } from '../types/consultation.types';
+import { BACKEND_URL } from '../config/api';
 
 export interface ConsultationContextType {
   // Core data
@@ -136,6 +137,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   const [selectedVideoConsultation, setSelectedVideoConsultation] = useState<ConsultationSession | null>(null);
   const [showVoiceBiometricsEnrollment, setShowVoiceBiometricsEnrollment] = useState(false);
   const [showFHIRConnector, setShowFHIRConnector] = useState(false);
+
 
   // User helpers
   const getUserName = useCallback(() => {
@@ -528,16 +530,20 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   // Clinic dashboard
   const handleOpenClinicDashboard = async () => {
     setIsCreatingClinic(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+
     try {
       const savedClinicId = localStorage.getItem('clinicId');
       if (savedClinicId) {
         setCurrentClinicId(savedClinicId);
         setShowClinicDashboard(true);
         setIsCreatingClinic(false);
+        clearTimeout(timeoutId);
         return;
       }
 
-      const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
+      const API_URL = BACKEND_URL;
       const response = await fetch(`${API_URL}/api/clinic/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -555,7 +561,10 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
           pincode: '123456',
           subscriptionTier: 'enterprise'
         }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (data.success) {
@@ -563,9 +572,17 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('clinicId', newClinicId);
         setCurrentClinicId(newClinicId);
         setShowClinicDashboard(true);
+      } else {
+        throw new Error(data.error || 'Failed to create clinic on backend');
       }
-    } catch (error) {
-      console.error('Error opening clinic dashboard:', error);
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      console.warn('Error or timeout creating clinic, falling back to local clinic mode:', error.message || error);
+      // Fallback local clinic creation so the user doesn't get stuck!
+      const fallbackClinicId = `local_clinic_${Date.now()}`;
+      localStorage.setItem('clinicId', fallbackClinicId);
+      setCurrentClinicId(fallbackClinicId);
+      setShowClinicDashboard(true);
     } finally {
       setIsCreatingClinic(false);
     }

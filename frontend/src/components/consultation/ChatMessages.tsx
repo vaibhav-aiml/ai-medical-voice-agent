@@ -43,9 +43,18 @@ export default function ChatMessages({
     }));
   };
 
-  // Auto-scroll to bottom
+  // Auto-scroll chat container to bottom when new messages arrive.
+  // Skip on initial mount so the page loads at the top instead of jumping down.
+  const hasRenderedRef = useRef(false);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!hasRenderedRef.current) {
+      hasRenderedRef.current = true;
+      return; // Skip the very first render — page should stay at top
+    }
+    // Only scroll if there are actual messages to show
+    if (messages.length > 0 || streamingMessage) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+    }
   }, [messages, streamingMessage]);
 
   // Get color for urgency banner
