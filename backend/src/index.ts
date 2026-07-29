@@ -1,5 +1,6 @@
 // Env validation must happen before anything else imports env vars
 import './config/env';
+import crypto from 'crypto';
 
 import express from 'express';
 import cors from 'cors';
@@ -117,9 +118,49 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.text({ type: ['text/plain', 'application/hl7-v2'], limit: '10mb' }));
 
-// Request logging middleware using Winston
+// Correlation ID + request logging middleware
 app.use((req, res, next) => {
-  logger.info(`Request received`, { method: req.method, path: req.path, ip: req.ip });
+  const requestId = (req.headers['x-request-id'] as string) || crypto.randomUUID();
+  res.setHeader('X-Request-ID', requestId);
+  (req as any).requestId = requestId;
+  logger.info(`Request received`, { requestId, method: req.method, path: req.path, ip: req.ip });
+  next();
+});
+
+// Idempotency cache (in-memory, suitable for single-instance deployment)
+const idempotencyCache = new Map<string, { status: number; body: any; timestamp: number }>();
+// Clean up old entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of idempotencyCache) {
+    if (now - entry.timestamp > 30 * 60 * 1000) { // 30 min TTL
+      idempotencyCache.delete(key);
+    }
+  }
+}, 10 * 60 * 1000);
+
+// Idempotency middleware for POST routes
+app.use((req, res, next) => {
+  if (req.method !== 'POST') return next();
+  const idempotencyKey = req.headers['idempotency-key'] as string;
+  if (!idempotencyKey) return next();
+
+  const cached = idempotencyCache.get(idempotencyKey);
+  if (cached) {
+    logger.info('Idempotent request replayed', { idempotencyKey, path: req.path });
+    return res.status(cached.status).json(cached.body);
+  }
+
+  // Intercept the response to cache it
+  const originalJson = res.json.bind(res);
+  res.json = (body: any) => {
+    idempotencyCache.set(idempotencyKey, {
+      status: res.statusCode,
+      body,
+      timestamp: Date.now(),
+    });
+    return originalJson(body);
+  };
   next();
 });
 
@@ -145,13 +186,27 @@ app.use('/api/hl7', hl7Routes);
 app.use('/api/emr', requireAuth, emrRoutes);
 app.use('/api/interop', requireAuth, interopRoutes);
 
-// Health check endpoint
+// Lightweight ping endpoint (for cold-start detection — no DB/Redis check)
+app.get('/health/ping', (req, res) => {
+  res.json({
+    status: 'ok',
+    apiVersion: 'v1',
+    build: process.env.GIT_COMMIT || 'dev',
+    environment: process.env.NODE_ENV || 'development',
+    uptime: Math.floor(process.uptime()),
+    timestamp: Date.now(),
+  });
+});
+
+// Detailed health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
+    apiVersion: 'v1',
+    build: process.env.GIT_COMMIT || 'dev',
     timestamp: new Date().toISOString(),
     message: 'AI Medical Voice Agent API is running',
-    uptime: process.uptime(),
+    uptime: Math.floor(process.uptime()),
     environment: process.env.NODE_ENV || 'development',
     services: {
       groq: !!process.env.GROQ_API_KEY,

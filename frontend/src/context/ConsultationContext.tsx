@@ -6,12 +6,14 @@ import { useSubscription } from './SubscriptionContext';
 import { consultationService } from '../services/consultationService';
 import { Message, ConsultationSession, DashboardStats } from '../types/consultation.types';
 import { BACKEND_URL } from '../config/api';
+import cacheService from '../services/cacheService';
+import logger from '../services/logger';
 
 export interface ConsultationContextType {
-  // Core data
+  // Core data — consultationsLoading is scoped (does NOT block the app)
   consultations: ConsultationSession[];
   stats: DashboardStats;
-  loading: boolean;
+  consultationsLoading: boolean;
   refreshKey: number;
 
   // User helpers
@@ -99,7 +101,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   const { t } = useLanguage();
   const { canStartConsultation, getRemainingConsultations, subscription, incrementConsultation } = useSubscription();
 
-  // Core data
+  // Core data — consultationsLoading is scoped, never blocks the whole app
   const [consultations, setConsultations] = useState<ConsultationSession[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalConsultations: 0,
@@ -107,7 +109,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     averageDuration: 0,
     pendingFollowUps: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [consultationsLoading, setConsultationsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Consultation lifecycle state
@@ -167,77 +169,72 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Load consultations
+  // Load consultations — cache-first, non-blocking
   useEffect(() => {
-    if (userId) {
-      let cachedData: ConsultationSession[] = [];
-      try {
-        const saved = localStorage.getItem(`consultations_${userId}`);
-        if (saved) {
-          cachedData = JSON.parse(saved);
-        }
-      } catch (err) {
-        console.error('Failed to parse cached consultations', err);
-      }
+    if (!userId) return;
 
-      if (cachedData.length > 0) {
-        setConsultations(cachedData);
-        updateStats(cachedData);
-        setLoading(false);
-      } else {
-        setLoading(true);
-      }
+    logger.info('consultations_load_start', { userId });
 
-      consultationService.getUserConsultations(userId)
-        .then(data => {
-          if (data && data.length > 0) {
-            const serializedData = JSON.stringify(data);
-            const serializedCache = JSON.stringify(cachedData);
-            if (serializedData !== serializedCache) {
-              setConsultations(data as unknown as ConsultationSession[]);
-              updateStats(data as unknown as ConsultationSession[]);
-            }
-          } else if (cachedData.length === 0) {
-            const mockConsultations: ConsultationSession[] = [
-              {
-                id: '1',
-                specialistType: 'general',
-                specialistName: 'Dr. Sarah Wilson',
-                status: 'completed',
-                startedAt: new Date('2024-03-15T10:30:00'),
-                endedAt: new Date('2024-03-15T10:45:00'),
-                duration: 15,
-                symptoms: 'Headache and fever for 2 days',
-                notes: 'Recommended rest and hydration',
-              },
-              {
-                id: '2',
-                specialistType: 'orthopedic',
-                specialistName: 'Dr. James Chen',
-                status: 'completed',
-                startedAt: new Date('2024-03-10T14:00:00'),
-                endedAt: new Date('2024-03-10T14:20:00'),
-                duration: 20,
-                symptoms: 'Lower back pain when sitting',
-                notes: 'Suggested posture correction exercises',
-              },
-            ];
-            setConsultations(mockConsultations);
-            localStorage.setItem(`consultations_${userId}`, JSON.stringify(mockConsultations));
-            updateStats(mockConsultations);
-          }
-        })
-        .catch(error => {
-          console.error('Error loading consultations:', error);
-          if (cachedData.length === 0) {
-            setConsultations([]);
-            updateStats([]);
-          }
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+    // 1. Immediately populate from cache (stale-while-revalidate)
+    const cachedData = consultationService.getCachedConsultations(userId);
+    if (cachedData.length > 0) {
+      setConsultations(cachedData as unknown as ConsultationSession[]);
+      updateStats(cachedData as unknown as ConsultationSession[]);
+      setConsultationsLoading(false); // Not blocking — cached data is showing
+      logger.info('consultations_loaded_from_cache', { count: cachedData.length });
     }
+
+    // 2. Background refresh from API (deduplicated by apiClient)
+    consultationService.getUserConsultations(userId)
+      .then(data => {
+        if (data && data.length > 0) {
+          setConsultations(data as unknown as ConsultationSession[]);
+          updateStats(data as unknown as ConsultationSession[]);
+          logger.info('consultations_refreshed_from_api', { count: data.length });
+        } else if (cachedData.length === 0) {
+          // No cache and no API data — show mock data for new users
+          const mockConsultations: ConsultationSession[] = [
+            {
+              id: '1',
+              specialistType: 'general',
+              specialistName: 'Dr. Sarah Wilson',
+              status: 'completed',
+              startedAt: new Date('2024-03-15T10:30:00'),
+              endedAt: new Date('2024-03-15T10:45:00'),
+              duration: 15,
+              symptoms: 'Headache and fever for 2 days',
+              notes: 'Recommended rest and hydration',
+            },
+            {
+              id: '2',
+              specialistType: 'orthopedic',
+              specialistName: 'Dr. James Chen',
+              status: 'completed',
+              startedAt: new Date('2024-03-10T14:00:00'),
+              endedAt: new Date('2024-03-10T14:20:00'),
+              duration: 20,
+              symptoms: 'Lower back pain when sitting',
+              notes: 'Suggested posture correction exercises',
+            },
+          ];
+          setConsultations(mockConsultations);
+          cacheService.set(`consultations_${userId}`, mockConsultations, 30 * 60 * 1000);
+          updateStats(mockConsultations);
+        }
+      })
+      .catch(error => {
+        logger.warn('consultations_api_failed', {
+          error: error instanceof Error ? error.message : 'Unknown',
+        });
+        // Cache is already showing — no action needed
+        if (cachedData.length === 0) {
+          setConsultations([]);
+          updateStats([]);
+        }
+      })
+      .finally(() => {
+        setConsultationsLoading(false);
+      });
   }, [userId, refreshKey, updateStats]);
 
   // UUID generator
@@ -596,7 +593,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   };
 
   const value: ConsultationContextType = {
-    consultations, stats, loading, refreshKey,
+    consultations, stats, consultationsLoading, refreshKey,
     getUserName, getCurrentUserId, getCurrentSessionId,
     consultationId, selectedSpecialist, setSelectedSpecialist,
     consultationStarted, messages, setMessages,

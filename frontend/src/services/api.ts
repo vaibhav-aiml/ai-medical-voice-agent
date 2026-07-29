@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { API_URL } from '../config/api';
+import { apiClient } from './apiClient';
 
 export interface ConsultationData {
   id: string;
@@ -18,7 +17,7 @@ export const api = {
   // Save consultation to database
   async saveConsultation(data: ConsultationData) {
     try {
-      const response = await axios.post(`${API_URL}/consultations/save`, data);
+      const response = await apiClient.post('/consultations/save', data);
       return response.data;
     } catch (error) {
       console.error('Error saving consultation:', error);
@@ -26,10 +25,10 @@ export const api = {
     }
   },
 
-  // Get user's consultations from database
+  // Get user's consultations from database (deduplicated + auto-retry)
   async getUserConsultations(userId: string) {
     try {
-      const response = await axios.get(`${API_URL}/consultations/user/${userId}`);
+      const response = await apiClient.get(`/consultations/user/${userId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching consultations:', error);
@@ -40,7 +39,7 @@ export const api = {
   // Get single consultation by ID
   async getConsultation(id: string) {
     try {
-      const response = await axios.get(`${API_URL}/consultations/${id}`);
+      const response = await apiClient.get(`/consultations/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching consultation:', error);
@@ -51,7 +50,7 @@ export const api = {
   // Delete consultation
   async deleteConsultation(id: string) {
     try {
-      const response = await axios.delete(`${API_URL}/consultations/${id}`);
+      const response = await apiClient.delete(`/consultations/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting consultation:', error);

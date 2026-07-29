@@ -1,5 +1,8 @@
-import axios from 'axios';
-import { API_URL } from '../config/api';
+import { apiClient } from './apiClient';
+import cacheService from './cacheService';
+import offlineQueue from './offlineQueue';
+import logger from './logger';
+import { BACKEND_URL } from '../config/api';
 
 export interface ConsultationData {
   id: string;
@@ -14,63 +17,100 @@ export interface ConsultationData {
   endedAt?: Date;
 }
 
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+function consultationsCacheKey(userId: string): string {
+  return `consultations_${userId}`;
+}
+
 /**
  * Frontend consultation service.
- * Wraps all API calls to /api/consultations endpoints.
- * Uses localStorage as a write-through cache:
- *   - Reads from API first, falls back to localStorage
- *   - Writes to both API and localStorage
+ *
+ * Uses apiClient for resilient HTTP with retry/dedup/circuit-breaker.
+ * Uses CacheService for stale-while-revalidate pattern.
+ * Uses offlineQueue for failed writes.
  */
 export const consultationService = {
   /**
-   * Save a consultation to the backend DB and localStorage cache.
+   * Get user's consultations.
+   * Returns cached data immediately, refreshes in background.
+   */
+  async getUserConsultations(userId: string): Promise<ConsultationData[]> {
+    try {
+      // Deduplicated GET with auto-retry
+      const response = await apiClient.get(`/consultations/user/${userId}`);
+      const data = response.data;
+
+      // Update cache with fresh data from API
+      if (Array.isArray(data) && data.length > 0) {
+        cacheService.set(consultationsCacheKey(userId), data, CACHE_TTL);
+      }
+      return data;
+    } catch (error) {
+      logger.warn('consultation_fetch_failed', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+      // Fall back to cache
+      return consultationService.getCachedConsultations(userId);
+    }
+  },
+
+  /**
+   * Get cached consultations (synchronous, no network).
+   */
+  getCachedConsultations(userId: string): ConsultationData[] {
+    const cached = cacheService.get<ConsultationData[]>(consultationsCacheKey(userId));
+    if (cached) {
+      logger.info('consultations_from_cache', { userId, count: cached.length });
+    }
+    return cached ?? [];
+  },
+
+  /**
+   * Save a consultation. No auto-retry. On failure, queues to offline queue.
    */
   async saveConsultation(data: ConsultationData): Promise<any> {
     try {
-      const response = await axios.post(`${API_URL}/consultations/save`, data);
+      const response = await apiClient.post('/consultations/save', data);
+
       // Write-through cache
       consultationService._updateLocalCache(data.userId, (list) => {
         const idx = list.findIndex((c: any) => c.id === data.id);
         if (idx >= 0) {
           list[idx] = data;
         } else {
-          list.push(data);
+          list.unshift(data);
         }
         return list;
       });
+
       return response.data;
     } catch (error) {
-      // Still save to localStorage on API failure
+      logger.error('consultation_save_failed', {
+        id: data.id,
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+
+      // Save to cache locally
       consultationService._updateLocalCache(data.userId, (list) => {
         const idx = list.findIndex((c: any) => c.id === data.id);
         if (idx >= 0) {
           list[idx] = data;
         } else {
-          list.push(data);
+          list.unshift(data);
         }
         return list;
       });
-      console.error('Error saving consultation to API, saved to localStorage:', error);
-      throw error;
-    }
-  },
 
-  /**
-   * Get user's consultations. Tries API first, falls back to localStorage.
-   */
-  async getUserConsultations(userId: string): Promise<ConsultationData[]> {
-    try {
-      const response = await axios.get(`${API_URL}/consultations/user/${userId}`);
-      const data = response.data;
-      // Update local cache with fresh data from API
-      if (Array.isArray(data) && data.length > 0) {
-        localStorage.setItem(`consultations_${userId}`, JSON.stringify(data));
-      }
-      return data;
-    } catch (error) {
-      console.error('Error fetching from API, falling back to localStorage:', error);
-      // Fall back to localStorage
-      return consultationService._getFromLocalCache(userId);
+      // Queue for replay when backend comes back
+      offlineQueue.enqueue({
+        method: 'POST',
+        url: `${BACKEND_URL}/api/consultations/save`,
+        data,
+      });
+
+      throw error;
     }
   },
 
@@ -79,50 +119,50 @@ export const consultationService = {
    */
   async getConsultation(id: string): Promise<ConsultationData | null> {
     try {
-      const response = await axios.get(`${API_URL}/consultations/${id}`);
+      const response = await apiClient.get(`/consultations/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching consultation:', error);
+      logger.error('consultation_get_failed', { id });
       return null;
     }
   },
 
   /**
-   * Delete a consultation.
+   * Delete a consultation. No auto-retry.
    */
   async deleteConsultation(id: string, userId: string): Promise<any> {
     try {
-      const response = await axios.delete(`${API_URL}/consultations/${id}`);
+      const response = await apiClient.delete(`/consultations/${id}`);
       // Remove from cache
       consultationService._updateLocalCache(userId, (list) =>
         list.filter((c: any) => c.id !== id)
       );
       return response.data;
     } catch (error) {
-      console.error('Error deleting consultation:', error);
+      logger.error('consultation_delete_failed', { id });
       throw error;
     }
   },
 
   /**
-   * Get voice session dialogue transcript for a consultation.
+   * Get voice session transcript.
    */
   async getVoiceSession(consultationId: string): Promise<any> {
     try {
-      const response = await axios.get(`${API_URL}/voice/session/${consultationId}`);
+      const response = await apiClient.get(`/voice/session/${consultationId}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching voice session transcript:', error);
+      logger.error('voice_session_fetch_failed', { consultationId });
       return null;
     }
   },
 
   /**
-   * Start a new consultation on the backend.
+   * Start a new consultation. Uses idempotent POST (safe to retry).
    */
   async startConsultation(userId: string, specialistType: string, email?: string, name?: string): Promise<any> {
     try {
-      const response = await axios.post(`${API_URL}/consultations/start`, {
+      const response = await apiClient.postIdempotent('/consultations/start', {
         userId,
         specialistType,
         email,
@@ -130,29 +170,24 @@ export const consultationService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error starting consultation on backend:', error);
+      logger.error('consultation_start_failed', {
+        userId,
+        specialistType,
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
       throw error;
     }
   },
 
-  // ---- Private helpers for localStorage cache ----
-
-  _getFromLocalCache(userId: string): ConsultationData[] {
-    try {
-      const saved = localStorage.getItem(`consultations_${userId}`);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  },
+  // ---- Private helpers for CacheService ----
 
   _updateLocalCache(userId: string, updater: (list: any[]) => any[]): void {
     try {
-      const existing = consultationService._getFromLocalCache(userId);
-      const updated = updater(existing);
-      localStorage.setItem(`consultations_${userId}`, JSON.stringify(updated));
+      const existing = consultationService.getCachedConsultations(userId);
+      const updated = updater([...existing]);
+      cacheService.set(consultationsCacheKey(userId), updated, CACHE_TTL);
     } catch {
-      // localStorage failure is non-critical
+      // Cache failure is non-critical
     }
   },
 };

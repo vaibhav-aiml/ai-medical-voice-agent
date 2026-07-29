@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useLocation, useNavigate } from 'react-router';
 import { X } from 'lucide-react';
@@ -6,9 +6,11 @@ import AuthGuard from './components/shared/AuthGuard';
 import Header from './components/shared/Header';
 import Footer from './components/shared/Footer';
 import SkeletonLoader from './components/shared/SkeletonLoader';
+import ColdStartBanner from './components/shared/ColdStartBanner';
 import { useLanguage } from './context/LanguageContext';
 import { ConsultationProvider, useConsultation } from './context/ConsultationContext';
 import { useAuthInterceptor } from './hooks/useAuthInterceptor';
+import logger from './services/logger';
 
 // Lazy load pages
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -67,10 +69,24 @@ function AppContent() {
   const [showDataExport, setShowDataExport] = useState(false);
   const [showAppointmentsList, setShowAppointmentsList] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
-  if (ctx.loading) {
-    return <SkeletonLoader />;
-  }
+  // Log app opened
+  useEffect(() => {
+    logger.info('app_opened', { timestamp: new Date().toISOString() });
+  }, []);
+
+  // Offline detection
+  useEffect(() => {
+    const handleOnline = () => { setIsOffline(false); logger.info('network_online'); };
+    const handleOffline = () => { setIsOffline(true); logger.warn('network_offline'); };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const isMinimalPage = ['/about', '/contact', '/terms', '/privacy', '/hipaa', '/cookies'].includes(location.pathname);
   const showPageNav = location.pathname !== '/' &&
@@ -78,6 +94,16 @@ function AppContent() {
 
   return (
     <div style={styles.app}>
+      {/* Cold-start banner — non-blocking, inline */}
+      <ColdStartBanner />
+
+      {/* Offline banner */}
+      {isOffline && (
+        <div style={styles.offlineBanner} role="alert">
+          <span>📡 You are offline. Cached data is being shown. Changes will sync when reconnected.</span>
+        </div>
+      )}
+
       {!isMinimalPage && (
         <Header
           setShowSymptomChecker={setShowSymptomChecker}
@@ -352,6 +378,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '18px',
     fontWeight: 600,
     color: 'var(--text-primary)',
+  },
+  offlineBanner: {
+    background: '#b45309',
+    color: '#fef3c7',
+    padding: '8px 16px',
+    textAlign: 'center' as const,
+    fontSize: '13px',
+    fontWeight: 500,
   },
   modalOverlay: {
     position: 'fixed' as const,
