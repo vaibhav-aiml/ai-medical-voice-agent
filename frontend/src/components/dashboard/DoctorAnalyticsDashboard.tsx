@@ -53,22 +53,16 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
     fetchAnalytics();
     return () => { abortRef.current?.abort(); };
   }, []);
-
-  // Generate analytics locally from consultation data (instant, no API call needed)
   const generateLocalAnalytics = (): AnalyticsData => {
     const list = consultations || [];
     const ratingObj = ratings || {};
     const ratingValues = Object.values(ratingObj).map((r: any) => r?.rating || 0).filter(Boolean);
     const avgRating = ratingValues.length > 0 ? ratingValues.reduce((a: number, b: number) => a + b, 0) / ratingValues.length : 4.5;
-
-    // Specialist distribution
     const specMap: Record<string, number> = {};
     list.forEach((c: any) => { specMap[c.specialistType || 'general'] = (specMap[c.specialistType || 'general'] || 0) + 1; });
     const specialistDistribution = Object.entries(specMap).map(([specialist, count]) => ({
       specialist, count, percentage: list.length ? (count / list.length) * 100 : 0
     }));
-
-    // Daily trends (last 30 days)
     const daily: { date: string; count: number }[] = [];
     for (let i = 29; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i);
@@ -79,8 +73,6 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
       }).length;
       daily.push({ date: dateStr, count });
     }
-
-    // Monthly trends
     const monthlyMap: Record<string, number> = {};
     list.forEach((c: any) => {
       const d = new Date(c.startedAt || c.date || Date.now());
@@ -88,8 +80,6 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
       monthlyMap[key] = (monthlyMap[key] || 0) + 1;
     });
     const monthly = Object.entries(monthlyMap).map(([month, count]) => ({ month, count }));
-
-    // Common symptoms
     const symptomMap: Record<string, number> = {};
     list.forEach((c: any) => {
       const words = (c.symptoms || '').toLowerCase().split(/[,;.]+/).map((s: string) => s.trim()).filter(Boolean);
@@ -145,8 +135,6 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
   const fetchAnalytics = async () => {
     setLoading(true);
     setError(null);
-
-    // Cancel any in-flight request
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -173,13 +161,13 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
         throw new Error(data.message || 'Failed to fetch analytics');
       }
     } catch (fetchError: any) {
-      if (fetchError.name === 'AbortError') return; // Cancelled, ignore
+      if (fetchError.name === 'AbortError') return; 
       console.warn('[Analytics] API failed, using local computation:', fetchError.message);
-      // Fall back to instant client-side computation
+      
       try {
         const localData = generateLocalAnalytics();
         setAnalytics(localData);
-        setError(null); // Clear error since fallback worked
+        setError(null); 
       } catch (localError) {
         console.error('[Analytics] Local fallback also failed:', localError);
         setError(fetchError instanceof Error ? fetchError.message : 'Failed to load analytics');

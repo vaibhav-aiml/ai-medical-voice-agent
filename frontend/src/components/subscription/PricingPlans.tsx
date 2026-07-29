@@ -72,7 +72,7 @@ export default function PricingPlans({ onClose }: { onClose: () => void }) {
       setSubscriptionTier('free');
       onClose();
     } else {
-      // Simulate payment - In production, integrate Razorpay/Stripe
+      
       alert(`✨ ${tier.toUpperCase()} Plan Selected!\n\nPrice: ₹${billingCycle === 'monthly' ? plans.find(p => p.tier === tier)?.price.monthly : plans.find(p => p.tier === tier)?.price.yearly}\n\nThis is a demo. In production, payment gateway will be integrated.`);
       setSubscriptionTier(tier);
       onClose();

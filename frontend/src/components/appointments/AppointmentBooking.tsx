@@ -50,21 +50,15 @@ export default function AppointmentBooking({
       status: 'scheduled',
       bookedAt: new Date(),
     };
-
-    // Save to localStorage
     const existing = localStorage.getItem('appointments');
     const appointments = existing ? JSON.parse(existing) : [];
     appointments.push(appointment);
     localStorage.setItem('appointments', JSON.stringify(appointments));
-
-    // Also save with user ID
     const userId = localStorage.getItem('userId') || 'user';
     const userAppointments = localStorage.getItem(`appointments_${userId}`);
     const userApps = userAppointments ? JSON.parse(userAppointments) : [];
     userApps.push(appointment);
     localStorage.setItem(`appointments_${userId}`, JSON.stringify(userApps));
-
-    // Send WhatsApp reminder (optional - doesn't block booking)
     try {
       sendAppointmentReminder(
         patientName,

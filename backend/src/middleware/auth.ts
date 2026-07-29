@@ -10,12 +10,10 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
       if (process.env.NODE_ENV === 'production') {
         return res.status(401).json({ error: 'Unauthorized: No authorization token provided' });
       }
-      // For development, allow requests without token
+      
       (req as any).userId = 'dev-user-123';
       return next();
     }
-    
-    // Cryptographically verify Clerk session token (JWT)
     let payload;
     try {
       payload = await clerkClient.verifyToken(sessionToken);
@@ -24,7 +22,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
       if (process.env.NODE_ENV === 'production') {
         return res.status(401).json({ error: 'Unauthorized: Invalid session token or verification failed' });
       }
-      // For development, allow fallback
+      
       (req as any).userId = 'dev-user-123';
       return next();
     }
@@ -40,7 +38,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     if (process.env.NODE_ENV === 'production') {
       return res.status(401).json({ error: 'Unauthorized: Authentication failed' });
     }
-    // For development, still allow the request
+    
     (req as any).userId = 'dev-user-123';
     next();
   }

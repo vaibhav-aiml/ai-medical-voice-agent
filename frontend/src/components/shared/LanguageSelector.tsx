@@ -6,8 +6,6 @@ const LanguageSelector: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Available languages - matching the Language type
   const availableLanguages = [
     { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
     { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
@@ -34,8 +32,6 @@ const LanguageSelector: React.FC = () => {
     setLanguage(languageCode as any);
     setIsOpen(false);
   };
-
-  // Group languages by script for better organization
   const devanagariLanguages = availableLanguages.filter(l => ['hi', 'mr'].includes(l.code));
   const dravidianLanguages = availableLanguages.filter(l => ['ta', 'te', 'kn', 'ml'].includes(l.code));
   const otherLanguages = availableLanguages.filter(l => ['en', 'bn', 'gu'].includes(l.code));
@@ -56,7 +52,7 @@ const LanguageSelector: React.FC = () => {
 
       {isOpen && (
         <div style={styles.dropdown}>
-          {/* Devanagari Languages (Hindi, Marathi) */}
+          {}
           <div style={styles.groupTitle}>देवनागरी / Devanagari</div>
           {devanagariLanguages.map((lang) => (
             <button
@@ -76,7 +72,7 @@ const LanguageSelector: React.FC = () => {
             </button>
           ))}
 
-          {/* Dravidian Languages (Tamil, Telugu, Kannada, Malayalam) */}
+          {}
           <div style={styles.groupTitle}>திராவிட / Dravidian</div>
           {dravidianLanguages.map((lang) => (
             <button
@@ -96,7 +92,7 @@ const LanguageSelector: React.FC = () => {
             </button>
           ))}
 
-          {/* Other Languages (English, Bengali, Gujarati) */}
+          {}
           <div style={styles.groupTitle}>Others</div>
           {otherLanguages.map((lang) => (
             <button

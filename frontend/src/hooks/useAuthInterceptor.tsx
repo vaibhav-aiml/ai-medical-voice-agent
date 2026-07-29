@@ -1,14 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { apiClient } from '../services/apiClient';
-
-/**
- * Sets up auth token injection on the shared apiClient instance.
- * Call once from a top-level component (AppContent).
- *
- * Attaches a request interceptor that adds the Clerk Bearer token to
- * every outgoing request via apiClient's axios instance.
- */
 export function useAuthInterceptor() {
   const { getToken } = useAuth();
 

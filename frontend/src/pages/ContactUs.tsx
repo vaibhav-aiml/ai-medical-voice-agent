@@ -20,10 +20,10 @@ export default function ContactUs() {
 
   return (
     <div className="contact-us-container">
-      {/* Back Button */}
+      {}
       <BackButton />
 
-      {/* Hero Section */}
+      {}
       <section className="hero-section">
         <h1>Contact Us</h1>
         <p>We're here to help. Reach out to us anytime.</p>

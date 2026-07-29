@@ -63,8 +63,6 @@ export interface ConsultationReport {
   recommendations: string[];
   generatedBy: string;
 }
-
-// Module-level private helper functions
 function addHeader(doc: PDFKit.PDFDocument, data: ConsultationReport): void {
   doc.fontSize(20)
      .font('Helvetica-Bold')
@@ -436,8 +434,6 @@ By using this report, you acknowledge that you have read and understood this dis
      .fillColor('#64748b')
      .text(disclaimerText, { align: 'left', width: 500 });
 }
-
-// Exported pure function
 export function generateSOAPReport(data: ConsultationReport): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
@@ -476,8 +472,6 @@ export function generateSOAPReport(data: ConsultationReport): Promise<Buffer> {
     }
   });
 }
-
-// Backward-compatible default export object
 export const reportGenerator = {
   generateSOAPReport,
 };

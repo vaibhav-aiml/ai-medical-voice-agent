@@ -56,11 +56,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Get API URL from environment variable
   const API_URL = BACKEND_URL;
-
-  // Load data from API with localStorage fallback
   useEffect(() => {
     fetchData();
   }, [clinicId]);
@@ -70,10 +66,10 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     setError(null);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 6000); 
     
     try {
-      // Try to fetch from API first
+      
       const [doctorsRes, appointmentsRes] = await Promise.all([
         fetch(`${API_URL}/api/clinic/${clinicId}/doctors`, { signal: controller.signal }).catch(() => null),
         fetch(`${API_URL}/api/clinic/${clinicId}/appointments`, { signal: controller.signal }).catch(() => null)
@@ -86,7 +82,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
         setDoctors(doctorsData.data || []);
         localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(doctorsData.data || []));
       } else {
-        // Fallback to localStorage
+        
         loadLocalData();
       }
 
@@ -95,11 +91,9 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
         setAppointments(appointmentsData.data || []);
         localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(appointmentsData.data || []));
       } else {
-        // Fallback to localStorage
+        
         loadLocalData();
       }
-
-      // Load patients from localStorage (since no API endpoint)
       loadLocalPatients();
       
     } catch (error: any) {
@@ -112,12 +106,12 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   };
 
   const loadLocalData = () => {
-    // Load doctors from localStorage
+    
     const storedDoctors = localStorage.getItem(`clinic_${clinicId}_doctors`);
     if (storedDoctors) {
       setDoctors(JSON.parse(storedDoctors));
     } else {
-      // Initialize with mock doctors
+      
       const mockDoctors: Doctor[] = [
         {
           id: 'doc_1',
@@ -153,13 +147,11 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
       setDoctors(mockDoctors);
       localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(mockDoctors));
     }
-
-    // Load appointments from localStorage
     const storedAppointments = localStorage.getItem(`clinic_${clinicId}_appointments`);
     if (storedAppointments) {
       setAppointments(JSON.parse(storedAppointments));
     } else {
-      // Initialize with mock appointments
+      
       const mockAppointments: Appointment[] = [
         {
           id: 'apt_1',
@@ -194,7 +186,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     if (storedPatients) {
       setPatients(JSON.parse(storedPatients));
     } else {
-      // Initialize with mock patients
+      
       const mockPatients: Patient[] = [
         {
           id: 'pat_1',
@@ -232,8 +224,6 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const saveDoctors = async (newDoctors: Doctor[]) => {
     setDoctors(newDoctors);
     localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(newDoctors));
-    
-    // Try to sync with API
     try {
       await fetch(`${API_URL}/api/clinic/${clinicId}/doctors/sync`, {
         method: 'POST',
@@ -253,8 +243,6 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const saveAppointments = async (newAppointments: Appointment[]) => {
     setAppointments(newAppointments);
     localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(newAppointments));
-    
-    // Try to sync with API
     try {
       await fetch(`${API_URL}/api/clinic/${clinicId}/appointments/sync`, {
         method: 'POST',
@@ -272,8 +260,6 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
       id: 'doc_' + Date.now(),
     };
     const updatedDoctors = [...doctors, newDoctor];
-    
-    // Try API first
     try {
       const response = await fetch(`${API_URL}/api/clinic/${clinicId}/doctors`, {
         method: 'POST',
@@ -292,15 +278,13 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     } catch (error) {
       console.error('API error, saving to localStorage:', error);
     }
-    
-    // Fallback to localStorage
     saveDoctors(updatedDoctors);
     setShowAddDoctor(false);
     alert('Doctor added successfully (offline mode)!');
   };
 
   const updateDoctor = async (id: string, doctorData: Partial<Doctor>) => {
-    // Try API first
+    
     try {
       const response = await fetch(`${API_URL}/api/clinic/${clinicId}/doctors/${id}`, {
         method: 'PUT',
@@ -316,8 +300,6 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     } catch (error) {
       console.error('API error, updating in localStorage:', error);
     }
-    
-    // Fallback to localStorage
     const updatedDoctors = doctors.map(d => 
       d.id === id ? { ...d, ...doctorData } : d
     );
@@ -328,8 +310,6 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
 
   const deleteDoctor = async (id: string) => {
     if (!confirm('Are you sure you want to delete this doctor?')) return;
-    
-    // Try API first
     try {
       const response = await fetch(`${API_URL}/api/clinic/${clinicId}/doctors/${id}`, {
         method: 'DELETE'
@@ -342,8 +322,6 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     } catch (error) {
       console.error('API error, deleting from localStorage:', error);
     }
-    
-    // Fallback to localStorage
     const updatedDoctors = doctors.filter(d => d.id !== id);
     saveDoctors(updatedDoctors);
     alert('Doctor deleted successfully (offline mode)!');
@@ -379,7 +357,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   };
 
   const updateAppointmentStatus = async (id: string, status: string) => {
-    // Try API first
+    
     try {
       const response = await fetch(`${API_URL}/api/clinic/${clinicId}/appointments/${id}`, {
         method: 'PUT',
@@ -394,8 +372,6 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     } catch (error) {
       console.error('API error, updating in localStorage:', error);
     }
-    
-    // Fallback to localStorage
     const updatedAppointments = appointments.map(apt =>
       apt.id === id ? { ...apt, status } : apt
     );
@@ -448,7 +424,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
 
   return (
     <div style={styles.container}>
-      {/* Sidebar */}
+      {}
       <div style={styles.sidebar}>
         <div style={styles.logo}>
           <Building2 size={28} color="#10b981" />
@@ -487,7 +463,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
         </nav>
       </div>
 
-      {/* Main Content */}
+      {}
       <div style={styles.mainContent}>
         <div style={styles.header}>
           <h2>Clinic Management</h2>
@@ -501,7 +477,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
           </div>
         </div>
 
-        {/* Overview Tab */}
+        {}
         {activeTab === 'overview' && (
           <div>
             <div style={styles.statsGrid}>
@@ -596,7 +572,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
           </div>
         )}
 
-        {/* Doctors Tab */}
+        {}
         {activeTab === 'doctors' && (
           <div>
             <div style={styles.searchBar}>
@@ -647,7 +623,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
           </div>
         )}
 
-        {/* Patients Tab */}
+        {}
         {activeTab === 'patients' && (
           <div>
             <div style={styles.searchBar}>
@@ -708,7 +684,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
           </div>
         )}
 
-        {/* Appointments Tab */}
+        {}
         {activeTab === 'appointments' && (
           <div>
             <div style={styles.appointmentsTable}>
@@ -756,7 +732,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
         )}
       </div>
 
-      {/* Modals */}
+      {}
       {showAddDoctor && (
         <AddDoctorModal onClose={() => setShowAddDoctor(false)} onSave={addDoctor} />
       )}
@@ -772,8 +748,6 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     </div>
   );
 };
-
-// Modal Components (same as before, keeping them)
 const AddDoctorModal = ({ onClose, onSave }: any) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -1374,8 +1348,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderTop: '1px solid var(--border-color)',
   },
 };
-
-// Add spin animation
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes spin {

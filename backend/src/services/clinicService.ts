@@ -1,15 +1,11 @@
 import { Clinic, ClinicDoctor, ClinicPatient, ClinicAppointment, ClinicSettings, ClinicBranding } from '../models/Clinic';
 import logger from '../utils/logger';
-
-// In-memory storage (replace with PostgreSQL in production)
 const clinics: Map<string, Clinic> = new Map();
 const clinicDoctors: Map<string, ClinicDoctor[]> = new Map();
 const clinicPatients: Map<string, ClinicPatient[]> = new Map();
 const clinicAppointments: Map<string, ClinicAppointment[]> = new Map();
 const clinicSettings: Map<string, ClinicSettings> = new Map();
 const clinicBranding: Map<string, ClinicBranding> = new Map();
-
-// Helper defaults
 function getDefaultSettings(clinicId: string): ClinicSettings {
   return {
     id: `settings_${Date.now()}`,
@@ -47,8 +43,6 @@ function getDefaultBranding(clinicId: string): ClinicBranding {
     faviconUrl: '',
   };
 }
-
-// Exported pure functions
 export function createClinic(data: Omit<Clinic, 'id' | 'createdAt' | 'updatedAt'>): Clinic {
   const clinic: Clinic = {
     id: `clinic_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
@@ -204,8 +198,6 @@ export function getClinicStats(clinicId: string): any {
     completionRate: appointments.length > 0 ? (completedAppointments.length / appointments.length) * 100 : 0,
   };
 }
-
-// Backward-compatible default export object
 export const clinicService = {
   createClinic,
   getClinicBySubdomain,

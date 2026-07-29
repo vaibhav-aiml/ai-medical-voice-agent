@@ -9,14 +9,10 @@ export async function handleSocketEmotionDetection(socket: Socket, transcript: s
   try {
     logger.info('Performing socket-based emotion detection', { consultationId });
     const emotionResult = await detectEmotionFromSpeech(transcript);
-    
-    // Emit emotion details back to client
     socket.emit('emotion-detected', {
       consultationId,
       ...emotionResult
     });
-    
-    // Save to database session
     const sessions = await db.select()
       .from(voiceSessions)
       .where(eq(voiceSessions.consultationId, consultationId));

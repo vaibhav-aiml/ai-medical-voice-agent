@@ -1,7 +1,7 @@
 export default function SkeletonLoader() {
   return (
     <div style={styles.container}>
-      {/* Hero Section Skeleton */}
+      {}
       <div style={styles.heroSection}>
         <div style={styles.heroContent}>
           <div style={styles.skeletonBadge}></div>
@@ -19,7 +19,7 @@ export default function SkeletonLoader() {
         </div>
       </div>
 
-      {/* Stats Section Skeleton */}
+      {}
       <div style={styles.statsSection}>
         <div style={styles.statsGrid}>
           {[1, 2, 3, 4].map((i) => (
@@ -32,7 +32,7 @@ export default function SkeletonLoader() {
         </div>
       </div>
 
-      {/* Features Section Skeleton */}
+      {}
       <div style={styles.featuresSection}>
         <div style={styles.skeletonSectionHeader}></div>
         <div style={styles.featuresGrid}>
@@ -46,7 +46,7 @@ export default function SkeletonLoader() {
         </div>
       </div>
 
-      {/* How It Works Skeleton */}
+      {}
       <div style={styles.howItWorksSection}>
         <div style={styles.skeletonSectionHeader}></div>
         <div style={styles.stepsContainer}>
@@ -61,7 +61,7 @@ export default function SkeletonLoader() {
         </div>
       </div>
 
-      {/* Testimonials Skeleton */}
+      {}
       <div style={styles.testimonialsSection}>
         <div style={styles.skeletonSectionHeader}></div>
         <div style={styles.testimonialsGrid}>
@@ -81,7 +81,7 @@ export default function SkeletonLoader() {
         </div>
       </div>
 
-      {/* CTA Skeleton */}
+      {}
       <div style={styles.ctaSection}>
         <div style={styles.skeletonCtaTitle}></div>
         <div style={styles.skeletonCtaButton}></div>
@@ -418,8 +418,6 @@ const styles = {
     margin: '24px auto 0',
   },
 };
-
-// Add shimmer animation CSS
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes shimmer {

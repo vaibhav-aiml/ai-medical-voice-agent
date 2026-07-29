@@ -28,19 +28,15 @@ export default function TwoFactorAuth({ onClose }: Props) {
   };
 
   const generateSecret = () => {
-    // Generate a random secret key (in production, this would come from backend)
+    
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     let secret = '';
     for (let i = 0; i < 16; i++) {
       secret += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     setSecretKey(secret);
-    
-    // Generate mock QR code URL (in production, use actual QR generation)
     const otpAuthUrl = `otpauth://totp/MediVoice:${email || 'user'}?secret=${secret}&issuer=MediVoice`;
     setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpAuthUrl)}`);
-    
-    // Generate backup codes
     const codes = [];
     for (let i = 0; i < 8; i++) {
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -55,7 +51,7 @@ export default function TwoFactorAuth({ onClose }: Props) {
         alert('Please enter the verification code');
         return;
       }
-      // In production, verify the code with backend
+      
       if (verificationCode.length === 6) {
         setIsEnabled(true);
         localStorage.setItem('twoFactorEnabled', 'true');

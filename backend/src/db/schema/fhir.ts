@@ -22,8 +22,8 @@ export const fhirSyncLogs = pgTable('fhir_sync_logs', {
   userId: uuid('user_id').references(() => users.id).notNull(),
   consultationId: uuid('consultation_id').references(() => consultations.id),
   resourceType: text('resource_type').notNull(),
-  status: text('status').notNull(), // 'success' | 'failed' | 'pending'
-  syncType: text('sync_type').notNull(), // 'manual' | 'automatic'
+  status: text('status').notNull(), 
+  syncType: text('sync_type').notNull(), 
   version: integer('version').default(1),
   error: text('error'),
   createdAt: timestamp('created_at').defaultNow(),

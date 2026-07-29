@@ -2,14 +2,10 @@ import { Router, Request, Response } from 'express';
 import { clinicService } from '../services/clinicService';
 
 const router = Router();
-
-// Helper function to safely extract string from params
 const safeString = (value: string | string[] | undefined): string => {
   if (!value) return '';
   return Array.isArray(value) ? value[0] : value;
 };
-
-// Create clinic
 router.post('/create', (req: Request, res: Response) => {
   try {
     const clinic = clinicService.createClinic(req.body);
@@ -19,8 +15,6 @@ router.post('/create', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to create clinic' });
   }
 });
-
-// Get clinic by subdomain
 router.get('/by-subdomain/:subdomain', (req: Request, res: Response) => {
   try {
     const subdomain = safeString(req.params.subdomain);
@@ -33,8 +27,6 @@ router.get('/by-subdomain/:subdomain', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to get clinic' });
   }
 });
-
-// Get clinic by ID
 router.get('/:id', (req: Request, res: Response) => {
   try {
     const id = safeString(req.params.id);
@@ -47,8 +39,6 @@ router.get('/:id', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to get clinic' });
   }
 });
-
-// Update clinic
 router.put('/:id', (req: Request, res: Response) => {
   try {
     const id = safeString(req.params.id);
@@ -61,8 +51,6 @@ router.put('/:id', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to update clinic' });
   }
 });
-
-// Add doctor
 router.post('/:clinicId/doctors', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -72,8 +60,6 @@ router.post('/:clinicId/doctors', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to add doctor' });
   }
 });
-
-// Get clinic doctors
 router.get('/:clinicId/doctors', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -83,8 +69,6 @@ router.get('/:clinicId/doctors', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to get doctors' });
   }
 });
-
-// Add patient
 router.post('/:clinicId/patients', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -94,8 +78,6 @@ router.post('/:clinicId/patients', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to add patient' });
   }
 });
-
-// Get clinic patients
 router.get('/:clinicId/patients', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -105,8 +87,6 @@ router.get('/:clinicId/patients', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to get patients' });
   }
 });
-
-// Book appointment
 router.post('/:clinicId/appointments', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -116,8 +96,6 @@ router.post('/:clinicId/appointments', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to book appointment' });
   }
 });
-
-// Get clinic appointments
 router.get('/:clinicId/appointments', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -127,8 +105,6 @@ router.get('/:clinicId/appointments', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to get appointments' });
   }
 });
-
-// Get appointments by doctor
 router.get('/:clinicId/appointments/doctor/:doctorId', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -139,8 +115,6 @@ router.get('/:clinicId/appointments/doctor/:doctorId', (req: Request, res: Respo
     res.status(500).json({ success: false, error: error.message || 'Failed to get appointments' });
   }
 });
-
-// Update appointment status
 router.patch('/appointments/:appointmentId/status', (req: Request, res: Response) => {
   try {
     const appointmentId = safeString(req.params.appointmentId);
@@ -151,8 +125,6 @@ router.patch('/appointments/:appointmentId/status', (req: Request, res: Response
     res.status(500).json({ success: false, error: error.message || 'Failed to update appointment' });
   }
 });
-
-// Get clinic settings
 router.get('/:clinicId/settings', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -162,8 +134,6 @@ router.get('/:clinicId/settings', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to get settings' });
   }
 });
-
-// Update clinic settings
 router.put('/:clinicId/settings', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -173,8 +143,6 @@ router.put('/:clinicId/settings', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to update settings' });
   }
 });
-
-// Get clinic branding
 router.get('/:clinicId/branding', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -184,8 +152,6 @@ router.get('/:clinicId/branding', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to get branding' });
   }
 });
-
-// Update clinic branding (white-label)
 router.put('/:clinicId/branding', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
@@ -195,8 +161,6 @@ router.put('/:clinicId/branding', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to update branding' });
   }
 });
-
-// Get clinic statistics
 router.get('/:clinicId/stats', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);

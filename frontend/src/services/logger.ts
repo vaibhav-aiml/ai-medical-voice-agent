@@ -1,15 +1,3 @@
-/**
- * Frontend structured logging & metrics service.
- *
- * Logs to console in dev/prod. Designed to be pluggable — swap the
- * transport to Sentry, LogRocket, or OpenTelemetry without changing call sites.
- *
- * Every log entry includes: timestamp, sessionId, requestId (when available),
- * event name, and structured data.
- */
-
-// ---------- Types ----------
-
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogEntry {
@@ -35,9 +23,6 @@ interface AggregateMetrics {
   offline_queue_replay_success_count: number;
   circuit_breaker_trip_count: number;
 }
-
-// ---------- Session ID ----------
-
 function getOrCreateSessionId(): string {
   const KEY = 'medivoice_session_id';
   let id = sessionStorage.getItem(KEY);
@@ -49,9 +34,6 @@ function getOrCreateSessionId(): string {
 }
 
 const SESSION_ID = getOrCreateSessionId();
-
-// ---------- Metrics store ----------
-
 const metrics: AggregateMetrics = {
   cold_start_count: 0,
   cold_start_total_duration_ms: 0,
@@ -66,9 +48,6 @@ const metrics: AggregateMetrics = {
   offline_queue_replay_success_count: 0,
   circuit_breaker_trip_count: 0,
 };
-
-// ---------- Core logger ----------
-
 function buildEntry(level: LogLevel, event: string, data?: Record<string, unknown>): LogEntry {
   return {
     timestamp: new Date().toISOString(),
@@ -98,13 +77,7 @@ function emit(entry: LogEntry): void {
       console.error(prefix, payload);
       break;
   }
-
-  // Future: send to external service here
-  // e.g. Sentry.addBreadcrumb({ message: entry.event, data: entry.data, level: entry.level });
 }
-
-// ---------- Public API ----------
-
 export const logger = {
   debug(event: string, data?: Record<string, unknown>): void {
     emit(buildEntry('debug', event, data));
@@ -121,18 +94,12 @@ export const logger = {
   error(event: string, data?: Record<string, unknown>): void {
     emit(buildEntry('error', event, data));
   },
-
-  /** Record a metric increment. */
   metric(key: keyof AggregateMetrics, value: number = 1): void {
     metrics[key] += value;
   },
-
-  /** Get current aggregate metrics snapshot. */
   getMetrics(): Readonly<AggregateMetrics> {
     return { ...metrics };
   },
-
-  /** Computed metrics with averages and rates. */
   getComputedMetrics() {
     const m = metrics;
     return {
@@ -153,13 +120,9 @@ export const logger = {
           : 100,
     };
   },
-
-  /** Get the current session ID (used for correlation). */
   getSessionId(): string {
     return SESSION_ID;
   },
-
-  /** Generate a unique request ID for correlation across frontend/backend. */
   generateRequestId(): string {
     return crypto.randomUUID?.() ?? `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   },

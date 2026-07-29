@@ -26,8 +26,6 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Available languages list
   const availableLanguages = [
     { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
     { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
@@ -115,8 +113,6 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
     if (user?.imageUrl) return user.imageUrl;
     return null;
   };
-
-  // Group languages by script
   const devanagariLanguages = availableLanguages.filter(l => ['hi', 'mr'].includes(l.code));
   const dravidianLanguages = availableLanguages.filter(l => ['ta', 'te', 'kn', 'ml'].includes(l.code));
   const otherLanguages = availableLanguages.filter(l => ['en', 'bn', 'gu'].includes(l.code));
@@ -135,7 +131,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
 
       {isOpen && (
         <div style={styles.dropdown}>
-          {/* User Info */}
+          {}
           <div style={styles.userInfo}>
             <div style={styles.avatarLarge}>
               {getCurrentAvatar() ? (
@@ -153,7 +149,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
             <div style={styles.userEmail}>{user?.emailAddresses[0]?.emailAddress}</div>
           </div>
 
-          {/* Avatar Change Menu */}
+          {}
           {showAvatarMenu && (
             <div style={styles.avatarMenu}>
               <button onClick={() => fileInputRef.current?.click()} style={styles.avatarMenuItem}>
@@ -171,7 +167,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
 
           <div style={styles.divider} />
 
-          {/* Account Switching */}
+          {}
           <button onClick={() => setShowAccounts(!showAccounts)} style={styles.menuItem}>
             <Users size={18} />
             <span>Switch Account</span>
@@ -205,20 +201,20 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
             </div>
           )}
 
-          {/* Theme Toggle */}
+          {}
           <button onClick={toggleTheme} style={styles.menuItem}>
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
           </button>
 
-          {/* Language Section */}
+          {}
           <div style={styles.languageSection}>
             <div style={styles.languageHeader}>
               <Globe size={16} />
               <span>Language / भाषा</span>
             </div>
             
-            {/* Devanagari Languages (Hindi, Marathi) */}
+            {}
             <div style={styles.languageSubgroup}>
               <div style={styles.languageSubgroupTitle}>देवनागरी / Devanagari</div>
               {devanagariLanguages.map((lang) => (
@@ -240,7 +236,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
               ))}
             </div>
 
-            {/* Dravidian Languages (Tamil, Telugu, Kannada, Malayalam) */}
+            {}
             <div style={styles.languageSubgroup}>
               <div style={styles.languageSubgroupTitle}>திராவிட / Dravidian</div>
               {dravidianLanguages.map((lang) => (
@@ -262,7 +258,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
               ))}
             </div>
 
-            {/* Other Languages (English, Bengali, Gujarati) */}
+            {}
             <div style={styles.languageSubgroup}>
               <div style={styles.languageSubgroupTitle}>Others</div>
               {otherLanguages.map((lang) => (
@@ -285,7 +281,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
             </div>
           </div>
 
-          {/* 2FA Option */}
+          {}
           <button onClick={onOpen2FA} style={styles.menuItem}>
             <Shield size={18} />
             <span>Two-Factor Authentication</span>
@@ -293,7 +289,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
 
           <div style={styles.divider} />
 
-          {/* Sign Out */}
+          {}
           <button onClick={() => signOut()} style={{ ...styles.menuItem, ...styles.signOut }}>
             <LogOut size={18} />
             <span>Sign Out</span>

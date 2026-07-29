@@ -54,8 +54,6 @@ export interface EmotionResult {
     neutral: number;
   };
 }
-
-// Simple rule-based heuristic fallback if AI calls fail or in mock mode
 function getHeuristicEmotion(text: string): EmotionResult {
   const normalized = text.toLowerCase();
   const scores = {
@@ -67,8 +65,6 @@ function getHeuristicEmotion(text: string): EmotionResult {
     fear: 0.1,
     neutral: 0.4
   };
-
-  // Rule mappings
   if (normalized.includes('chest pain') || normalized.includes('breath') || normalized.includes('choking') || normalized.includes('scared') || normalized.includes('afraid')) {
     scores.fear = 0.6;
     scores.anxiety = 0.3;
@@ -88,8 +84,6 @@ function getHeuristicEmotion(text: string): EmotionResult {
     scores.happiness = 0.8;
     scores.neutral = 0.1;
   }
-
-  // Find max emotion
   let maxVal = -1;
   let dominant: keyof typeof scores = 'neutral';
   for (const [em, val] of Object.entries(scores)) {
@@ -171,17 +165,17 @@ Your output must be JSON matching this TypeScript structure:
 
     if (responseText) {
       const parsed = JSON.parse(responseText);
-      // Validate schema
+      
       if (
         parsed.emotion &&
         ['stress', 'anxiety', 'happiness', 'sadness', 'anger', 'fear', 'neutral'].includes(parsed.emotion) &&
         typeof parsed.confidence === 'number' &&
         parsed.scores
       ) {
-        // Normalize any incoming AssemblyAI sentiment if provided
+        
         if (assemblyAISentiment) {
           logger.info('Integrating AssemblyAI sentiment data with LLM analysis');
-          // e.g. adjust confidence based on AssemblyAI speech analysis
+          
         }
 
         return parsed as EmotionResult;
@@ -190,7 +184,5 @@ Your output must be JSON matching this TypeScript structure:
   } catch (error: any) {
     logger.error('Failed to detect emotion using LLM client', { error: error.message });
   }
-
-  // Fallback to rules if API fails
   return getHeuristicEmotion(text);
 }

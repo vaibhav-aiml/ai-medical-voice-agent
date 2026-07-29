@@ -10,7 +10,7 @@ try {
 
   if (!databaseUrl) {
     logger.error('DATABASE_URL is not set. Database operations will fail.');
-    // Create a stub that throws on use rather than crashing the import
+    
     db = new Proxy({} as any, {
       get: () => {
         throw new Error('Database not configured — DATABASE_URL is missing');

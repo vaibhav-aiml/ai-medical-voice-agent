@@ -1,19 +1,13 @@
 import { Router, Request, Response } from 'express';
-
-// In-memory storage for conversations
 const conversationStore: Map<string, any[]> = new Map();
 
 const router = Router();
-
-// Helper to safely get userId from params
 function getUserId(req: Request): string | null {
   const userId = req.params.userId;
   if (!userId) return null;
   if (Array.isArray(userId)) return userId[0];
   return userId;
 }
-
-// Get user's conversation history
 router.get('/history/:userId', async (req: Request, res: Response) => {
   try {
     const userId = getUserId(req);
@@ -30,8 +24,6 @@ router.get('/history/:userId', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Failed to fetch history' });
   }
 });
-
-// Get previous symptoms for context
 router.get('/previous-symptoms/:userId', async (req: Request, res: Response) => {
   try {
     const userId = getUserId(req);
@@ -78,8 +70,6 @@ router.get('/previous-symptoms/:userId', async (req: Request, res: Response) => 
     res.status(500).json({ success: false, error: 'Failed to fetch symptoms' });
   }
 });
-
-// Save conversation session
 router.post('/session', async (req: Request, res: Response) => {
   try {
     const session = req.body;
@@ -107,8 +97,6 @@ router.post('/session', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Failed to save session' });
   }
 });
-
-// Generate context prompt for AI
 router.post('/context', async (req: Request, res: Response) => {
   try {
     const { userId, symptoms } = req.body;

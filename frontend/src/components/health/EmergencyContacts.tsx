@@ -50,7 +50,7 @@ export default function EmergencyContacts({ onClose }: Props) {
     if (saved) {
       setContacts(JSON.parse(saved));
     } else {
-      // Demo contact
+      
       setContacts([
         {
           id: '1',
@@ -338,7 +338,7 @@ export default function EmergencyContacts({ onClose }: Props) {
         </div>
 
         <div style={styles.content}>
-          {/* Medical Info Banner */}
+          {}
           <div style={styles.medicalBanner} onClick={() => setShowMedicalForm(true)}>
             <Heart size={20} />
             <div>
@@ -348,7 +348,7 @@ export default function EmergencyContacts({ onClose }: Props) {
             <Edit2 size={16} />
           </div>
 
-          {/* Emergency Contacts Section */}
+          {}
           <div style={styles.contactsHeader}>
             <h3>Emergency Contacts</h3>
             <button onClick={() => setShowAddForm(true)} style={styles.addContactButton}>
@@ -397,7 +397,7 @@ export default function EmergencyContacts({ onClose }: Props) {
             </div>
           )}
 
-          {/* Emergency Instructions */}
+          {}
           <div style={styles.emergencyInstructions}>
             <h4><AlertTriangle size={18} /> In Case of Emergency</h4>
             <ul>
@@ -743,4 +743,4 @@ const styles = {
     cursor: 'pointer',
     marginTop: '16px',
   },
-};
+};

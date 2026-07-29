@@ -42,22 +42,17 @@ export default function ChatMessages({
       [messageId]: !prev[messageId]
     }));
   };
-
-  // Auto-scroll chat container to bottom when new messages arrive.
-  // Skip on initial mount so the page loads at the top instead of jumping down.
   const hasRenderedRef = useRef(false);
   useEffect(() => {
     if (!hasRenderedRef.current) {
       hasRenderedRef.current = true;
-      return; // Skip the very first render — page should stay at top
+      return; 
     }
-    // Only scroll if there are actual messages to show
+    
     if (messages.length > 0 || streamingMessage) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
     }
   }, [messages, streamingMessage]);
-
-  // Get color for urgency banner
   const getUrgencyColor = (colorCode: string) => {
     switch (colorCode) {
       case 'red': return { bg: '#dc2626', text: 'white', icon: '🚨', label: 'EMERGENCY' };
@@ -66,8 +61,6 @@ export default function ChatMessages({
       default: return { bg: '#16a34a', text: 'white', icon: '🟢', label: 'ROUTINE' };
     }
   };
-
-  // Get urgency display text
   const getUrgencyDisplay = (urgencyLevel: string) => {
     switch (urgencyLevel) {
       case 'emergency_immediate': return '🚨 EMERGENCY - Call 108 Now';
@@ -76,14 +69,12 @@ export default function ChatMessages({
       default: return '🟢 Routine - Monitor Symptoms';
     }
   };
-
-  // Process messages when they change
   useEffect(() => {
     const processMessages = async () => {
       const processed = [];
       
       for (const msg of messages) {
-        // Only check user messages for crisis
+        
         if (msg.type === 'user') {
           const safetyCheck = safetyGuardrail.analyzeMessage(msg.content);
           
@@ -164,7 +155,7 @@ export default function ChatMessages({
         </div>
         
         <div style={styles.messagesContainer}>
-          {/* Triage Urgency Banner */}
+          {}
           {triageResult && triageResult.score && (
             <div style={{
               ...styles.urgencyBanner,
@@ -183,7 +174,7 @@ export default function ChatMessages({
             </div>
           )}
           
-          {/* Regular messages */}
+          {}
           {processedMessages.map((message, index) => (
             <div
               key={message.id || index}
@@ -240,7 +231,7 @@ export default function ChatMessages({
             </div>
           ))}
           
-          {/* Streaming message (real-time typing effect) */}
+          {}
           {isStreaming && streamingMessage && (
             <div style={styles.streamingMessage}>
               <div style={styles.messageHeader}>
@@ -421,8 +412,6 @@ const styles = {
     animation: 'pulse 1.5s infinite',
   },
 };
-
-// Add animation styles
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
   @keyframes slideIn {

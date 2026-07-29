@@ -11,8 +11,6 @@ import { useLanguage } from './context/LanguageContext';
 import { ConsultationProvider, useConsultation } from './context/ConsultationContext';
 import { useAuthInterceptor } from './hooks/useAuthInterceptor';
 import logger from './services/logger';
-
-// Lazy load pages
 const HomePage = lazy(() => import('./pages/HomePage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const ConsultationPage = lazy(() => import('./pages/ConsultationPage'));
@@ -25,8 +23,6 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const VoiceConsultationPage = lazy(() => import('./pages/VoiceConsultation'));
 const HIPAACompliance = lazy(() => import('./pages/HIPAACompliance'));
 const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
-
-// Lazy load modal components
 const SymptomChecker = lazy(() => import('./components/health/SymptomChecker'));
 const HealthTips = lazy(() => import('./components/health/HealthTips'));
 const EmergencyContacts = lazy(() => import('./components/health/EmergencyContacts'));
@@ -48,17 +44,13 @@ const ClinicDashboard = lazy(() => import('./components/clinic/ClinicDashboard')
 const FHIRConnector = lazy(() => import('./components/clinic/FHIRConnector'));
 
 function AppContent() {
-  // Set up global auth interceptors
+  
   useAuthInterceptor();
 
   const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Access consultation context for modals
   const ctx = useConsultation();
-
-  // Non-consultation modal state (simple open/close toggles)
   const [showSymptomChecker, setShowSymptomChecker] = useState(false);
   const [showHealthTips, setShowHealthTips] = useState(false);
   const [showEmergencyContacts, setShowEmergencyContacts] = useState(false);
@@ -70,13 +62,9 @@ function AppContent() {
   const [showAppointmentsList, setShowAppointmentsList] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-
-  // Log app opened
   useEffect(() => {
     logger.info('app_opened', { timestamp: new Date().toISOString() });
   }, []);
-
-  // Offline detection
   useEffect(() => {
     const handleOnline = () => { setIsOffline(false); logger.info('network_online'); };
     const handleOffline = () => { setIsOffline(true); logger.warn('network_offline'); };
@@ -94,10 +82,10 @@ function AppContent() {
 
   return (
     <div style={styles.app}>
-      {/* Cold-start banner — non-blocking, inline */}
+      {}
       <ColdStartBanner />
 
-      {/* Offline banner */}
+      {}
       {isOffline && (
         <div style={styles.offlineBanner} role="alert">
           <span>📡 You are offline. Cached data is being shown. Changes will sync when reconnected.</span>
@@ -154,9 +142,9 @@ function AppContent() {
         </Routes>
       </Suspense>
 
-      {/* ===== Modals (non-routed overlays) ===== */}
+      {}
 
-      {/* Regular Symptom Checker Modal */}
+      {}
       {showSymptomChecker && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
@@ -168,7 +156,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* Enhanced Report Modal */}
+      {}
       {ctx.showEnhancedReport && ctx.selectedReportData && (
         <Suspense fallback={null}>
           <EnhancedReportViewer
@@ -178,7 +166,7 @@ function AppContent() {
         </Suspense>
       )}
 
-      {/* Doctor Analytics Dashboard Modal */}
+      {}
       {ctx.showAnalytics && (
         <Suspense fallback={null}>
           <DoctorAnalyticsDashboard
@@ -198,7 +186,7 @@ function AppContent() {
         </Suspense>
       )}
 
-      {/* Clinic Dashboard Modal */}
+      {}
       {ctx.showClinicDashboard && ctx.currentClinicId && (
         <div style={styles.modalOverlayFull}>
           <div style={styles.modalFullContent}>
@@ -314,7 +302,7 @@ function AppContent() {
 
       <Footer
         setCurrentPage={(page: string) => {
-          // Map old page names to routes
+          
           const routeMap: Record<string, string> = {
             home: '/', dashboard: '/dashboard', reports: '/reports',
             consultation: '/consultation', reminders: '/reminders',

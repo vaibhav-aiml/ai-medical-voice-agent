@@ -44,8 +44,6 @@ class SocketRateLimiter {
     logger.warn('Socket.IO rate limit exceeded', { userId, socketId, event });
     return false;
   }
-
-  // Helper to manually set limit values in tests
   public setLimit(event: string, value: number) {
     this.limits[event] = value;
   }

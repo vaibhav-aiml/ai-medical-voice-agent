@@ -2,8 +2,6 @@ import { Router, Request, Response } from 'express';
 import { ragKnowledgeBase } from '../services/ragKnowledgeBase';
 
 const router = Router();
-
-// POST /api/rag/search - Search medical knowledge base
 router.post('/search', (req: Request, res: Response) => {
   try {
     const { symptoms, limit } = req.body;
@@ -25,8 +23,6 @@ router.post('/search', (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to search knowledge base' });
   }
 });
-
-// POST /api/rag/enhance - Generate enhanced response using RAG
 router.post('/enhance', (req: Request, res: Response) => {
   try {
     const { symptoms, userMessage } = req.body;
@@ -50,8 +46,6 @@ router.post('/enhance', (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to generate enhanced response' });
   }
 });
-
-// GET /api/rag/emergency - Get emergency guidance
 router.get('/emergency', (req: Request, res: Response) => {
   res.json({
     success: true,
@@ -67,8 +61,6 @@ router.get('/emergency', (req: Request, res: Response) => {
     timestamp: new Date().toISOString()
   });
 });
-
-// GET /api/rag/conditions - Get all conditions in knowledge base
 router.get('/conditions', (req: Request, res: Response) => {
   const conditions = ragKnowledgeBase.searchKnowledge('', 100);
   res.json({

@@ -70,8 +70,6 @@ export default function SymptomChecker({ onClose, onStartConsultation }: Props) 
     }
 
     setAnalyzing(true);
-    
-    // Simulate AI analysis
     setTimeout(() => {
       const results = generateAnalysis(selectedSymptoms);
       setConditions(results);
@@ -84,8 +82,6 @@ export default function SymptomChecker({ onClose, onStartConsultation }: Props) 
     const symptomLower = symptoms.map(s => s.toLowerCase());
     
     const possibleConditions: Condition[] = [];
-    
-    // Headache analysis
     if (symptomLower.includes('headache')) {
       if (symptomLower.includes('dizziness')) {
         possibleConditions.push({
@@ -115,8 +111,6 @@ export default function SymptomChecker({ onClose, onStartConsultation }: Props) 
         });
       }
     }
-    
-    // Fever analysis
     if (symptomLower.includes('fever')) {
       if (symptomLower.includes('cough') || symptomLower.includes('sore throat')) {
         possibleConditions.push({
@@ -146,8 +140,6 @@ export default function SymptomChecker({ onClose, onStartConsultation }: Props) 
         });
       }
     }
-    
-    // Chest pain analysis
     if (symptomLower.includes('chest pain')) {
       possibleConditions.push({
         name: '⚠️ Potential Cardiac Concern',
@@ -162,8 +154,6 @@ export default function SymptomChecker({ onClose, onStartConsultation }: Props) 
         urgency: 'high',
       });
     }
-    
-    // Back pain analysis
     if (symptomLower.includes('back pain')) {
       possibleConditions.push({
         name: 'Muscle Strain',
@@ -178,8 +168,6 @@ export default function SymptomChecker({ onClose, onStartConsultation }: Props) 
         urgency: 'low',
       });
     }
-    
-    // Shortness of breath
     if (symptomLower.includes('shortness of breath')) {
       possibleConditions.push({
         name: '⚠️ Respiratory Concern',
@@ -194,8 +182,6 @@ export default function SymptomChecker({ onClose, onStartConsultation }: Props) 
         urgency: 'high',
       });
     }
-    
-    // Joint pain analysis
     if (symptomLower.includes('joint pain')) {
       possibleConditions.push({
         name: 'Joint Inflammation',
@@ -210,8 +196,6 @@ export default function SymptomChecker({ onClose, onStartConsultation }: Props) 
         urgency: 'low',
       });
     }
-    
-    // If no specific condition matched
     if (possibleConditions.length === 0) {
       possibleConditions.push({
         name: 'General Symptoms',

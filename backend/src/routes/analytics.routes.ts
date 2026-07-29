@@ -2,8 +2,6 @@ import { Router, Request, Response } from 'express';
 import { analyticsService } from '../services/analyticsService';
 
 const router = Router();
-
-// Get analytics dashboard data
 router.post('/dashboard', async (req: Request, res: Response) => {
   try {
     const { consultations, ratings } = req.body;
@@ -20,8 +18,6 @@ router.post('/dashboard', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Failed to generate analytics' });
   }
 });
-
-// Get consultation trends over time
 router.post('/trends', async (req: Request, res: Response) => {
   try {
     const { consultations } = req.body;
@@ -32,8 +28,6 @@ router.post('/trends', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Failed to fetch trends' });
   }
 });
-
-// Get common symptoms analysis
 router.post('/symptoms', async (req: Request, res: Response) => {
   try {
     const { consultations } = req.body;

@@ -149,8 +149,6 @@ export const sendMedicalReportEmail = async (data: any) => {
     throw error;
   }
 };
-
-// Backward-compatible export
 export const emailService = {
   sendTestEmail,
   sendMedicalReportEmail,

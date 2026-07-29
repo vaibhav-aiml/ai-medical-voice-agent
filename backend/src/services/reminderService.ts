@@ -4,8 +4,6 @@ import logger from '../utils/logger';
 import { db } from '../config/database';
 import { dbMedications, dbReminderLogs, dbUserPreferences } from '../db/schema/index';
 import { eq, and } from 'drizzle-orm';
-
-// Store active timeouts in-memory for active runtime execution
 const activeTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
 let emailTransporter: nodemailer.Transporter | null = null;
@@ -27,11 +25,7 @@ function initEmailTransporter(): void {
     logger.warn('Email transporter not configured in reminder service - missing credentials');
   }
 }
-
-// Initialize on module load
 initEmailTransporter();
-
-// Helper functions for reminder scheduling
 function clearRemindersForMedication(medicationId: string): void {
   for (const [key, timeout] of activeTimeouts) {
     if (key.startsWith(medicationId)) {
@@ -427,8 +421,6 @@ export const reminderService = {
   rescheduleAllReminders,
   forceSendReminder,
 };
-
-// Reschedule reminders when server starts
 setTimeout(() => {
   rescheduleAllReminders();
 }, 5000);

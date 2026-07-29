@@ -58,8 +58,6 @@ const TriageDisplay: React.FC<TriageDisplayProps> = ({ result, onClose }) => {
   };
 
   const colors = getColorStyles();
-
-  // Format recommendation text to remove HTML/asterisk formatting
   const cleanText = (text: string) => {
     return text.replace(/\*\*/g, '').replace(/⚠️/g, '🚨');
   };

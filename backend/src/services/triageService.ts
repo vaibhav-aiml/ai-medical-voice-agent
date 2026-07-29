@@ -1,18 +1,14 @@
-// Triage & Urgency Scoring Service — Functional Module
-
 export type UrgencyLevel = 'routine' | 'consult_48h' | 'consult_24h' | 'emergency_immediate';
 
 export interface TriageResult {
   urgencyLevel: UrgencyLevel;
-  score: number; // 0-100, higher = more urgent
+  score: number; 
   recommendation: string;
   riskFactors: string[];
   suggestedAction: string;
   requiresAmbulance: boolean;
   colorCode: 'green' | 'yellow' | 'orange' | 'red';
 }
-
-// Critical keywords that indicate emergency
 const EMERGENCY_KEYWORDS = {
   cardiac: ['chest pain', 'heart attack', 'palpitations', 'racing heart', 'tightness in chest'],
   respiratory: ['difficulty breathing', 'can\'t breathe', 'shortness of breath', 'choking', 'gasping'],
@@ -23,8 +19,6 @@ const EMERGENCY_KEYWORDS = {
   allergic: ['anaphylaxis', 'severe allergic reaction', 'throat swelling', 'cannot swallow'],
   mental: ['suicidal', 'kill myself', 'want to die', 'end my life', 'self harm']
 };
-
-// Keywords for 24-hour consultation
 const URGENT_24H_KEYWORDS = {
   fever: ['high fever', 'fever over 103', 'persistent fever', 'fever for 3 days'],
   infection: ['infection', 'pus', 'wound infection', 'cellulitis', 'redness spreading'],
@@ -32,8 +26,6 @@ const URGENT_24H_KEYWORDS = {
   respiratory: ['persistent cough', 'productive cough', 'wheezing', 'chest congestion'],
   digestive: ['vomiting', 'diarrhea', 'dehydration', 'blood in stool', 'severe nausea']
 };
-
-// Keywords for 48-hour consultation
 const ROUTINE_48H_KEYWORDS = {
   mild_symptoms: ['mild headache', 'slight fever', 'minor cough', 'cold symptoms'],
   chronic: ['follow up', 'medication refill', 'chronic condition', 'ongoing issue'],
@@ -81,8 +73,6 @@ export function analyzeSymptoms(symptoms: string, age?: number, existingConditio
   let riskFactors: string[] = [];
   let maxUrgencyScore = 0;
   let urgencyLevel: UrgencyLevel = 'routine';
-  
-  // 1. Check for emergency keywords (score 90-100)
   for (const [category, keywords] of Object.entries(EMERGENCY_KEYWORDS)) {
     for (const keyword of keywords) {
       if (lowerSymptoms.includes(keyword)) {
@@ -92,8 +82,6 @@ export function analyzeSymptoms(symptoms: string, age?: number, existingConditio
       }
     }
   }
-  
-  // 2. Check for 24-hour urgency (score 70-89)
   if (urgencyLevel !== 'emergency_immediate') {
     for (const [category, keywords] of Object.entries(URGENT_24H_KEYWORDS)) {
       for (const keyword of keywords) {
@@ -105,8 +93,6 @@ export function analyzeSymptoms(symptoms: string, age?: number, existingConditio
       }
     }
   }
-  
-  // 3. Check for 48-hour routine (score 40-69)
   if (urgencyLevel === 'routine') {
     for (const [category, keywords] of Object.entries(ROUTINE_48H_KEYWORDS)) {
       for (const keyword of keywords) {
@@ -118,15 +104,11 @@ export function analyzeSymptoms(symptoms: string, age?: number, existingConditio
       }
     }
   }
-  
-  // 4. Default score if no keywords matched
   if (maxUrgencyScore === 0) {
     maxUrgencyScore = 30;
     urgencyLevel = 'routine';
     riskFactors.push('General: Mild or unspecified symptoms');
   }
-  
-  // 5. Age-based risk adjustment (applied on top of baseline score)
   if (age) {
     if (age > 65) {
       riskFactors.push('Age risk: Patient over 65 years');
@@ -142,8 +124,6 @@ export function analyzeSymptoms(symptoms: string, age?: number, existingConditio
       }
     }
   }
-  
-  // 6. Existing conditions adjustment (applied on top of baseline score)
   if (existingConditions && existingConditions.length > 0) {
     const highRiskConditions = ['diabetes', 'heart disease', 'asthma', 'COPD', 'kidney disease', 'cancer'];
     for (const condition of existingConditions) {
@@ -153,15 +133,11 @@ export function analyzeSymptoms(symptoms: string, age?: number, existingConditio
       }
     }
   }
-  
-  // If the adjusted score is high enough, elevate the urgency level
   if (maxUrgencyScore >= 70 && urgencyLevel === 'routine') {
     urgencyLevel = 'consult_24h';
   } else if (maxUrgencyScore >= 40 && urgencyLevel === 'routine') {
     urgencyLevel = 'consult_48h';
   }
-  
-  // Generate recommendation and color code
   const result = getRecommendation(urgencyLevel, maxUrgencyScore, riskFactors);
   
   return {
@@ -174,6 +150,4 @@ export function analyzeSymptoms(symptoms: string, age?: number, existingConditio
     colorCode: result.colorCode
   };
 }
-
-// Backward-compatible export
 export const triageService = { analyzeSymptoms };

@@ -11,7 +11,7 @@ export default function RemindersPage() {
       <MedicationReminder
         userId={ctx.getCurrentUserId()}
         onClose={() => {
-          // Navigate back handled by browser back or header nav
+          
           window.history.back();
         }}
       />

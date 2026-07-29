@@ -5,8 +5,6 @@ import { AppError } from '../utils/AppError';
 import logger from '../utils/logger';
 
 const router = Router();
-
-// Analyze symptoms with enhanced logic
 router.post('/analyze', catchAsync(async (req: Request, res: Response) => {
   const { symptoms, durations, severities, patientProfile } = req.body;
   
@@ -23,14 +21,10 @@ router.post('/analyze', catchAsync(async (req: Request, res: Response) => {
   
   res.json({ success: true, data: result });
 }));
-
-// Get condition information
 router.get('/condition/:conditionName', catchAsync(async (req: Request, res: Response) => {
   const { conditionName } = req.params;
   res.json({ success: true, data: { condition: conditionName, details: 'Detailed information here' } });
 }));
-
-// Get medication recommendations
 router.post('/medications', catchAsync(async (req: Request, res: Response) => {
   const { condition, symptoms, patientProfile } = req.body;
   

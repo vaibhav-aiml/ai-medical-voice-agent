@@ -404,8 +404,6 @@ const styles = {
     cursor: 'pointer',
   },
 };
-
-// Add animation CSS
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
   @keyframes spin {

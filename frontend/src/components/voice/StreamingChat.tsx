@@ -14,8 +14,6 @@ export default function StreamingChat({ consultationId, specialistType, userId, 
   const [isReceivingStream, setIsReceivingStream] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
   const [contextPrompt, setContextPrompt] = useState('');
-
-  // Load conversation context
   useEffect(() => {
     const loadContext = async () => {
       try {
@@ -34,8 +32,6 @@ export default function StreamingChat({ consultationId, specialistType, userId, 
       loadContext();
     }
   }, [userId]);
-
-  // WebSocket event listeners
   useEffect(() => {
     if (!socket) return;
     
@@ -91,8 +87,6 @@ export default function StreamingChat({ consultationId, specialistType, userId, 
     connectionStatus,
   };
 }
-
-// Add a typed message component for streaming
 export function StreamingMessage({ text, isStreaming }: { text: string; isStreaming: boolean }) {
   return (
     <div style={{

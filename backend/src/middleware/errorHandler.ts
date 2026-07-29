@@ -1,18 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/AppError';
 import logger from '../utils/logger';
-
-/**
- * Centralized Express error handler.
- * Must be registered AFTER all routes.
- */
 export const errorHandler = (
   err: Error | AppError,
   req: Request,
   res: Response,
   _next: NextFunction
 ) => {
-  // Default values
+  
   let statusCode = 500;
   let message = 'Internal server error';
   let isOperational = false;
@@ -30,8 +25,6 @@ export const errorHandler = (
     message = err.message;
     isOperational = true;
   }
-
-  // Log the error
   if (isOperational) {
     logger.warn('Operational error', {
       statusCode,
@@ -48,14 +41,10 @@ export const errorHandler = (
       method: req.method,
     });
   }
-
-  // Send response
   const response: Record<string, any> = {
     error: message,
     timestamp: new Date().toISOString(),
   };
-
-  // Include stack trace only in development
   if (process.env.NODE_ENV === 'development' && err.stack) {
     response.stack = err.stack;
   }

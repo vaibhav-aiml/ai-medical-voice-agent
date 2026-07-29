@@ -12,8 +12,6 @@ interface EmailTemplateData {
 
 export const generateEmailHTML = (data: EmailTemplateData): string => {
   const { patientName, consultationId, specialistType, specialistName, date, symptoms, diagnosis, recommendations, medications } = data;
-
-  // Format medications list
   const medicationsHtml = medications.map(med => `
     <tr>
       <td style="padding: 10px; border: 1px solid #ddd;">${med.name}</td>
@@ -22,8 +20,6 @@ export const generateEmailHTML = (data: EmailTemplateData): string => {
       <td style="padding: 10px; border: 1px solid #ddd;">${med.duration}</td>
      </tr>
   `).join('');
-
-  // Format recommendations list
   const recommendationsHtml = recommendations.map(rec => `<li>${rec}</li>`).join('');
 
   return `

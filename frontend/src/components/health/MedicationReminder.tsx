@@ -190,7 +190,7 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
-        {/* Header */}
+        {}
         <div style={styles.header}>
           <h2 style={styles.title}>
             <Bell size={24} style={styles.icon} />
@@ -201,7 +201,7 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
           </button>
         </div>
 
-        {/* Message Toast */}
+        {}
         {message && (
           <div style={{...styles.toast, background: message.type === 'success' ? '#10b981' : '#ef4444'}}>
             {message.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
@@ -209,7 +209,7 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
           </div>
         )}
 
-        {/* Stats Cards */}
+        {}
         {stats && (
           <div style={styles.statsContainer}>
             <div style={styles.statCard}>
@@ -228,7 +228,7 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
           </div>
         )}
 
-        {/* Action Buttons */}
+        {}
         <div style={styles.actionButtons}>
           <button onClick={() => setShowPrefsModal(true)} style={styles.prefsButton}>
             <Mail size={16} /> Notification Settings
@@ -238,7 +238,7 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
           </button>
         </div>
 
-        {/* Medications List */}
+        {}
         <div style={styles.medicationsList}>
           {medications.length === 0 ? (
             <div style={styles.emptyState}>
@@ -282,7 +282,7 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
         </div>
       </div>
 
-      {/* Add/Edit Medication Modal */}
+      {}
       {(showAddModal || editingMed) && (
         <MedicationFormModal
           medication={editingMed}
@@ -300,7 +300,7 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
         />
       )}
 
-      {/* Preferences Modal */}
+      {}
       {showPrefsModal && (
         <PreferencesModal
           preferences={preferences}
@@ -311,8 +311,6 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
     </div>
   );
 };
-
-// Medication Form Modal Component
 const MedicationFormModal: React.FC<{
   medication?: Medication | null;
   onClose: () => void;
@@ -396,8 +394,6 @@ const MedicationFormModal: React.FC<{
     </div>
   );
 };
-
-// Preferences Modal Component
 const PreferencesModal: React.FC<{
   preferences: NotificationPrefs | null;
   onClose: () => void;
@@ -765,8 +761,6 @@ const styles = {
     cursor: 'pointer',
   },
 };
-
-// Add animation CSS
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes spin {

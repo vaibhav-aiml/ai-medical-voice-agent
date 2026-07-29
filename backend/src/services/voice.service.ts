@@ -5,22 +5,16 @@ import { db } from '../config/database';
 import { voiceSessions } from '../db/schema/index';
 import logger from '../utils/logger';
 import { phiService } from './phiService';
-
-// Module-scoped state (replaces class instance properties)
 let assemblyAI: AssemblyAI;
 let openai: OpenAI | null = null;
 let groq: Groq | null = null;
 let useMockAI: boolean = false;
 let aiProvider: string = 'mock';
-
-// Initialize on module load (replaces constructor)
 function init() {
-  // Initialize AssemblyAI
+  
   assemblyAI = new AssemblyAI({
     apiKey: process.env.ASSEMBLYAI_API_KEY!
   });
-
-  // Try Groq first (free)
   if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'your-groq-api-key-here') {
     try {
       groq = new Groq({
@@ -32,8 +26,6 @@ function init() {
       logger.warn('Failed to initialize Groq');
     }
   }
-
-  // Fallback to OpenAI if Groq not available
   if (!groq && process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your-openai-api-key-here') {
     try {
       openai = new OpenAI({
@@ -182,9 +174,6 @@ Recommendations:
 
 ⚠️ This is an AI-generated summary. Please consult a qualified healthcare provider for medical advice.`;
 }
-
-// Exported functions (replace class methods)
-
 export async function getAIResponse(transcript: string, specialistType: string, conversationHistory: Array<{ role: string; content: string }> = []) {
   if (useMockAI) {
     logger.info('Using mock AI response');
@@ -200,8 +189,6 @@ export async function getAIResponse(transcript: string, specialistType: string, 
       content: msg.content
     }))
   ];
-
-  // Redact PHI from messages before sending to Groq/OpenAI
   const redactedMessages = await Promise.all(messages.map(async (msg) => {
     if (msg.role === 'user') {
       const cleanContent = await phiService.prepareTextForAI(msg.content, 'assessment-system', 'assessment-session');
@@ -316,6 +303,4 @@ export async function generateMedicalReport(consultationId: string, transcript: 
   
   return getFallbackReport(transcript);
 }
-
-// Re-export for backward compatibility
 export const voiceService = { getAIResponse, processVoiceStream, generateMedicalReport };

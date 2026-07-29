@@ -1,10 +1,10 @@
 export interface Clinic {
   id: string;
   name: string;
-  subdomain: string; // e.g., "apollo", "fortis"
-  customDomain?: string; // e.g., "clinic.apollohospitals.com"
-  logo?: string; // Base64 or URL
-  primaryColor: string; // Brand color
+  subdomain: string; 
+  customDomain?: string; 
+  logo?: string; 
+  primaryColor: string; 
   secondaryColor: string;
   accentColor: string;
   favicon?: string;
@@ -40,7 +40,7 @@ export interface ClinicPatient {
   id: string;
   clinicId: string;
   userId: string;
-  patientId: string; // Unique ID within clinic
+  patientId: string; 
   name: string;
   phone: string;
   email: string;

@@ -1,7 +1,5 @@
 import { Pool } from 'pg';
 import logger from '../utils/logger';
-
-// PostgreSQL connection pool using DATABASE_URL if available, otherwise host/port
 const pool = process.env.DATABASE_URL
   ? new Pool({ connectionString: process.env.DATABASE_URL })
   : new Pool({
@@ -36,8 +34,6 @@ export interface ConversationSession {
   diagnosis?: string;
   recommendations?: string[];
 }
-
-// Exported pure functions
 export async function saveSession(session: ConversationSession): Promise<void> {
   try {
     const query = `
@@ -186,8 +182,6 @@ export async function initTable(): Promise<void> {
 export async function close(): Promise<void> {
   await pool.end();
 }
-
-// Backward-compatible default export object
 export const conversationMemory = {
   saveSession,
   getUserHistory,
@@ -198,6 +192,4 @@ export const conversationMemory = {
   initTable,
   close,
 };
-
-// Initialize table on startup (non-fatal)
 initTable().catch(() => {});

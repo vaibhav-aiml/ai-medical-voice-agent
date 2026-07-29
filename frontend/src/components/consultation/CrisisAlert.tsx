@@ -23,7 +23,7 @@ const CrisisAlert: React.FC<CrisisAlertProps> = ({ crisisType, resource, onClose
           <p style={{ fontSize: '14px', marginTop: '8px' }}>Free & Confidential Support Available 24/7</p>
         </div>
 
-        {/* Primary National Helpline - Most prominent */}
+        {}
         <div className="hotline-section">
           <div className="hotline-number-large">
             📞 <span className="hotline-digits">14416</span>
@@ -33,7 +33,7 @@ const CrisisAlert: React.FC<CrisisAlertProps> = ({ crisisType, resource, onClose
           <div className="hotline-alt-number">Toll Free: 1-800-891-4416</div>
         </div>
 
-        {/* Secondary Helplines Grid */}
+        {}
         <div className="helpline-grid">
           <div className="helpline-card">
             <div className="helpline-number">📞 9820466728</div>

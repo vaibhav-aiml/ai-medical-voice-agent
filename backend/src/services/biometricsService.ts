@@ -18,11 +18,6 @@ export interface VerifyResult {
   confidence: number;
   message: string;
 }
-
-/**
- * Enrolls a patient's voice signature template into the database.
- * Enforces the unique constraint to prevent duplicate enrollments for the same user.
- */
 export async function enrollVoiceTemplate(userId: string, audioBuffer: Buffer): Promise<EnrollResult> {
   try {
     if (!userId) {
@@ -53,8 +48,6 @@ export async function enrollVoiceTemplate(userId: string, audioBuffer: Buffer): 
     } else {
       internalUserId = userList[0].id;
     }
-
-    // Check if the user is already enrolled to prevent duplicates proactively
     const existing = await db
       .select()
       .from(voiceBiometrics)
@@ -64,11 +57,7 @@ export async function enrollVoiceTemplate(userId: string, audioBuffer: Buffer): 
       logger.warn('User already enrolled for voice biometrics', { userId: internalUserId });
       return { success: false, message: 'User is already enrolled. Duplicate enrollment prevented.' };
     }
-
-    // Extract embedding vector
     const embedding = extractVoiceEmbedding(audioBuffer);
-
-    // Save to database
     await db.insert(voiceBiometrics).values({
       userId: internalUserId,
       voiceEmbedding: embedding,
@@ -88,11 +77,6 @@ export async function enrollVoiceTemplate(userId: string, audioBuffer: Buffer): 
     };
   }
 }
-
-/**
- * Verifies a patient's voice signature against their enrolled template.
- * Computes the cosine similarity vector distance metric.
- */
 export async function verifyVoiceTemplate(userId: string, audioBuffer: Buffer): Promise<VerifyResult> {
   try {
     if (!userId) {
@@ -123,8 +107,6 @@ export async function verifyVoiceTemplate(userId: string, audioBuffer: Buffer): 
     } else {
       internalUserId = userList[0].id;
     }
-
-    // Retrieve enrolled embedding
     const records = await db
       .select()
       .from(voiceBiometrics)
@@ -142,10 +124,8 @@ export async function verifyVoiceTemplate(userId: string, audioBuffer: Buffer): 
 
     const enrolledEmbedding = records[0].voiceEmbedding as number[];
     const testEmbedding = extractVoiceEmbedding(audioBuffer);
-
-    // Calculate similarity score
     const similarity = calculateCosineSimilarity(enrolledEmbedding, testEmbedding);
-    const confidence = Math.max(0, Math.min(1, similarity)); // Clamp score between 0 and 1
+    const confidence = Math.max(0, Math.min(1, similarity)); 
     const isMatch = confidence >= SIMILARITY_THRESHOLD;
 
     logger.info('Voice verification completed', {

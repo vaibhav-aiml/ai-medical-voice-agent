@@ -7,8 +7,6 @@ import { desc, and, eq } from 'drizzle-orm';
 import { AppError } from '../utils/AppError';
 
 const router = Router();
-
-// POST /api/hipaa/log
 router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) => {
   const { type, value, accessReason, accessedBy, timestamp, extraData } = req.body;
   
@@ -17,15 +15,11 @@ router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) 
   }
 
   const authenticatedUserId = (req as any).userId;
-  
-  // Authorization: Enforce that user can only submit logs for themselves
   if (accessedBy && authenticatedUserId && authenticatedUserId !== accessedBy) {
     throw new AppError('Forbidden: Cannot log HIPAA events on behalf of another user', 403);
   }
 
   const logTimestamp = timestamp ? new Date(timestamp) : new Date();
-
-  // Duplicate Check
   const duplicates = await db.select()
     .from(hipaaLogs)
     .where(
@@ -53,13 +47,11 @@ router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) 
   
   res.status(200).json({ success: true, message: 'HIPAA log received' });
 }));
-
-// GET /api/hipaa/logs (for admin)
 router.get('/logs', requireAuth, catchAsync(async (req: Request, res: Response) => {
   const logs = await db.select()
     .from(hipaaLogs)
     .orderBy(desc(hipaaLogs.receivedAt))
-    .limit(1000); // safety limit
+    .limit(1000); 
   
   res.status(200).json({ success: true, logs });
 }));

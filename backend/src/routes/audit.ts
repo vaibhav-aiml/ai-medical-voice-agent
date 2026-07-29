@@ -10,8 +10,6 @@ import { AppError } from '../utils/AppError';
 const router = Router();
 
 const AUDIT_SIGNING_SECRET = process.env.AUDIT_SIGNING_SECRET || 'secure-fallback-audit-secret-2026';
-
-// Helper to compute server-side HMAC signature
 export function computeLogSignature(log: {
   userId: string | null;
   sessionId: string | null;
@@ -31,26 +29,18 @@ export function computeLogSignature(log: {
     .update(JSON.stringify(dataToSign))
     .digest('hex');
 }
-
-// POST /api/audit/log
 router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) => {
   const { timestamp, userId, sessionId, action, message, metadata } = req.body;
-  
-  // Validation
   if (!action) {
     throw new AppError('Action is required', 400);
   }
   
   const authenticatedUserId = (req as any).userId;
-  
-  // Authorization: Enforce that user can only submit logs for themselves
   if (userId && authenticatedUserId && authenticatedUserId !== userId) {
     throw new AppError('Forbidden: Cannot log events on behalf of another user', 403);
   }
 
   const logTimestamp = timestamp ? new Date(timestamp) : new Date();
-
-  // Duplicate Check
   const duplicates = await db.select()
     .from(auditLogs)
     .where(
@@ -66,8 +56,6 @@ router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) 
   if (duplicates.length > 0) {
     return res.status(200).json({ success: true, message: 'Audit log received (duplicate ignored)' });
   }
-
-  // Compute secure server-side HMAC
   const signature = computeLogSignature({
     userId,
     sessionId,
@@ -88,15 +76,11 @@ router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) 
   
   res.status(200).json({ success: true, message: 'Audit log received and signed securely' });
 }));
-
-// GET /api/audit/logs (for admin)
 router.get('/logs', requireAuth, catchAsync(async (req: Request, res: Response) => {
   const logs = await db.select()
     .from(auditLogs)
     .orderBy(desc(auditLogs.receivedAt))
-    .limit(1000); // safety limit
-    
-  // Verify signatures server-side to detect any tampering
+    .limit(1000); 
   const verifiedLogs = logs.map(log => {
     const calculatedSig = computeLogSignature({
       userId: log.userId,

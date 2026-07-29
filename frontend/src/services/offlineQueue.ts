@@ -1,20 +1,6 @@
-/**
- * Offline write queue.
- *
- * Queues failed POST/PUT requests and replays them when the backend
- * comes back online. Persists in CacheService so the queue survives
- * page refreshes.
- *
- * Conflict resolution: last-write-wins with timestamp.
- * Items older than 24 hours are discarded (stale data safety).
- */
-
 import cacheService from './cacheService';
 import logger from './logger';
 import backendStatus from './backendStatus';
-
-// ---------- Types ----------
-
 export interface QueuedRequest {
   id: string;
   method: 'POST' | 'PUT';
@@ -24,19 +10,10 @@ export interface QueuedRequest {
   retries: number;
   idempotencyKey?: string;
 }
-
-// ---------- Constants ----------
-
 const CACHE_KEY = 'offline_queue';
 const MAX_RETRIES_PER_ITEM = 3;
-const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-// ---------- State ----------
-
+const MAX_AGE_MS = 24 * 60 * 60 * 1000; 
 let isReplaying = false;
-
-// ---------- Helpers ----------
-
 function getQueue(): QueuedRequest[] {
   return cacheService.get<QueuedRequest[]>(CACHE_KEY) ?? [];
 }
@@ -48,10 +25,6 @@ function saveQueue(queue: QueuedRequest[]): void {
 function generateId(): string {
   return crypto.randomUUID?.() ?? `oq_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
-
-/**
- * Purge items older than MAX_AGE_MS.
- */
 function purgeStale(queue: QueuedRequest[]): QueuedRequest[] {
   const now = Date.now();
   const filtered = queue.filter((item) => {
@@ -68,9 +41,6 @@ function purgeStale(queue: QueuedRequest[]): QueuedRequest[] {
   });
   return filtered;
 }
-
-// ---------- Replay engine ----------
-
 async function replayQueue(): Promise<void> {
   if (isReplaying) return;
   isReplaying = true;
@@ -93,12 +63,12 @@ async function replayQueue(): Promise<void> {
         url: item.url,
         retries: item.retries,
       });
-      completed.push(item.id); // remove from queue, it's exhausted
+      completed.push(item.id); 
       continue;
     }
 
     try {
-      // Use raw fetch to avoid apiClient interceptor loops
+      
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -143,12 +113,10 @@ async function replayQueue(): Promise<void> {
         retries: item.retries,
       });
       logger.metric('offline_queue_replay_count');
-      // If we're offline or backend down again, stop replaying
+      
       if (typeof navigator !== 'undefined' && !navigator.onLine) break;
     }
   }
-
-  // Update queue: remove completed, keep failed with updated retry counts
   queue = queue.filter((item) => !completed.includes(item.id));
   saveQueue(queue);
 
@@ -159,31 +127,19 @@ async function replayQueue(): Promise<void> {
 
   isReplaying = false;
 }
-
-// ---------- Auto-replay triggers ----------
-
-// Replay when browser comes back online
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     logger.info('network_online');
-    // Small delay to let network stabilize
+    
     setTimeout(() => replayQueue(), 2000);
   });
 }
-
-// Replay when backend becomes awake
 backendStatus.subscribe((state) => {
   if (state === 'awake') {
     setTimeout(() => replayQueue(), 1000);
   }
 });
-
-// ---------- Public API ----------
-
 export const offlineQueue = {
-  /**
-   * Add a failed write request to the queue.
-   */
   enqueue(request: Omit<QueuedRequest, 'id' | 'retries' | 'timestamp'>): void {
     const queue = getQueue();
     const item: QueuedRequest = {
@@ -202,31 +158,15 @@ export const offlineQueue = {
       queue_size: queue.length,
     });
   },
-
-  /**
-   * Get current queue size.
-   */
   size(): number {
     return getQueue().length;
   },
-
-  /**
-   * Get the current queue contents.
-   */
   getItems(): QueuedRequest[] {
     return getQueue();
   },
-
-  /**
-   * Manually trigger a replay attempt.
-   */
   replay(): Promise<void> {
     return replayQueue();
   },
-
-  /**
-   * Clear the queue.
-   */
   clear(): void {
     saveQueue([]);
     logger.info('offline_queue_cleared');

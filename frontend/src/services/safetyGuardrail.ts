@@ -1,4 +1,3 @@
-// Crisis keywords and patterns
 export const CRISIS_PATTERNS = {
   suicidal: [
     'kill myself', 'end my life', 'suicide', 'want to die', 'die already',
@@ -64,8 +63,6 @@ export class SafetyGuardrail {
     sanitizedMessage?: string;
   } {
     const lowerMessage = message.toLowerCase();
-    
-    // Check for crisis patterns
     for (const [type, patterns] of Object.entries(CRISIS_PATTERNS)) {
       for (const pattern of patterns) {
         if (lowerMessage.includes(pattern)) {
@@ -90,7 +87,7 @@ export class SafetyGuardrail {
   }
 
   private redactCrisisContent(message: string): string {
-    // Redact sensitive crisis content while keeping the message for context
+    
     return message.replace(/\b(?:kill|suicide|die|hurt\s*myself|cut\s*myself)\b/gi, '[REDACTED]');
   }
 

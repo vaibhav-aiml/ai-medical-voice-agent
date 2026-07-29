@@ -15,13 +15,9 @@ export function useVoiceSocket(consultationId: string) {
   const socketRef = useRef<Socket | null>(null);
   const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const missedHeartbeatsRef = useRef<number>(0);
-
-  // Keep socketRef in sync with state
   useEffect(() => {
     socketRef.current = socket;
   }, [socket]);
-
-  // Store getToken in a ref to avoid reconnecting Socket.IO client when Clerk token updates
   const getTokenRef = useRef(getToken);
   useEffect(() => {
     getTokenRef.current = getToken;
@@ -34,7 +30,7 @@ export function useVoiceSocket(consultationId: string) {
     let socketInstance: Socket | null = null;
 
     const initSocket = async () => {
-      // If backend is currently waking from cold start, wait until it's awake first
+      
       if (backendStatus.getState() === 'waking') {
         setConnectionStatus('Waiting for server...');
         logger.info('socket_waiting_for_backend', { consultationId });
@@ -73,8 +69,6 @@ export function useVoiceSocket(consultationId: string) {
         setFailedPermanently(false);
         missedHeartbeatsRef.current = 0;
         socketInstance?.emit('join-consultation', consultationId);
-
-        // Start 30s heartbeat
         if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
         heartbeatTimerRef.current = setInterval(() => {
           const currentSock = socketRef.current;
@@ -84,7 +78,7 @@ export function useVoiceSocket(consultationId: string) {
               logger.warn('socket_heartbeat_missed', { missed: missedHeartbeatsRef.current });
               setConnectionStatus('Reconnecting (Heartbeat lost)...');
               setIsReconnecting(true);
-              currentSock.connect(); // Force reconnect
+              currentSock.connect(); 
               missedHeartbeatsRef.current = 0;
             } else {
               currentSock.emit('ping-heartbeat', { timestamp: Date.now() });
@@ -101,7 +95,7 @@ export function useVoiceSocket(consultationId: string) {
         logger.warn('socket_disconnected', { consultationId, reason });
         setConnectionStatus(`Disconnected (${reason})`);
         if (reason === 'io server disconnect') {
-          // Server disconnected us, manual reconnect needed
+          
           socketInstance?.connect();
         }
       });
@@ -146,10 +140,6 @@ export function useVoiceSocket(consultationId: string) {
       socketRef.current = null;
     };
   }, [consultationId]);
-
-  /**
-   * Send a message through the socket using the stable ref.
-   */
   const sendMessage = useCallback((event: string, data: any): boolean => {
     const currentSocket = socketRef.current;
     if (currentSocket && currentSocket.connected) {

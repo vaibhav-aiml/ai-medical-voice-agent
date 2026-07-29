@@ -3,16 +3,16 @@ import BackButton from '../components/shared/BackButton';
 export default function PrivacyPolicy() {
   return (
     <div className="privacy-policy-container">
-      {/* Back Button */}
+      {}
       <BackButton />
 
-      {/* Hero Section */}
+      {}
       <section className="hero-section">
         <h1>Privacy Policy</h1>
         <p>Your privacy is important to us. Learn how we handle your data.</p>
       </section>
 
-      {/* Content Sections */}
+      {}
       <div className="container policy-content">
         <section className="policy-card">
           <h2>Information We Collect</h2>
@@ -59,7 +59,7 @@ export default function PrivacyPolicy() {
         </section>
       </div>
 
-      {/* Closing CTA Contact Section */}
+      {}
       <section className="contact-cta-section">
         <div className="container">
           <h2>Contact Us</h2>

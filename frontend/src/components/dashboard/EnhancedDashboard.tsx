@@ -25,13 +25,11 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
   const [specialistChart, setSpecialistChart] = useState<any>(null);
   const [ratingChart, setRatingChart] = useState<any>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-
-  // Use refs to prevent unnecessary re-renders
   const chartOptionsRef = useRef({
     responsive: true,
     maintainAspectRatio: false,
     animation: {
-      duration: 0, // Disable animation to prevent continuous expansion
+      duration: 0, 
     },
     plugins: {
       legend: {
@@ -44,7 +42,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
     responsive: true,
     maintainAspectRatio: false,
     animation: {
-      duration: 0, // Disable animation
+      duration: 0, 
     },
     plugins: {
       legend: {
@@ -57,7 +55,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
     responsive: true,
     maintainAspectRatio: false,
     animation: {
-      duration: 0, // Disable animation
+      duration: 0, 
     },
     plugins: {
       legend: {
@@ -166,8 +164,6 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
       ],
     };
   };
-
-  // Initialize charts once when timeRange changes
   useEffect(() => {
     if (consultations.length > 0) {
       const newChartData = prepareChartData();
@@ -225,14 +221,14 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
 
   return (
     <div style={styles.container}>
-      {/* Time Range Selector */}
+      {}
       <div style={styles.timeRangeSelector}>
         <button onClick={() => setTimeRange('week')} style={{ ...styles.rangeButton, ...(timeRange === 'week' ? styles.rangeActive : {}) }}>Last 7 Days</button>
         <button onClick={() => setTimeRange('month')} style={{ ...styles.rangeButton, ...(timeRange === 'month' ? styles.rangeActive : {}) }}>Last 30 Days</button>
         <button onClick={() => setTimeRange('year')} style={{ ...styles.rangeButton, ...(timeRange === 'year' ? styles.rangeActive : {}) }}>Last Year</button>
       </div>
 
-      {/* Stats Cards */}
+      {}
       <div style={styles.statsGrid}>
         <div style={styles.statCard}>
           <div style={styles.statIcon}><Calendar size={24} color="#3b82f6" /></div>
@@ -267,7 +263,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
         </div>
       </div>
 
-      {/* Charts - Fixed height containers prevent expansion */}
+      {}
       <div style={styles.chartsGrid}>
         <div style={styles.chartCard}>
           <h3 style={styles.chartTitle}>Consultations Trend</h3>
@@ -295,7 +291,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
         </div>
       </div>
 
-      {/* Insights */}
+      {}
       <div style={styles.insightsCard}>
         <h3 style={styles.insightsTitle}>📈 Health Insights</h3>
         <div style={styles.insightsGrid}>
@@ -520,8 +516,6 @@ const styles = {
     color: 'var(--text-primary)',
   },
 };
-
-// Add keyframes for spinner animation
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes spin {

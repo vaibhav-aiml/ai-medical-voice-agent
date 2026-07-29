@@ -82,15 +82,15 @@ export default function Header({
   return (
     <nav style={styles.nav}>
       <div style={styles.navContent}>
-        {/* ===== UPDATED LOGO SECTION ===== */}
+        {}
         <div onClick={() => navigate('/')} style={styles.logoContainer}>
           <div style={styles.logoIcon}>
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Medical cross */}
+              {}
               <rect x="6" y="6" width="16" height="16" rx="4" stroke="white" strokeWidth="2.5" fill="none"/>
               <path d="M14 9V17" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
               <path d="M10 13H18" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-              {/* Voice wave dots - representing voice/AI */}
+              {}
               <circle cx="22" cy="8" r="1.8" fill="white" opacity="0.9"/>
               <circle cx="24.5" cy="11" r="1.4" fill="white" opacity="0.7"/>
               <circle cx="26" cy="14" r="1" fill="white" opacity="0.5"/>
@@ -116,7 +116,7 @@ export default function Header({
             </button>
           ))}
 
-          {/* Reminders Button */}
+          {}
           <button onClick={onOpenReminders} style={styles.reminderButton}>
             <Bell size={18} />
             <span>Reminders</span>
@@ -195,7 +195,7 @@ const styles = {
     gap: '10px',
     cursor: 'pointer',
   },
-  // ===== UPDATED LOGO ICON =====
+  
   logoIcon: {
     width: '36px',
     height: '36px',
@@ -208,7 +208,7 @@ const styles = {
     flexShrink: 0,
     boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
   },
-  // ===== UPDATED LOGO TEXT =====
+  
   logo: {
     fontSize: '1.25rem',
     fontWeight: 700,
@@ -333,8 +333,6 @@ const styles = {
     transition: 'all 0.15s ease',
   },
 };
-
-// Add hover styles via a style tag
 const hoverStyles = document.createElement('style');
 hoverStyles.textContent = `
   /* Nav button hover */

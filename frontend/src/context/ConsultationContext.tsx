@@ -10,18 +10,14 @@ import cacheService from '../services/cacheService';
 import logger from '../services/logger';
 
 export interface ConsultationContextType {
-  // Core data — consultationsLoading is scoped (does NOT block the app)
+  
   consultations: ConsultationSession[];
   stats: DashboardStats;
   consultationsLoading: boolean;
   refreshKey: number;
-
-  // User helpers
   getUserName: () => string;
   getCurrentUserId: () => string;
   getCurrentSessionId: () => string;
-
-  // Consultation lifecycle
   consultationId: string;
   selectedSpecialist: string;
   setSelectedSpecialist: (s: string) => void;
@@ -44,8 +40,6 @@ export interface ConsultationContextType {
   handleAIResponse: (response: string, isComplete?: boolean) => void;
   addMessage: (message: Message) => void;
   handleSymptomCheckerConsultation: (specialistType: string, symptoms: string) => void;
-
-  // Report/appointment/rating handlers
   handleViewReport: (consultationId: string) => void;
   handleBookAppointment: (consultation: ConsultationSession) => void;
   handleRateConsultation: (consultation: ConsultationSession) => void;
@@ -53,8 +47,6 @@ export interface ConsultationContextType {
   handleResumeConsultation: (consultId: string) => Promise<void>;
   handleVideoConsultation: (consultation: ConsultationSession) => void;
   handleRatingSubmit: (rating: number, feedback: string) => void;
-
-  // Consultation-dependent modal state
   showReportModal: boolean;
   setShowReportModal: (show: boolean) => void;
   selectedConsultation: ConsultationSession | null;
@@ -81,8 +73,6 @@ export interface ConsultationContextType {
   setShowVoiceBiometricsEnrollment: (show: boolean) => void;
   showFHIRConnector: boolean;
   setShowFHIRConnector: (show: boolean) => void;
-
-  // Specialist icon helper
   getSpecialistIcon: (type: string) => React.ReactNode;
 }
 
@@ -100,8 +90,6 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { canStartConsultation, getRemainingConsultations, subscription, incrementConsultation } = useSubscription();
-
-  // Core data — consultationsLoading is scoped, never blocks the whole app
   const [consultations, setConsultations] = useState<ConsultationSession[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalConsultations: 0,
@@ -111,8 +99,6 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   });
   const [consultationsLoading, setConsultationsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  // Consultation lifecycle state
   const [consultationId, setConsultationId] = useState('');
   const [selectedSpecialist, setSelectedSpecialist] = useState('');
   const [consultationStarted, setConsultationStarted] = useState(false);
@@ -121,8 +107,6 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   const [triageResult, setTriageResult] = useState<any>(null);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-
-  // Consultation-dependent modal state
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState<ConsultationSession | null>(null);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
@@ -139,9 +123,6 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   const [selectedVideoConsultation, setSelectedVideoConsultation] = useState<ConsultationSession | null>(null);
   const [showVoiceBiometricsEnrollment, setShowVoiceBiometricsEnrollment] = useState(false);
   const [showFHIRConnector, setShowFHIRConnector] = useState(false);
-
-
-  // User helpers
   const getUserName = useCallback(() => {
     if (user?.fullName) return user.fullName.split(' ')[0];
     if (user?.firstName) return user.firstName;
@@ -156,8 +137,6 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   const getCurrentSessionId = useCallback(() => {
     return consultationId || `session_${Date.now()}`;
   }, [consultationId]);
-
-  // Stats updater
   const updateStats = useCallback((consultList: ConsultationSession[]) => {
     setStats({
       totalConsultations: consultList.length,
@@ -168,23 +147,17 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       pendingFollowUps: consultList.filter(c => c.status === 'completed').length,
     });
   }, []);
-
-  // Load consultations — cache-first, non-blocking
   useEffect(() => {
     if (!userId) return;
 
     logger.info('consultations_load_start', { userId });
-
-    // 1. Immediately populate from cache (stale-while-revalidate)
     const cachedData = consultationService.getCachedConsultations(userId);
     if (cachedData.length > 0) {
       setConsultations(cachedData as unknown as ConsultationSession[]);
       updateStats(cachedData as unknown as ConsultationSession[]);
-      setConsultationsLoading(false); // Not blocking — cached data is showing
+      setConsultationsLoading(false); 
       logger.info('consultations_loaded_from_cache', { count: cachedData.length });
     }
-
-    // 2. Background refresh from API (deduplicated by apiClient)
     consultationService.getUserConsultations(userId)
       .then(data => {
         if (data && data.length > 0) {
@@ -192,7 +165,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
           updateStats(data as unknown as ConsultationSession[]);
           logger.info('consultations_refreshed_from_api', { count: data.length });
         } else if (cachedData.length === 0) {
-          // No cache and no API data — show mock data for new users
+          
           const mockConsultations: ConsultationSession[] = [
             {
               id: '1',
@@ -226,7 +199,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
         logger.warn('consultations_api_failed', {
           error: error instanceof Error ? error.message : 'Unknown',
         });
-        // Cache is already showing — no action needed
+        
         if (cachedData.length === 0) {
           setConsultations([]);
           updateStats([]);
@@ -236,8 +209,6 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
         setConsultationsLoading(false);
       });
   }, [userId, refreshKey, updateStats]);
-
-  // UUID generator
   const generateUUID = () => {
     if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
       return window.crypto.randomUUID();
@@ -523,12 +494,10 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   const handleVideoConsultation = (_consultation: ConsultationSession) => {
     alert('🎥 Video Consultation Coming Soon!\n\nTo enable real video calls:\n1. Sign up at daily.co\n2. Add your API key\n3. Real video calls will work instantly');
   };
-
-  // Clinic dashboard
   const handleOpenClinicDashboard = async () => {
     setIsCreatingClinic(true);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 6000); 
 
     try {
       const savedClinicId = localStorage.getItem('clinicId');
@@ -575,7 +544,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       clearTimeout(timeoutId);
       console.warn('Error or timeout creating clinic, falling back to local clinic mode:', error.message || error);
-      // Fallback local clinic creation so the user doesn't get stuck!
+      
       const fallbackClinicId = `local_clinic_${Date.now()}`;
       localStorage.setItem('clinicId', fallbackClinicId);
       setCurrentClinicId(fallbackClinicId);
@@ -584,11 +553,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       setIsCreatingClinic(false);
     }
   };
-
-  // Specialist icon helper (used by multiple pages)
   const getSpecialistIcon = (_type: string): React.ReactNode => {
-    // Returns null — each consumer imports their own icons.
-    // This is kept as a stub for API compatibility.
     return null;
   };
 

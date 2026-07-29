@@ -79,7 +79,7 @@ export async function translateText(
 
   if (useMockAI) {
     logger.debug('Translation Service: Running mock translation (pass-through)');
-    // Simply prefix in mock mode to verify logic path
+    
     return {
       translatedText: `[Translated to ${targetLangName}] ${text}`,
       sourceLang: normSource,
@@ -129,8 +129,6 @@ Provide ONLY the raw translated text. Do NOT include any explanations, introduct
   } catch (error: any) {
     logger.error('Failed to translate text using LLM client', { error: error.message });
   }
-
-  // Fallback to mock prefix if API fails
   return {
     translatedText: `[Translation Fallback] ${text}`,
     sourceLang: normSource,

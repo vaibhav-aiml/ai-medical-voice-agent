@@ -13,8 +13,6 @@ function getParam(param: string | string[] | undefined): string {
   if (Array.isArray(param)) return param[0];
   return param;
 }
-
-// Add Clerk requireAuth middleware as default for all routes in this router
 router.use(requireAuth);
 
 router.post('/medication', validate(createMedicationSchema), catchAsync(async (req: Request, res: Response) => {
@@ -78,8 +76,6 @@ router.post('/preferences', catchAsync(async (req: Request, res: Response) => {
   if (userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot modify other users\' preferences', 403);
   }
-
-  // Validate the inner preferences object using Zod schema
   const parsedPrefs = setPreferencesSchema.parse(preferences || {});
   
   const result = await reminderService.setUserPreferences(userId, parsedPrefs);

@@ -3,16 +3,16 @@ import BackButton from '../components/shared/BackButton';
 export default function CookiePolicy() {
   return (
     <div className="cookie-policy-container">
-      {/* Back Button */}
+      {}
       <BackButton />
 
-      {/* Hero Section */}
+      {}
       <section className="hero-section">
         <h1>Cookie Policy</h1>
         <p>How We Use Cookies to Enhance Your Experience</p>
       </section>
 
-      {/* Content Sections */}
+      {}
       <div className="container cookie-content">
         <section className="cookie-card">
           <h2>What Are Cookies?</h2>
@@ -51,7 +51,7 @@ export default function CookiePolicy() {
         </section>
       </div>
 
-      {/* Closing CTA Contact Section */}
+      {}
       <section className="contact-cta-section">
         <div className="container">
           <h2>Contact Us</h2>

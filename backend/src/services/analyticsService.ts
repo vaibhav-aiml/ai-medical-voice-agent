@@ -1,5 +1,3 @@
-// Analytics Service — Functional Module
-
 export interface AnalyticsData {
   totalPatients: number;
   totalConsultations: number;
@@ -236,6 +234,4 @@ export function generateAnalytics(consultations: any[], ratings?: any): Analytic
     topDoctors,
   };
 }
-
-// Backward-compatible export
 export const analyticsService = { generateAnalytics };

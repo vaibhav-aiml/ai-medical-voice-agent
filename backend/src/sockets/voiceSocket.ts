@@ -6,8 +6,6 @@ import { clerkClient } from '@clerk/clerk-sdk-node';
 import { registerJoinConsultationHandler } from './handlers/joinConsultation';
 import { registerGetAIResponseStreamHandler } from './handlers/getAIResponseStream';
 import { registerGetAIResponseHandler } from './handlers/getAIResponse';
-
-// Initialize Groq only if API key exists
 let groq: Groq | null = null;
 try {
   if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.length > 10 && process.env.GROQ_API_KEY.startsWith('gsk_')) {
@@ -23,7 +21,7 @@ try {
 }
 
 export function setupVoiceSocket(io: Server) {
-  // Handshake Authentication Middleware
+  
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
@@ -55,8 +53,6 @@ export function setupVoiceSocket(io: Server) {
 
   io.on('connection', (socket: Socket) => {
     logger.debug('Client connected to socket', { socketId: socket.id, userId: socket.data.userId });
-    
-    // Register Modular Handlers
     registerJoinConsultationHandler(socket);
     registerGetAIResponseStreamHandler(socket, groq);
     registerGetAIResponseHandler(socket, groq);

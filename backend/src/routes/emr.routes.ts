@@ -6,8 +6,6 @@ import logger from '../utils/logger';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
-
-// Export a completed consultation clinical session
 router.get('/export/:consultationId', requireAuth, catchAsync(async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const consultationId = req.params.consultationId as string;

@@ -20,7 +20,7 @@ export default function HomePage() {
   return (
     <>
       <div style={styles.homeContainer}>
-        {/* Hero Section */}
+        {}
         <div style={styles.heroSection}>
           <div style={styles.heroContent}>
             <div style={styles.heroBadge}>
@@ -61,7 +61,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Stats Section */}
+        {}
         <div style={styles.statsSection}>
           <div style={styles.statsContainer}>
             <div style={styles.statCard}>
@@ -91,7 +91,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Features Section */}
+        {}
         <div style={styles.featuresSection}>
           <div style={styles.sectionHeader}>
             <h2>{t('home.whyChoose')} <span style={styles.sectionHeaderAccent}>{t('home.mediVoiceAI')}</span></h2>
@@ -137,7 +137,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* How It Works Section */}
+        {}
         <div style={styles.howItWorksSection}>
           <div style={styles.sectionHeader}>
             <h2>{t('home.howItWorks')} <span style={styles.sectionHeaderAccent}>{t('home.works')}</span></h2>
@@ -212,7 +212,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Testimonials Section */}
+        {}
         <div style={styles.testimonialsSection}>
           <div style={styles.sectionHeader}>
             <h2>{t('home.whatUsersSay')} <span style={styles.sectionHeaderAccent}>{t('home.aboutUs')}</span></h2>
@@ -255,7 +255,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* CTA Section */}
+        {}
         <div style={styles.ctaSection}>
           <div style={styles.ctaContent}>
             <h2>{t('home.readyTitle')}</h2>
@@ -268,7 +268,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Enhanced Symptom Checker Modal */}
+      {}
       {showEnhancedSymptomChecker && (
         <Suspense fallback={<SkeletonLoader />}>
           <EnhancedSymptomChecker

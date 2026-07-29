@@ -38,8 +38,6 @@ export default function EMRExportModal({ consultationId, onClose }: Props) {
         const json = await response.json();
         blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json;charset=utf-8' });
       }
-
-      // Trigger standard browser download
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -83,7 +81,7 @@ export default function EMRExportModal({ consultationId, onClose }: Props) {
           )}
 
           <div style={styles.exportList}>
-            {/* Format 1: SOAP Clinical Summary PDF */}
+            {}
             <div style={styles.exportCard}>
               <div style={styles.cardInfo}>
                 <div style={styles.cardHeader}>
@@ -102,7 +100,7 @@ export default function EMRExportModal({ consultationId, onClose }: Props) {
               </button>
             </div>
 
-            {/* Format 2: FHIR R4 Bundle */}
+            {}
             <div style={styles.exportCard}>
               <div style={styles.cardInfo}>
                 <div style={styles.cardHeader}>
@@ -121,7 +119,7 @@ export default function EMRExportModal({ consultationId, onClose }: Props) {
               </button>
             </div>
 
-            {/* Format 3: HL7 V2 Message */}
+            {}
             <div style={styles.exportCard}>
               <div style={styles.cardInfo}>
                 <div style={styles.cardHeader}>
@@ -140,7 +138,7 @@ export default function EMRExportModal({ consultationId, onClose }: Props) {
               </button>
             </div>
 
-            {/* Format 4: Structured JSON Report */}
+            {}
             <div style={styles.exportCard}>
               <div style={styles.cardInfo}>
                 <div style={styles.cardHeader}>

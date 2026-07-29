@@ -73,8 +73,6 @@ export default function VoiceEnrollmentModal({ onClose, userId }: Props) {
 
       mediaRecorder.start();
       setIsRecording(true);
-      
-      // Automatic recording cut-off after 4 seconds
       setCountdown(4);
       countdownIntervalRef.current = setInterval(() => {
         setCountdown((prev) => {
@@ -106,7 +104,7 @@ export default function VoiceEnrollmentModal({ onClose, userId }: Props) {
     setErrorMsg('');
 
     try {
-      // Convert audio blob to base64
+      
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);
       reader.onloadend = async () => {

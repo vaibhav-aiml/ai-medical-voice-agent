@@ -5,8 +5,6 @@ import { analyzeTriageSchema } from '../validators/triage.validator';
 import { catchAsync } from '../utils/catchAsync';
 
 const router = Router();
-
-// POST /api/triage/analyze - Analyze symptoms for urgency scoring
 router.post('/analyze', validate(analyzeTriageSchema), catchAsync(async (req: Request, res: Response) => {
   const { symptoms, age, existingConditions } = req.body;
   
@@ -18,8 +16,6 @@ router.post('/analyze', validate(analyzeTriageSchema), catchAsync(async (req: Re
     timestamp: new Date().toISOString()
   });
 }));
-
-// GET /api/triage/guidelines - Get triage guidelines
 router.get('/guidelines', (req: Request, res: Response) => {
   res.json({
     success: true,

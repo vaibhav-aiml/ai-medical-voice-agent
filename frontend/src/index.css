@@ -1,10 +1,5 @@
-/* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-/* Indian Language Font Support */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600;700&family=Noto+Sans+Kannada:wght@400;500;600;700&family=Noto+Sans+Malayalam:wght@400;500;600;700&family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap');
-
-/* Light Theme (Default) */
 :root {
   --bg-primary: #f0f9ff;
   --bg-secondary: #ffffff;
@@ -51,8 +46,6 @@
   --radius-xl: 20px;
   --radius-full: 9999px;
 }
-
-/* Dark Theme */
 [data-theme="dark"] {
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
@@ -113,8 +106,6 @@ body {
   position: relative;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
-
-/* Indian Language Font Classes */
 .lang-hi, .lang-mr { font-family: 'Noto Sans Devanagari', 'Mangal', 'Inter', 'Arial', sans-serif; }
 .lang-bn { font-family: 'Noto Sans Bengali', 'Shonar Bangla', 'Inter', 'Arial', sans-serif; }
 .lang-ta { font-family: 'Noto Sans Tamil', 'Latha', 'Inter', 'Arial', sans-serif; }
@@ -131,8 +122,6 @@ html[lang="te"] body { font-family: 'Noto Sans Telugu', 'Gautami', 'Inter', sans
 html[lang="kn"] body { font-family: 'Noto Sans Kannada', 'Tunga', 'Inter', sans-serif; }
 html[lang="ml"] body { font-family: 'Noto Sans Malayalam', 'Kartika', 'Inter', sans-serif; }
 html[lang="gu"] body { font-family: 'Noto Sans Gujarati', 'Shruti', 'Inter', sans-serif; }
-
-/* Subtle gradient overlay */
 body::before {
   content: '';
   position: fixed;
@@ -163,17 +152,10 @@ body::after {
 [data-theme="dark"] body::after { opacity: 0.06; }
 
 #root { position: relative; z-index: 1; }
-
-/* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
-
-/* ============================================
-   NAVIGATION STYLES - PILL SHAPED
-   ============================================ */
-
 .nav-pill {
   display: inline-flex;
   align-items: center;
@@ -207,11 +189,6 @@ body::after {
   background: var(--button-primary-hover);
   color: white !important;
 }
-
-/* ============================================
-   CARD STYLES - WITH GRADIENT BORDER ON HOVER
-   ============================================ */
-
 .card-gradient {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
@@ -243,11 +220,6 @@ body::after {
 .card-gradient:hover::before {
   opacity: 1;
 }
-
-/* ============================================
-   STAT CARDS - WITH COLORED ICON BACKGROUNDS
-   ============================================ */
-
 .stat-card-modern {
   display: flex;
   align-items: center;
@@ -311,11 +283,6 @@ body::after {
   padding: 2px 10px;
   border-radius: var(--radius-full);
 }
-
-/* ============================================
-   FEATURE CARD - MODERN
-   ============================================ */
-
 .feature-card-modern {
   padding: 32px 24px;
   background: var(--bg-card);
@@ -355,11 +322,6 @@ body::after {
   font-weight: 500;
   margin-top: 12px;
 }
-
-/* ============================================
-   STATUS BADGES - IMPROVED
-   ============================================ */
-
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -375,11 +337,6 @@ body::after {
 .status-cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); }
 .status-scheduled { background: var(--status-scheduled-bg); color: var(--status-scheduled-text); }
 .status-in-progress { background: var(--status-in-progress-bg); color: var(--status-in-progress-text); }
-
-/* ============================================
-   BUTTONS - IMPROVED
-   ============================================ */
-
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -422,11 +379,6 @@ body::after {
   color: var(--button-primary);
   transform: translateY(-2px);
 }
-
-/* ============================================
-   HERO SECTION
-   ============================================ */
-
 .hero-modern {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -472,11 +424,6 @@ body::after {
   line-height: 1.7;
   margin-bottom: 32px;
 }
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
 @media (max-width: 1024px) {
   .hero-modern {
     grid-template-columns: 1fr;
@@ -491,11 +438,6 @@ body::after {
   .stat-value-large { font-size: 22px; }
   .stat-card-modern { padding: 16px; }
 }
-
-/* ============================================
-   EXISTING STYLES - KEPT FOR COMPATIBILITY
-   ============================================ */
-
 .gradient-text {
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   -webkit-background-clip: text;
@@ -531,8 +473,6 @@ body::after {
 
 *:focus-visible { outline: 2px solid var(--button-primary); outline-offset: 2px; border-radius: 4px; }
 ::selection { background: var(--button-primary); color: white; }
-
-/* Keep existing classes for backward compatibility */
 .feature-card:hover,
 .report-card:hover {
   transform: translateY(-4px);
@@ -562,8 +502,6 @@ body::after {
 .hero-gradient { background: var(--hero-bg); }
 .nav-link { color: var(--text-secondary); transition: color 0.2s ease; }
 .nav-link:hover { color: var(--button-primary); }
-
-/* Language-specific */
 html[lang="hi"] .small-text,
 html[lang="mr"] .small-text,
 html[lang="bn"] .small-text,

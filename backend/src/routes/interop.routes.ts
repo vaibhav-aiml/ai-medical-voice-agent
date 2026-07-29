@@ -10,8 +10,6 @@ import logger from '../utils/logger';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
-
-// Retrieve all FHIR synchronization transaction logs
 router.get('/sync-logs', requireAuth, catchAsync(async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   logger.info('Fetching FHIR synchronization transaction logs', { userId });
@@ -24,8 +22,6 @@ router.get('/sync-logs', requireAuth, catchAsync(async (req: Request, res: Respo
 
   res.json(logs);
 }));
-
-// Run demographics reconciliation against remote EHR Patient resource
 router.post('/reconcile', requireAuth, catchAsync(async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   logger.info('Manual demographics reconciliation request received', { userId });
@@ -38,8 +34,6 @@ router.post('/reconcile', requireAuth, catchAsync(async (req: Request, res: Resp
     throw new AppError(err.message, 400);
   }
 }));
-
-// Manually trigger retry worker execution queue
 router.post('/retry', requireAuth, catchAsync(async (req: Request, res: Response) => {
   logger.info('Manual trigger request for sync queue retry worker');
   const result = await SyncQueueService.retryFailedSyncs();

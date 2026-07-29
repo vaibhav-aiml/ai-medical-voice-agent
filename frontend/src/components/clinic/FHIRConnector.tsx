@@ -14,30 +14,20 @@ interface Props {
 
 export default function FHIRConnector({ userId, onClose, consultations }: Props) {
   const { getToken } = useAuth();
-  
-  // Connection states
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<any>(null);
-  
-  // Forms/inputs
   const [provider, setProvider] = useState('smart');
   const [fhirServerUrl, setFhirServerUrl] = useState('https://launch.smarthealthit.org/v/r4/fhir');
   const [clientId, setClientId] = useState('mock-client-id');
   const [scope, setScope] = useState('launch/patient patient/*.read patient/*.write openid fhirUser');
-
-  // Fetched EHR data
   const [clinicalData, setClinicalData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'profile' | 'medications' | 'allergies' | 'vitals' | 'conditions' | 'appointments' | 'reports'>('profile');
   const [syncLoading, setSyncLoading] = useState<string | null>(null);
   const [syncStatusMap, setSyncStatusMap] = useState<Record<string, { success: boolean; id: string }>>({});
-  
-  // Real-time synchronization log and reconciliation states
   const [syncLogs, setSyncLogs] = useState<any[]>([]);
   const [reconciling, setReconciling] = useState(false);
   const [retryingQueue, setRetryingQueue] = useState(false);
-
-  // Preset sandboxes mapping for developer comfort
   const sandboxes: Record<string, { name: string; url: string; clientId: string }> = {
     smart: {
       name: 'SMART Health IT Sandbox',
@@ -63,8 +53,6 @@ export default function FHIRConnector({ userId, onClose, consultations }: Props)
 
   useEffect(() => {
     fetchConnectionStatus();
-    
-    // Listen for postMessage callback from popups
     const handleOauthMessage = (event: MessageEvent) => {
       if (event.data?.type === 'EHR_CONNECTED') {
         fetchConnectionStatus();
@@ -198,7 +186,7 @@ export default function FHIRConnector({ userId, onClose, consultations }: Props)
       });
       const data = await response.json();
       if (data.success && data.authorizationUrl) {
-        // Open authorization redirect in a popup
+        
         const width = 600;
         const height = 700;
         const left = window.screen.width / 2 - width / 2;
@@ -232,7 +220,7 @@ export default function FHIRConnector({ userId, onClose, consultations }: Props)
           ...prev,
           [consultationId]: { success: true, id: data.data.bundleId }
         }));
-        fetchSyncLogs(); // Refresh logs after successful manual sync
+        fetchSyncLogs(); 
       } else {
         alert('Sync failed: ' + (data.error || 'EHR rejection'));
       }
@@ -330,7 +318,7 @@ export default function FHIRConnector({ userId, onClose, consultations }: Props)
                 </div>
               </div>
 
-              {/* Aggregated Clinical Chart View */}
+              {}
               <div style={styles.clinicalSection}>
                 <h3>Real-Time EHR Patient Chart</h3>
                 
@@ -463,7 +451,7 @@ export default function FHIRConnector({ userId, onClose, consultations }: Props)
                 </div>
               </div>
 
-              {/* Consultation Synchronization List */}
+              {}
               <div style={styles.syncSection}>
                 <h3>Local Consultations Sync Dashboard</h3>
                 <div style={styles.syncList}>
@@ -502,7 +490,7 @@ export default function FHIRConnector({ userId, onClose, consultations }: Props)
                 </div>
               </div>
 
-              {/* FHIR Sync Audit & Logs */}
+              {}
               <div style={styles.syncSection}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3>FHIR Sync Audit & Logs</h3>
@@ -559,8 +547,6 @@ export default function FHIRConnector({ userId, onClose, consultations }: Props)
     </div>
   );
 }
-
-// Inline sleek styling aligning with vanilla CSS & glassmorphism details
 const styles = {
   overlay: {
     position: 'fixed' as const,

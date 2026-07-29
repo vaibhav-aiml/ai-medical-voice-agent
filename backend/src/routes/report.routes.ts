@@ -6,8 +6,6 @@ import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 
 const router = Router();
-
-// Get report by consultation ID
 router.get('/consultation/:consultationId', catchAsync(async (req: Request, res: Response) => {
   const { consultationId } = req.params;
   const report = await db.select()
@@ -20,12 +18,8 @@ router.get('/consultation/:consultationId', catchAsync(async (req: Request, res:
   
   res.json(report[0]);
 }));
-
-// Get all reports for a user (Clerk ID)
 router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.params; // Clerk ID
-  
-  // Find internal UUID for the Clerk user
+  const { userId } = req.params; 
   const dbUser = await db.select().from(users).where(eq(users.clerkId, userId as string));
   if (dbUser.length === 0) {
     return res.json([]);

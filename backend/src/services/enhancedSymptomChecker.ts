@@ -1,5 +1,3 @@
-// Enhanced Symptom Checker — Functional Module
-
 export interface Symptom {
   id: string;
   name: string;
@@ -122,8 +120,6 @@ const SYMPTOM_DATABASE = {
     redFlags: ['with fever', 'with difficulty breathing', 'with blistering', 'widespread rapid spread'],
   },
 };
-
-// Helper private functions
 function normalizeSymptom(symptom: string): string {
   const normalized = symptom.toLowerCase().trim();
   const mappings: Record<string, string> = {
@@ -462,8 +458,6 @@ function getSpecialistReferral(diagnosis: string): string | undefined {
   };
   return referrals[diagnosis];
 }
-
-// Main exported function
 export function analyzeSymptoms(
   symptoms: string[],
   durations: Record<string, string>,
@@ -522,8 +516,6 @@ export function analyzeSymptoms(
     specialistReferral,
   };
 }
-
-// Backward-compatible default export object
 export const enhancedSymptomChecker = {
   analyzeSymptoms,
 };

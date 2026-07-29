@@ -10,13 +10,6 @@ interface State {
   hasError: boolean;
   error: Error | null;
 }
-
-/**
- * Production-grade error boundary.
- * Catches render errors anywhere in the component tree and shows a
- * recovery UI instead of a white screen. Logs errors via the structured
- * logger for production diagnostics.
- */
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,

@@ -3,7 +3,7 @@ import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import BackButton from '../components/shared/BackButton';
 
 const AboutUs: React.FC = () => {
-  // Team members data - Updated with your team
+  
   const teamMembers = [
     {
       name: 'Vaibhav Badaya',
@@ -36,8 +36,6 @@ const AboutUs: React.FC = () => {
       }
     }
   ];
-
-  // Core values data - Professional version
   const coreValues = [
     {
       title: 'Technical Excellence',
@@ -63,16 +61,16 @@ const AboutUs: React.FC = () => {
 
   return (
     <div className="about-us-container">
-      {/* Back Button */}
+      {}
       <BackButton />
 
-      {/* Hero Section */}
+      {}
       <section className="hero-section">
         <h1>About Us</h1>
         <p>Transforming Healthcare with AI-Powered Voice Technology</p>
       </section>
 
-      {/* Company Story */}
+      {}
       <section className="story-section">
         <div className="container">
           <h2>Our Story</h2>
@@ -85,7 +83,7 @@ const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      {/* Mission & Vision */}
+      {}
       <section className="mission-section">
         <div className="container">
           <div className="mission-card">
@@ -99,7 +97,7 @@ const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      {/* Team Section */}
+      {}
       <section className="team-section">
         <div className="container">
           <h2>Meet Our Team</h2>
@@ -124,7 +122,7 @@ const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      {/* Values Section - Professional */}
+      {}
       <section className="values-section">
         <div className="container">
           <h2>Our Core Values</h2>
@@ -141,7 +139,7 @@ const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      {/* Contact CTA */}
+      {}
       <section className="contact-cta">
         <div className="container">
           <h2>Ready to Transform Healthcare?</h2>

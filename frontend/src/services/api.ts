@@ -14,7 +14,7 @@ export interface ConsultationData {
 }
 
 export const api = {
-  // Save consultation to database
+  
   async saveConsultation(data: ConsultationData) {
     try {
       const response = await apiClient.post('/consultations/save', data);
@@ -24,8 +24,6 @@ export const api = {
       throw error;
     }
   },
-
-  // Get user's consultations from database (deduplicated + auto-retry)
   async getUserConsultations(userId: string) {
     try {
       const response = await apiClient.get(`/consultations/user/${userId}`);
@@ -35,8 +33,6 @@ export const api = {
       return [];
     }
   },
-
-  // Get single consultation by ID
   async getConsultation(id: string) {
     try {
       const response = await apiClient.get(`/consultations/${id}`);
@@ -46,8 +42,6 @@ export const api = {
       return null;
     }
   },
-
-  // Delete consultation
   async deleteConsultation(id: string) {
     try {
       const response = await apiClient.delete(`/consultations/${id}`);

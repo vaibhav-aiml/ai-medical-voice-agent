@@ -3,16 +3,16 @@ import BackButton from '../components/shared/BackButton';
 export default function HIPAACompliance() {
   return (
     <div className="hipaa-compliance-container">
-      {/* Back Button */}
+      {}
       <BackButton />
 
-      {/* Hero Section */}
+      {}
       <section className="hero-section">
         <h1>HIPAA Compliance</h1>
         <p>Your Health Information Privacy is Our Priority</p>
       </section>
 
-      {/* Content Sections */}
+      {}
       <div className="container hipaa-content">
         <section className="hipaa-card">
           <h2>What is HIPAA?</h2>

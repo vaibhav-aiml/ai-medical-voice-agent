@@ -3,8 +3,6 @@ import { reportGenerator, ConsultationReport, SOAPData } from '../services/repor
 import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
-
-// Generate SOAP report PDF
 router.post('/generate-soap', async (req: Request, res: Response) => {
   try {
     const consultationData = req.body;
@@ -76,8 +74,6 @@ router.post('/generate-soap', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Failed to generate report', details: String(error) });
   }
 });
-
-// Preview report (HTML format for browser viewing)
 router.post('/preview', async (req: Request, res: Response) => {
   try {
     const consultationData = req.body;
@@ -339,8 +335,6 @@ router.post('/preview', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Failed to generate preview', details: String(error) });
   }
 });
-
-// Generate and send report via email
 router.post('/generate-and-email', async (req: Request, res: Response) => {
   try {
     const consultationData = req.body;

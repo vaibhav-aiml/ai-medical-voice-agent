@@ -1,6 +1,5 @@
-// WhatsApp message templates
 export const WhatsAppTemplates = {
-  // Consultation Summary Template
+  
   consultationSummary: (patientName: string, specialistName: string, symptoms: string, date: Date, reportUrl: string) => {
     return `🏥 *MediVoice AI - Consultation Summary*
 
@@ -25,8 +24,6 @@ _This is an AI-generated summary. For medical emergencies, please contact emerge
 Stay healthy! 🌟
 `;
   },
-
-  // Appointment Reminder Template
   appointmentReminder: (patientName: string, specialistName: string, date: Date, time: string, consultationLink: string) => {
     return `🔔 *MediVoice AI - Appointment Reminder*
 
@@ -53,8 +50,6 @@ Need to reschedule? Visit your dashboard.
 Thank you for choosing MediVoice AI! 🌟
 `;
   },
-
-  // Report Ready Template
   reportReady: (patientName: string, consultationId: string, reportUrl: string) => {
     return `📄 *MediVoice AI - Your Report is Ready*
 
@@ -76,8 +71,6 @@ Start a new consultation or reply to this message.
 Thank you for trusting MediVoice AI! 🏥
 `;
   },
-
-  // Prescription Ready Template
   prescriptionReady: (patientName: string, medication: string, pharmacyLink: string) => {
     return `💊 *MediVoice AI - Prescription Ready*
 
@@ -98,28 +91,18 @@ Stay healthy! 🌟
 `;
   },
 };
-
-// WhatsApp sharing function
 export const shareOnWhatsApp = (message: string, phoneNumber?: string) => {
-  // Remove spaces from phone number if provided
+  
   const formattedNumber = phoneNumber ? phoneNumber.replace(/\s/g, '') : '';
-  
-  // Encode message for URL
   const encodedMessage = encodeURIComponent(message);
-  
-  // Create WhatsApp URL
   let whatsappUrl;
   if (formattedNumber) {
     whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodedMessage}`;
   } else {
     whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
   }
-  
-  // Open WhatsApp in new tab
   window.open(whatsappUrl, '_blank');
 };
-
-// Send consultation summary via WhatsApp
 export const sendConsultationSummary = (
   patientName: string,
   specialistName: string,
@@ -131,8 +114,6 @@ export const sendConsultationSummary = (
   const message = WhatsAppTemplates.consultationSummary(patientName, specialistName, symptoms, date, reportUrl);
   shareOnWhatsApp(message, phoneNumber);
 };
-
-// Send appointment reminder via WhatsApp
 export const sendAppointmentReminder = (
   patientName: string,
   specialistName: string,
@@ -144,8 +125,6 @@ export const sendAppointmentReminder = (
   const message = WhatsAppTemplates.appointmentReminder(patientName, specialistName, date, time, consultationLink);
   shareOnWhatsApp(message, phoneNumber);
 };
-
-// Send report ready notification via WhatsApp
 export const sendReportReadyNotification = (
   patientName: string,
   consultationId: string,

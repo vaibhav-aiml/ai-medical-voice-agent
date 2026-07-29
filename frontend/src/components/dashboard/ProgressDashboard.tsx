@@ -40,7 +40,7 @@ export default function ProgressDashboard({ onClose }: Props) {
       const parsed = JSON.parse(saved);
       setHealthData(parsed.sort((a: HealthData, b: HealthData) => new Date(a.date).getTime() - new Date(b.date).getTime()));
     } else {
-      // Generate mock data for demo
+      
       const mockData: HealthData[] = [];
       for (let i = 6; i >= 0; i--) {
         const date = new Date();
@@ -167,7 +167,7 @@ export default function ProgressDashboard({ onClose }: Props) {
         <div style={styles.content}>
           {activeTab === 'health' && (
             <>
-              {/* Summary Cards */}
+              {}
               <div style={styles.summaryGrid}>
                 <div style={styles.summaryCard}>
                   <Droplet size={20} color="#3b82f6" />
@@ -211,7 +211,7 @@ export default function ProgressDashboard({ onClose }: Props) {
                 </div>
               </div>
 
-              {/* Mood Tracker */}
+              {}
               <div style={styles.section}>
                 <h3>Mood Tracker</h3>
                 <div style={styles.moodGrid}>
@@ -224,7 +224,7 @@ export default function ProgressDashboard({ onClose }: Props) {
                 </div>
               </div>
 
-              {/* Weekly Progress Bars */}
+              {}
               <div style={styles.section}>
                 <h3>Weekly Progress</h3>
                 {['water', 'steps', 'sleep', 'calories'].map(metric => (

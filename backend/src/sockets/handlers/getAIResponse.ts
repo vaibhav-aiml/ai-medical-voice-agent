@@ -38,8 +38,6 @@ export function registerGetAIResponseHandler(socket: Socket, groq: Groq | null) 
       specialistType,
       language
     });
-
-    // Async emotion detection in background
     handleSocketEmotionDetection(socket, transcript, consultationId);
     
     const systemPrompt = getSystemPrompt(specialistType, undefined, language);
@@ -70,7 +68,7 @@ export function registerGetAIResponseHandler(socket: Socket, groq: Groq | null) 
     }
     
     try {
-      // Redact PHI from messages before sending to Groq/OpenAI
+      
       const redactedMessages = await Promise.all(messages.map(async (msg) => {
         if (msg.role === 'user') {
           const cleanContent = await phiService.prepareTextForAI(msg.content, 'socket-user', consultationId);

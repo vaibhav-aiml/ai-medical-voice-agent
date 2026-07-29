@@ -184,7 +184,7 @@ export default function DataExport({ onClose }: Props) {
         </div>
 
         <div style={styles.content}>
-          {/* Export Format Selection */}
+          {}
           <div style={styles.section}>
             <h3>Export Format</h3>
             <div style={styles.formatSelector}>
@@ -205,7 +205,7 @@ export default function DataExport({ onClose }: Props) {
             </div>
           </div>
 
-          {/* Data Selection */}
+          {}
           <div style={styles.section}>
             <h3>Select Data to Export</h3>
             <div style={styles.checkboxGrid}>
@@ -276,7 +276,7 @@ export default function DataExport({ onClose }: Props) {
             </div>
           </div>
 
-          {/* Export Summary */}
+          {}
           <div style={styles.summaryCard}>
             <Database size={20} color="#3b82f6" />
             <div>
@@ -287,7 +287,7 @@ export default function DataExport({ onClose }: Props) {
             </div>
           </div>
 
-          {/* Export Button */}
+          {}
           <button
             onClick={handleExport}
             disabled={exporting || getTotalRecords() === 0}
@@ -302,7 +302,7 @@ export default function DataExport({ onClose }: Props) {
             )}
           </button>
 
-          {/* Danger Zone */}
+          {}
           <div style={styles.dangerZone}>
             <h3 style={styles.dangerTitle}>⚠️ Danger Zone</h3>
             <p style={styles.dangerText}>

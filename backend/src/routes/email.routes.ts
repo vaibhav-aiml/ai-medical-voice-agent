@@ -2,8 +2,6 @@ import { Router } from 'express';
 import { sendTestEmail, sendMedicalReportEmail } from '../services/email.service';
 
 const router = Router();
-
-// Test email endpoint
 router.post('/test', async (req, res) => {
   console.log('📧 Test email request received');
   try {
@@ -20,8 +18,6 @@ router.post('/test', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// Send medical report email
 router.post('/send-report', async (req, res) => {
   console.log('📧 Send report request received');
   try {

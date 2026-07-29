@@ -85,8 +85,6 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
     utterance.rate = settings.rate;
     utterance.pitch = settings.pitch;
     utterance.volume = settings.volume;
-    
-    // Try to set voice
     if (settings.voice !== 'default') {
       const voices = window.speechSynthesis.getVoices();
       const selectedVoiceObj = voices.find(v => v.name.toLowerCase().includes(settings.voice.split('-')[1] || ''));
@@ -127,7 +125,7 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
         </div>
 
         <div style={styles.content}>
-          {/* Enable Voice */}
+          {}
           <div style={styles.settingCard}>
             <div style={styles.settingHeader}>
               <div style={styles.settingIcon}>
@@ -148,7 +146,7 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
             </div>
           </div>
 
-          {/* Auto Speak */}
+          {}
           <div style={styles.settingCard}>
             <div style={styles.settingHeader}>
               <div style={styles.settingIcon}>
@@ -169,7 +167,7 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
             </div>
           </div>
 
-          {/* Voice Selection */}
+          {}
           <div style={styles.section}>
             <h3>Voice Selection</h3>
             <div style={styles.voiceGrid}>
@@ -200,7 +198,7 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
             </div>
           </div>
 
-          {/* Speed Control */}
+          {}
           <div style={styles.section}>
             <h3>Speech Rate</h3>
             <div style={styles.sliderContainer}>
@@ -219,7 +217,7 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
             <div style={styles.valueDisplay}>{settings.rate}x</div>
           </div>
 
-          {/* Pitch Control */}
+          {}
           <div style={styles.section}>
             <h3>Pitch</h3>
             <div style={styles.sliderContainer}>
@@ -238,7 +236,7 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
             <div style={styles.valueDisplay}>{settings.pitch}x</div>
           </div>
 
-          {/* Volume Control */}
+          {}
           <div style={styles.section}>
             <h3>Volume</h3>
             <div style={styles.sliderContainer}>
@@ -257,7 +255,7 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
             <div style={styles.valueDisplay}>{Math.round(settings.volume * 100)}%</div>
           </div>
 
-          {/* Test Section */}
+          {}
           <div style={styles.section}>
             <h3>Test Voice</h3>
             <div style={styles.testSection}>
@@ -282,7 +280,7 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
             </div>
           </div>
 
-          {/* Info Box */}
+          {}
           <div style={styles.infoBox}>
             <p>💡 <strong>Tip:</strong> Voice features work best in Chrome, Edge, or Safari. Make sure your device volume is turned up!</p>
           </div>
@@ -500,8 +498,6 @@ const styles = {
     color: 'var(--text-secondary)',
   },
 };
-
-// Add slider styles
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
   input[type="range"] {

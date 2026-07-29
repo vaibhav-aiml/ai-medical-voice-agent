@@ -6,8 +6,6 @@ interface LoadingScreenProps {
 
 export default function LoadingScreen({ message = 'Loading secure portal...' }: LoadingScreenProps) {
   const [dots, setDots] = useState('');
-
-  // Subtle animated loading dots
   useEffect(() => {
     const interval = setInterval(() => {
       setDots((prev) => (prev.length >= 3 ? '' : prev + '.'));
@@ -23,7 +21,7 @@ export default function LoadingScreen({ message = 'Loading secure portal...' }: 
       aria-label="Loading application"
     >
       <div style={styles.card}>
-        {/* Animated Medical Logo Wrapper */}
+        {}
         <div style={styles.logoWrapper}>
           <svg 
             width="64" 
@@ -36,26 +34,26 @@ export default function LoadingScreen({ message = 'Loading secure portal...' }: 
             strokeLinejoin="round" 
             style={styles.logoSvg}
           >
-            {/* Heart shape */}
+            {}
             <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-            {/* Medical Cross in the center */}
+            {}
             <path d="M12 9v6" style={styles.crossPath} />
             <path d="M9 12h6" style={styles.crossPath} />
           </svg>
-          {/* Circular rotating gradient ring */}
+          {}
           <div style={styles.spinnerRing}></div>
         </div>
 
-        {/* Brand Text */}
+        {}
         <h1 style={styles.title}>🏥 AI Medical Voice Agent</h1>
         
-        {/* Loading Message */}
+        {}
         <p style={styles.message}>
           {message}
           <span style={styles.dots}>{dots}</span>
         </p>
 
-        {/* Security / Compliance Badge */}
+        {}
         <div style={styles.badge}>
           <svg 
             width="12" 
@@ -73,7 +71,7 @@ export default function LoadingScreen({ message = 'Loading secure portal...' }: 
         </div>
       </div>
 
-      {/* Embedded CSS animations */}
+      {}
       <style>{`
         @keyframes rotateSpinner {
           0% { transform: rotate(0deg); }

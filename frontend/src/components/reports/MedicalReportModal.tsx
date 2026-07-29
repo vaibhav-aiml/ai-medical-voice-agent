@@ -21,7 +21,7 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [generatedPdfData, setGeneratedPdfData] = useState<string>('');
   const [reportData, setReportData] = useState<any>(null);
-  const [showWhatsAppShare, setShowWhatsAppShare] = useState(false); // Only declare once
+  const [showWhatsAppShare, setShowWhatsAppShare] = useState(false); 
   const [showEMRExport, setShowEMRExport] = useState(false);
 
   const handleGeneratePDF = async () => {

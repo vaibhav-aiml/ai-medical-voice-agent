@@ -1,5 +1,3 @@
-// RAG (Retrieval-Augmented Generation) Medical Knowledge Base — Functional Module
-
 export interface MedicalKnowledge {
   id: string;
   condition: string;
@@ -176,8 +174,6 @@ const MEDICAL_KNOWLEDGE_BASE: MedicalKnowledge[] = [
     confidence: 0.93
   }
 ];
-
-// Exported functional methods
 export function searchKnowledge(symptoms: string, limit: number = 3): MedicalKnowledge[] {
   const lowerSymptoms = symptoms.toLowerCase();
   const scoredResults: { knowledge: MedicalKnowledge; score: number }[] = [];
@@ -257,8 +253,6 @@ Signs of medical emergency include:
 
 Do not wait. Seek immediate medical attention.`;
 }
-
-// Backward-compatible default export object
 export const ragKnowledgeBase = {
   searchKnowledge,
   getConditionAdvice,

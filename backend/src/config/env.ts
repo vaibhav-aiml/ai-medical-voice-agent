@@ -1,18 +1,14 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
 import path from 'path';
-
-// Load .env before validation
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const envSchema = z.object({
-  // Required — server will not start without these
+  
   PORT: z.string().default('3000'),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   CLERK_SECRET_KEY: z.string().min(1, 'CLERK_SECRET_KEY is required'),
   GROQ_API_KEY: z.string().min(1, 'GROQ_API_KEY is required'),
-
-  // Optional — server starts but features may be limited
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   OPENAI_API_KEY: z.string().optional(),
   ASSEMBLYAI_API_KEY: z.string().optional(),
@@ -25,7 +21,7 @@ const envSchema = z.object({
   EMAIL_PASS: z.string().optional(),
   FRONTEND_URL: z.string().optional(),
   KEEP_AWAKE_URL: z.string().optional(),
-  KEEP_AWAKE_INTERVAL: z.string().default('840000'), // 14 minutes in milliseconds
+  KEEP_AWAKE_INTERVAL: z.string().default('840000'), 
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -50,8 +46,6 @@ function validateEnv(): Env {
     console.error('\nPlease check your .env file and ensure all required variables are set.\n');
     process.exit(1);
   }
-
-  // Warn about optional vars that are missing
   const env = result.data;
   const optionalWarnings: string[] = [];
 

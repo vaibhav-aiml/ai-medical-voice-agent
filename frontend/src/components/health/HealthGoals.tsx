@@ -82,7 +82,7 @@ export default function HealthGoals({ onClose }: Props) {
       const parsed = JSON.parse(saved);
       setGoals(parsed.map((g: any) => ({ ...g, deadline: new Date(g.deadline), createdAt: new Date(g.createdAt) })));
     } else {
-      // Default goals
+      
       const defaultGoals: Goal[] = [
         {
           id: '1',
@@ -150,8 +150,6 @@ export default function HealthGoals({ onClose }: Props) {
 
   const saveDailyLog = (log: DailyLog) => {
     localStorage.setItem('dailyHealthLog', JSON.stringify(log));
-    
-    // Add to history
     const existingHistory = JSON.parse(localStorage.getItem('dailyHealthLogs') || '[]');
     const existingIndex = existingHistory.findIndex((h: DailyLog) => h.date === log.date);
     if (existingIndex >= 0) {
@@ -240,7 +238,7 @@ export default function HealthGoals({ onClose }: Props) {
         </div>
 
         <div style={styles.content}>
-          {/* Daily Log Section */}
+          {}
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
               <h3>📝 Today's Log - {new Date().toLocaleDateString()}</h3>

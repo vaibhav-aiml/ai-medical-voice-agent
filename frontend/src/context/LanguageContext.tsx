@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-// Import JSON files directly
 import enTranslations from '../translations/en.json';
 import hiTranslations from '../translations/hi.json';
 import taTranslations from '../translations/ta.json';
@@ -34,8 +32,6 @@ const availableLanguages = [
   { code: 'kn' as Language, name: 'Kannada', nativeName: 'ಕನ್ನಡ', flag: '🇮🇳' },
   { code: 'ml' as Language, name: 'Malayalam', nativeName: 'മലയാളം', flag: '🇮🇳' },
 ];
-
-// Helper function to flatten nested objects
 const flattenObject = (obj: any, prefix = ''): Record<string, string> => {
   const result: Record<string, string> = {};
   
@@ -51,8 +47,6 @@ const flattenObject = (obj: any, prefix = ''): Record<string, string> => {
   }
   return result;
 };
-
-// Flatten all translations
 const translations: Record<Language, Record<string, string>> = {
   en: flattenObject(enTranslations),
   hi: flattenObject(hiTranslations),

@@ -42,9 +42,6 @@ export interface EMRStructuredReport {
 }
 
 export class EMRExportService {
-  /**
-   * Fetch elements and build a unified structured clinical report
-   */
   static async exportStructuredJSON(userId: string, consultationId: string): Promise<EMRStructuredReport> {
     logger.info('Compiling unified structured clinical EMR report', { consultationId });
 
@@ -68,7 +65,7 @@ export class EMRExportService {
         clerkId: user.clerkId,
         name: user.name || 'MediVoice Patient',
         email: user.email,
-        gender: user.phone || 'U', // fallback or placeholder
+        gender: user.phone || 'U', 
         birthDate: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString() : null
       },
       consultation: {
@@ -97,10 +94,6 @@ export class EMRExportService {
       } : null
     };
   }
-
-  /**
-   * Generates a standard HL7 ORU^R01 message string for a consultation
-   */
   static async exportHL7(userId: string, consultationId: string): Promise<string> {
     const data = await this.exportStructuredJSON(userId, consultationId);
     
@@ -123,10 +116,6 @@ export class EMRExportService {
 
     return HL7Service.generateORU(patientData, consultData, diagnosis);
   }
-
-  /**
-   * Generates a standard FHIR Transaction Bundle
-   */
   static async exportFHIRBundle(userId: string, consultationId: string): Promise<any> {
     const data = await this.exportStructuredJSON(userId, consultationId);
     const patientRef = `Patient/${data.patient.clerkId}`;
@@ -204,10 +193,6 @@ export class EMRExportService {
       ]
     };
   }
-
-  /**
-   * Generates a standard FHIR resource (provisional Condition assessment)
-   */
   static async exportFHIRJSON(userId: string, consultationId: string): Promise<any> {
     const data = await this.exportStructuredJSON(userId, consultationId);
     return {
@@ -220,10 +205,6 @@ export class EMRExportService {
       onsetDateTime: new Date(data.consultation.startedAt).toISOString()
     };
   }
-
-  /**
-   * Streams/renders standard SOAP clinical report PDF
-   */
   static async exportPDF(userId: string, consultationId: string): Promise<Buffer> {
     const data = await this.exportStructuredJSON(userId, consultationId);
 

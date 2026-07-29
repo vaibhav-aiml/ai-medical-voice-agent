@@ -5,9 +5,6 @@ import { FHIRService } from './fhirService';
 import logger from '../utils/logger';
 
 export class SyncQueueService {
-  /**
-   * Log a synchronization attempt in the database
-   */
   static async logSyncAttempt(
     userId: string,
     consultationId: string,
@@ -17,7 +14,7 @@ export class SyncQueueService {
     error?: string
   ): Promise<void> {
     try {
-      // Check if sync log already exists for this consultation & resource
+      
       const existing = await db
         .select()
         .from(fhirSyncLogs)
@@ -59,10 +56,6 @@ export class SyncQueueService {
       logger.error('Failed to write sync log entry', { error: err.message });
     }
   }
-
-  /**
-   * Worker task: Retrieves failed sync logs and re-attempts synchronization
-   */
   static async retryFailedSyncs(): Promise<{ processed: number; succeeded: number }> {
     logger.info('Starting sync queue background worker execution');
 
@@ -80,10 +73,8 @@ export class SyncQueueService {
       
       try {
         logger.info(`Retrying synchronization for consultation: ${log.consultationId}`);
-        // Attempt FHIR Bundle sync
-        await FHIRService.syncConsultationToFHIR(log.userId, log.consultationId);
         
-        // Update log on success
+        await FHIRService.syncConsultationToFHIR(log.userId, log.consultationId);
         await db
           .update(fhirSyncLogs)
           .set({

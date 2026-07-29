@@ -120,8 +120,8 @@ export const generatePDFReport = async (reportData: ReportData): Promise<void> =
       format: 'a4',
     });
     
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
+    const imgWidth = 210; 
+    const pageHeight = 297; 
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     let heightLeft = imgHeight;
     let position = 0;
@@ -216,7 +216,7 @@ export const generateMockReportData = (consultationId: string, specialistType: s
   return {
     id: `REPORT_${Date.now()}`,
     consultationId: consultationId,
-    patientName: 'Patient Name', // You can get this from auth
+    patientName: 'Patient Name', 
     specialistType: specialistType,
     specialistName: `${specialistType.charAt(0).toUpperCase() + specialistType.slice(1)} Specialist`,
     date: new Date(),
@@ -225,7 +225,7 @@ export const generateMockReportData = (consultationId: string, specialistType: s
     recommendations: recommendationsMap[specialistType] || recommendationsMap.general,
     medications: medicationsMap[specialistType] || medicationsMap.general,
     followUpNeeded: true,
-    followUpDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days later
+    followUpDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
     duration: Math.floor(Math.random() * 20) + 10,
     notes: 'Patient advised to monitor symptoms and follow recommendations. Schedule follow-up if symptoms persist or worsen.',
   };

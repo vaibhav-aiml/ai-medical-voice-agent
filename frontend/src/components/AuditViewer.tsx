@@ -6,7 +6,7 @@ const AuditViewer: React.FC = () => {
   const [filter, setFilter] = useState('');
 
   useEffect(() => {
-    // Load logs (admin only)
+    
     const loadLogs = async () => {
       const stored = localStorage.getItem('audit_logs');
       if (stored) {

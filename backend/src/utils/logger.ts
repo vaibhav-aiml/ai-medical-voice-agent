@@ -20,8 +20,6 @@ const logger = winston.createLogger({
     new winston.transports.Console(),
   ],
 });
-
-// Never log sensitive data
 export function sanitizeForLog(obj: Record<string, any>): Record<string, any> {
   const sensitiveKeys = ['password', 'token', 'apiKey', 'api_key', 'secret', 'authorization', 'cookie', 'email_pass'];
   const sanitized: Record<string, any> = {};

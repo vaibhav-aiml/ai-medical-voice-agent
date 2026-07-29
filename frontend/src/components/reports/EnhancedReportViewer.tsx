@@ -30,15 +30,13 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
   const [activeTab, setActiveTab] = useState<'preview' | 'download'>('preview');
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-
-  // ✅ ADD THIS - Full backend URL
   const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
 
   const generatePreview = async () => {
     setIsGenerating(true);
     setError(null);
     try {
-      // ✅ Use full URL
+      
       const response = await fetch(`${API_URL}/api/enhanced-report/preview`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,7 +61,7 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
     setIsGenerating(true);
     setError(null);
     try {
-      // Prepare complete data for PDF
+      
       const reportPayload = {
         patientId: consultationData.patientId || 'unknown',
         patientName: consultationData.patientName || 'Patient',
@@ -92,8 +90,6 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
           'Seek medical attention if symptoms worsen'
         ]
       };
-      
-      // ✅ Use full URL
       const response = await fetch(`${API_URL}/api/enhanced-report/generate-soap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -106,8 +102,6 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
       }
       
       const blob = await response.blob();
-      
-      // Check if blob is actually a PDF
       if (blob.type !== 'application/pdf') {
         console.warn('Response is not PDF, type:', blob.type);
       }
@@ -136,7 +130,7 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
     setIsGenerating(true);
     setError(null);
     try {
-      // ✅ Use full URL
+      
       const response = await fetch(`${API_URL}/api/enhanced-report/generate-and-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -180,7 +174,7 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
           </button>
         </div>
 
-        {/* Error Message */}
+        {}
         {error && (
           <div style={styles.errorMessage}>
             <span>❌ Error: {error}</span>
@@ -188,7 +182,7 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
           </div>
         )}
 
-        {/* Tabs */}
+        {}
         <div style={styles.tabs}>
           <button
             onClick={() => setActiveTab('preview')}

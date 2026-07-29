@@ -21,13 +21,13 @@ const getEmotionEmoji = (emotion: string): string => {
 
 const getEmotionColor = (emotion: string): string => {
   const colorMap: Record<string, string> = {
-    stress: '#f59e0b', // orange
-    anxiety: '#8b5cf6', // purple
-    happiness: '#10b981', // green
-    sadness: '#3b82f6', // blue
-    anger: '#ef4444', // red
-    fear: '#ec4899', // pink
-    neutral: '#6b7280', // gray
+    stress: '#f59e0b', 
+    anxiety: '#8b5cf6', 
+    happiness: '#10b981', 
+    sadness: '#3b82f6', 
+    anger: '#ef4444', 
+    fear: '#ec4899', 
+    neutral: '#6b7280', 
   };
   return colorMap[emotion] || '#6b7280';
 };

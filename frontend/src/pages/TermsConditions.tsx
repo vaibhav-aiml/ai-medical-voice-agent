@@ -3,16 +3,16 @@ import BackButton from '../components/shared/BackButton';
 export default function TermsConditions() {
   return (
     <div className="terms-conditions-container">
-      {/* Back Button */}
+      {}
       <BackButton />
 
-      {/* Hero Section */}
+      {}
       <section className="hero-section">
         <h1>Terms & Conditions</h1>
         <p>Please read these terms carefully before using our platform.</p>
       </section>
 
-      {/* Content Sections */}
+      {}
       <div className="container terms-content">
         <section className="terms-card">
           <h2>1. Acceptance of Terms</h2>
@@ -55,7 +55,7 @@ export default function TermsConditions() {
         </section>
       </div>
 
-      {/* Closing CTA Contact Section */}
+      {}
       <section className="contact-cta-section">
         <div className="container">
           <h2>8. Contact Us</h2>

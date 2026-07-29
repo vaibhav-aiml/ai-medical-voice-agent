@@ -3,8 +3,6 @@ import { db } from '../config/database';
 import { fhirConnections, consultations, voiceSessions, medicalReports, users } from '../db/schema/index';
 import { eq } from 'drizzle-orm';
 import logger from '../utils/logger';
-
-// Type definitions for FHIR R4 standard structures
 export interface FHIRConnectionInfo {
   id: string;
   userId: string;
@@ -15,8 +13,6 @@ export interface FHIRConnectionInfo {
   refreshToken: string | null;
   tokenExpiresAt: Date | null;
 }
-
-// FHIR Resource Interfaces
 export interface FHIRPatient {
   resourceType: 'Patient';
   id?: string;
@@ -160,8 +156,6 @@ export interface FHIRDiagnosticReport {
   issued?: string;
   conclusion?: string;
 }
-
-// SMART well-known configuration format
 export interface SMARTConfig {
   authorization_endpoint: string;
   token_endpoint: string;
@@ -170,9 +164,6 @@ export interface SMARTConfig {
 }
 
 export class FHIRService {
-  /**
-   * Fetch OAuth metadata using SMART Discovery
-   */
   static async discoverEndpoints(fhirServerUrl: string): Promise<SMARTConfig> {
     try {
       const wellKnownUrl = `${fhirServerUrl.replace(/\/$/, '')}/.well-known/smart-configuration`;
@@ -181,7 +172,7 @@ export class FHIRService {
       return response.data;
     } catch (error: any) {
       logger.warn('Failed to fetch SMART config, falling back to conformance statement', { error: error.message });
-      // Fallback: Query capability statement
+      
       const capabilityUrl = `${fhirServerUrl.replace(/\/$/, '')}/metadata`;
       const response = await axios.get(capabilityUrl, { timeout: 5000 });
       const rest = response.data?.rest?.[0];
@@ -199,10 +190,6 @@ export class FHIRService {
       };
     }
   }
-
-  /**
-   * Retrieves user connection from Database
-   */
   static async getConnection(userId: string): Promise<FHIRConnectionInfo | null> {
     const results = await db.select()
       .from(fhirConnections)
@@ -211,10 +198,6 @@ export class FHIRService {
     if (results.length === 0) return null;
     return results[0] as FHIRConnectionInfo;
   }
-
-  /**
-   * Exchange OAuth auth code for Access Token
-   */
   static async exchangeAuthorizationCode(
     userId: string,
     provider: string,
@@ -275,10 +258,6 @@ export class FHIRService {
       return inserted[0] as FHIRConnectionInfo;
     }
   }
-
-  /**
-   * Refreshes access token using Refresh Token
-   */
   static async refreshAccessToken(connection: FHIRConnectionInfo): Promise<FHIRConnectionInfo> {
     if (!connection.refreshToken) {
       throw new Error('No refresh token available to refresh session');
@@ -288,7 +267,7 @@ export class FHIRService {
     const params = new URLSearchParams();
     params.append('grant_type', 'refresh_token');
     params.append('refresh_token', connection.refreshToken);
-    params.append('client_id', 'mock-client-id'); // Use config value in production
+    params.append('client_id', 'mock-client-id'); 
 
     logger.info('Refreshing expired SMART access token', { userId: connection.userId });
     const response = await axios.post(endpoints.token_endpoint, params, {
@@ -313,10 +292,6 @@ export class FHIRService {
 
     return updated[0] as FHIRConnectionInfo;
   }
-
-  /**
-   * Secure REST helper with automatic token refreshing
-   */
   static async requestFHIR(connection: FHIRConnectionInfo, urlPath: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', data?: any): Promise<any> {
     let conn = connection;
     if (conn.tokenExpiresAt && new Date(conn.tokenExpiresAt) <= new Date()) {
@@ -352,9 +327,6 @@ export class FHIRService {
       throw error;
     }
   }
-
-  // --- CRUD FHIR OPERATIONS ---
-
   static async getPatient(userId: string): Promise<FHIRPatient> {
     const conn = await this.getConnection(userId);
     if (!conn) throw new Error('EHR patient connection not established');
@@ -445,7 +417,7 @@ export class FHIRService {
     const conn = await this.getConnection(userId);
     if (!conn) return [];
     try {
-      // Fetch Encounters to extract doctor references or search directly
+      
       const data = await this.requestFHIR(conn, '/Practitioner');
       return (data.entry || []).map((e: any) => e.resource);
     } catch {
@@ -463,10 +435,6 @@ export class FHIRService {
       return [];
     }
   }
-
-  /**
-   * Retrieves aggregated clinical data bundle
-   */
   static async getClinicalData(userId: string): Promise<{
     patient: FHIRPatient | null;
     appointments: FHIRAppointment[];
@@ -490,15 +458,9 @@ export class FHIRService {
 
     return { patient, appointments, medications, allergies, observations, conditions, encounters, reports };
   }
-
-  /**
-   * Synchronizes consultation clinical records to target EHR as standard FHIR R4 Bundle
-   */
   static async syncConsultationToFHIR(userId: string, consultationId: string): Promise<{ success: boolean; bundleId?: string }> {
     const conn = await this.getConnection(userId);
     if (!conn) throw new Error('EHR patient connection not established');
-
-    // Fetch local database details
     const consultationList = await db.select().from(consultations).where(eq(consultations.id, consultationId));
     if (consultationList.length === 0) throw new Error('Consultation record not found');
     const consultation = consultationList[0];
@@ -511,14 +473,12 @@ export class FHIRService {
 
     const patientRef = `Patient/${conn.patientId}`;
     const timestampStr = new Date().toISOString();
-
-    // 1. Encounter resource
     const encounter: FHIREncounter = {
       resourceType: 'Encounter',
       status: 'finished',
       class: {
         system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
-        code: 'AMB', // Ambulatory / outpatient clinic
+        code: 'AMB', 
         display: 'ambulatory'
       },
       subject: { reference: patientRef },
@@ -527,8 +487,6 @@ export class FHIRService {
         end: consultation.endedAt ? new Date(consultation.endedAt).toISOString() : timestampStr
       }
     };
-
-    // 2. Symptoms as Observation resource
     const symptomsObs: FHIRObservation = {
       resourceType: 'Observation',
       status: 'final',
@@ -544,8 +502,6 @@ export class FHIRService {
       effectiveDateTime: timestampStr,
       valueString: consultation.symptoms || 'No symptoms reported'
     };
-
-    // 3. Assessment Diagnosis as Condition resource
     const condition: FHIRCondition = {
       resourceType: 'Condition',
       clinicalStatus: {
@@ -566,8 +522,6 @@ export class FHIRService {
       subject: { reference: patientRef },
       onsetDateTime: timestampStr
     };
-
-    // 4. Clinical Report DocumentReference
     const docRef = {
       resourceType: 'DocumentReference',
       status: 'current',
@@ -599,8 +553,6 @@ export class FHIRService {
         }
       ]
     };
-
-    // Create a transaction bundle
     const bundle = {
       resourceType: 'Bundle',
       type: 'transaction',
@@ -627,8 +579,6 @@ export class FHIRService {
     try {
       logger.info('Uploading consultation FHIR transaction bundle', { consultationId });
       const response = await this.requestFHIR(conn, '/', 'POST', bundle);
-      
-      // Log successful sync attempt
       const { SyncQueueService } = await import('./syncQueueService');
       await SyncQueueService.logSyncAttempt(userId, consultationId, 'Bundle', 'success', 'automatic');
 
@@ -637,7 +587,7 @@ export class FHIRService {
         bundleId: response.id || 'transaction-completed'
       };
     } catch (err: any) {
-      // Log failed sync attempt
+      
       const { SyncQueueService } = await import('./syncQueueService');
       await SyncQueueService.logSyncAttempt(userId, consultationId, 'Bundle', 'failed', 'automatic', err.message);
       throw err;

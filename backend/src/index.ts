@@ -1,4 +1,3 @@
-// Env validation must happen before anything else imports env vars
 import './config/env';
 import crypto from 'crypto';
 
@@ -9,8 +8,6 @@ import compression from 'compression';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
-
-// Import configs & utils
 import logger from './utils/logger';
 import { db } from './config/database';
 import { redis } from './config/redis';
@@ -19,8 +16,6 @@ import { errorHandler } from './middleware/errorHandler';
 import { globalLimiter, aiLimiter } from './middleware/rateLimiter';
 import { requireAuth } from './middleware/auth';
 import { startKeepAwake, stopKeepAwake } from './services/keepAwakeService';
-
-// Import routes
 import consultationRoutes from './routes/consultation.routes';
 import voiceRoutes from './routes/voice.routes';
 import reportRoutes from './routes/report.routes';
@@ -42,8 +37,6 @@ import interopRoutes from './routes/interop.routes';
 
 const app = express();
 const httpServer = createServer(app);
-
-// Allowed origins for CORS - exactly as specified
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -58,8 +51,6 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 logger.info('Configured CORS allowed origins', { allowedOrigins: allowedOrigins.map(o => o.toString()) });
-
-// Configure Socket.IO with CORS
 const io = new Server(httpServer, {
   cors: {
     origin: allowedOrigins,
@@ -68,8 +59,6 @@ const io = new Server(httpServer, {
   },
   transports: ['websocket', 'polling']
 });
-
-// Security Middleware (Helmet with strict CSP)
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: {
@@ -85,8 +74,6 @@ app.use(helmet({
     },
   },
 }));
-
-// CORS middleware
 app.use(cors({
   origin: function(origin, callback) {
     if (!origin) return callback(null, true);
@@ -109,16 +96,12 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
-
-// Rate limiting (Global)
 app.use(globalLimiter);
 
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.text({ type: ['text/plain', 'application/hl7-v2'], limit: '10mb' }));
-
-// Correlation ID + request logging middleware
 app.use((req, res, next) => {
   const requestId = (req.headers['x-request-id'] as string) || crypto.randomUUID();
   res.setHeader('X-Request-ID', requestId);
@@ -126,20 +109,16 @@ app.use((req, res, next) => {
   logger.info(`Request received`, { requestId, method: req.method, path: req.path, ip: req.ip });
   next();
 });
-
-// Idempotency cache (in-memory, suitable for single-instance deployment)
 const idempotencyCache = new Map<string, { status: number; body: any; timestamp: number }>();
-// Clean up old entries every 10 minutes
+
 setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of idempotencyCache) {
-    if (now - entry.timestamp > 30 * 60 * 1000) { // 30 min TTL
+    if (now - entry.timestamp > 30 * 60 * 1000) { 
       idempotencyCache.delete(key);
     }
   }
 }, 10 * 60 * 1000);
-
-// Idempotency middleware for POST routes
 app.use((req, res, next) => {
   if (req.method !== 'POST') return next();
   const idempotencyKey = req.headers['idempotency-key'] as string;
@@ -150,8 +129,6 @@ app.use((req, res, next) => {
     logger.info('Idempotent request replayed', { idempotencyKey, path: req.path });
     return res.status(cached.status).json(cached.body);
   }
-
-  // Intercept the response to cache it
   const originalJson = res.json.bind(res);
   res.json = (body: any) => {
     idempotencyCache.set(idempotencyKey, {
@@ -163,14 +140,10 @@ app.use((req, res, next) => {
   };
   next();
 });
-
-// Routes with specific rate limiters applied to AI routes
 app.use('/api/consultations', requireAuth, aiLimiter, consultationRoutes);
 app.use('/api/voice', requireAuth, aiLimiter, voiceRoutes);
 app.use('/api/triage', requireAuth, aiLimiter, triageRoutes);
 app.use('/api/enhanced-symptom', requireAuth, aiLimiter, enhancedSymptomRoutes);
-
-// Other standard routes
 app.use('/api/reports', requireAuth, reportRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/audit', auditRoutes);
@@ -185,8 +158,6 @@ app.use('/api/fhir', fhirRoutes);
 app.use('/api/hl7', hl7Routes);
 app.use('/api/emr', requireAuth, emrRoutes);
 app.use('/api/interop', requireAuth, interopRoutes);
-
-// Lightweight ping endpoint (for cold-start detection — no DB/Redis check)
 app.get('/health/ping', (req, res) => {
   res.json({
     status: 'ok',
@@ -197,8 +168,6 @@ app.get('/health/ping', (req, res) => {
     timestamp: Date.now(),
   });
 });
-
-// Detailed health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
@@ -216,8 +185,6 @@ app.get('/health', (req, res) => {
     }
   });
 });
-
-// Root endpoint
 app.get('/', (req, res) => {
   res.json({
     name: 'AI Medical Voice Agent API',
@@ -225,11 +192,7 @@ app.get('/', (req, res) => {
     status: 'running',
   });
 });
-
-// Setup WebSocket handlers for voice
 setupVoiceSocket(io);
-
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     error: 'Endpoint not found',
@@ -237,8 +200,6 @@ app.use((req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-
-// Centralized error handler
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
@@ -247,21 +208,13 @@ const server = httpServer.listen(PORT, () => {
   logger.info(`⚡ Health check available at http://localhost:${PORT}/health`);
   startKeepAwake();
 });
-
-// Graceful shutdown
 const shutdown = (signal: string) => {
   logger.info(`Received ${signal}. Shutting down server gracefully...`);
   stopKeepAwake();
-  
-  // Close socket.io connections
   io.close(() => {
     logger.info('WebSocket connections closed.');
-    
-    // Close http server
     server.close(async () => {
       logger.info('HTTP server closed.');
-      
-      // Close Redis connection if any
       if (redis) {
         await redis.quit();
         logger.info('Redis connection closed.');
@@ -274,11 +227,9 @@ const shutdown = (signal: string) => {
 
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
-
-// Uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
-  // Force clean shutdown
+  
   process.exit(1);
 });
 

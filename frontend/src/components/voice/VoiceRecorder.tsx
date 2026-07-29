@@ -23,8 +23,6 @@ interface TriageResult {
   requiresAmbulance: boolean;
   colorCode: 'green' | 'yellow' | 'orange' | 'red';
 }
-
-// Map language to speech recognition code
 const getSpeechRecognitionCode = (language: string): string => {
   const langMap: Record<string, string> = {
     en: 'en-US',
@@ -56,13 +54,13 @@ const getEmotionEmoji = (emotion: string): string => {
 
 const getEmotionColor = (emotion: string): string => {
   const colorMap: Record<string, string> = {
-    stress: '#f59e0b', // orange
-    anxiety: '#8b5cf6', // purple
-    happiness: '#10b981', // green
-    sadness: '#3b82f6', // blue
-    anger: '#ef4444', // red
-    fear: '#ec4899', // pink
-    neutral: '#6b7280', // gray
+    stress: '#f59e0b', 
+    anxiety: '#8b5cf6', 
+    happiness: '#10b981', 
+    sadness: '#3b82f6', 
+    anger: '#ef4444', 
+    fear: '#ec4899', 
+    neutral: '#6b7280', 
   };
   return colorMap[emotion] || '#6b7280';
 };
@@ -70,8 +68,6 @@ const getEmotionColor = (emotion: string): string => {
 export default function VoiceRecorder({ consultationId, specialistType, onTranscriptUpdate, onAIResponse, onTriageResult, userId, initialHistory }: Props) {
   const { language, t } = useLanguage();
   const { socket, socketRef, connectionStatus, sendMessage } = useVoiceSocket(consultationId);
-
-  // Stabilize callbacks to prevent socket listener re-registrations on every render cycle
   const onAIResponseRef = useRef(onAIResponse);
   const onTranscriptUpdateRef = useRef(onTranscriptUpdate);
   const tRef = useRef(t);
@@ -80,10 +76,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     onTranscriptUpdateRef.current = onTranscriptUpdate;
     tRef.current = t;
   }, [onAIResponse, onTranscriptUpdate, t]);
-
-  // Refs for values accessed inside speech recognition callbacks to prevent stale closures.
-  // The speech recognition onend callback is created once (per language change) and would
-  // otherwise capture stale values of these props/state.
   const consultationIdRef = useRef(consultationId);
   const specialistTypeRef = useRef(specialistType);
   const userIdRef = useRef(userId);
@@ -103,13 +95,13 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [contextPrompt, _setContextPrompt] = useState('');
-  // Wrapper that keeps both state and ref in sync
+  
   const setContextPrompt = useCallback((val: string) => {
     _setContextPrompt(val);
     contextPromptRef.current = val;
   }, []);
   const [conversationHistory, _setConversationHistory] = useState<{role: string, content: string}[]>(() => initialHistory || []);
-  // Wrapper that keeps both state and ref in sync
+  
   const setConversationHistory = useCallback((updater: React.SetStateAction<{role: string, content: string}[]>) => {
     _setConversationHistory(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
@@ -121,22 +113,16 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const accumulatedResponseRef = useRef<string>('');
   const [detectedEmotion, setDetectedEmotion] = useState<string | null>(null);
   const [emotionConfidence, setEmotionConfidence] = useState<number | null>(null);
-  const [biometricStatus, setBiometricStatus] = useState<string>(''); // '', 'verified', 'mismatch', 'unregistered'
-  
-  // Sync history when resuming
+  const [biometricStatus, setBiometricStatus] = useState<string>(''); 
   useEffect(() => {
     if (initialHistory && initialHistory.length > 0) {
       setConversationHistory(initialHistory);
     }
   }, [initialHistory, setConversationHistory]);
-
-  // Keep prop/state refs in sync so speech callbacks always have latest values
   useEffect(() => { consultationIdRef.current = consultationId; }, [consultationId]);
   useEffect(() => { specialistTypeRef.current = specialistType; }, [specialistType]);
   useEffect(() => { userIdRef.current = userId; }, [userId]);
   useEffect(() => { languageRef.current = language; }, [language]);
-
-  // Ref to track isProcessing state dynamically inside callbacks without stale closures
   const isProcessingRef = useRef(isProcessing);
   useEffect(() => {
     isProcessingRef.current = isProcessing;
@@ -146,7 +132,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const verifyChunksRef = useRef<Blob[]>([]);
   const [noiseCancellationEnabled, setNoiseCancellationEnabled] = useState(() => {
     const saved = localStorage.getItem('noiseCancellationEnabled');
-    return saved !== 'false'; // default true
+    return saved !== 'false'; 
   });
 
   const getCleanAudioStream = (rawStream: MediaStream): MediaStream => {
@@ -161,18 +147,12 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
 
       const audioCtx = new AudioContextClass();
       const source = audioCtx.createMediaStreamSource(rawStream);
-
-      // 1. Highpass filter (cuts off frequencies below 100Hz: AC mains, rumbling)
       const hpFilter = audioCtx.createBiquadFilter();
       hpFilter.type = 'highpass';
       hpFilter.frequency.value = 100;
-
-      // 2. Lowpass filter (cuts off frequencies above 3000Hz: high static hiss)
       const lpFilter = audioCtx.createBiquadFilter();
       lpFilter.type = 'lowpass';
       lpFilter.frequency.value = 3000;
-
-      // Connect filters in series
       const destination = audioCtx.createMediaStreamDestination();
       source.connect(hpFilter);
       hpFilter.connect(lpFilter);
@@ -185,14 +165,10 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       return rawStream;
     }
   };
-
-  // Voice settings
   const [voiceSettings, setVoiceSettings] = useState(() => {
     const saved = localStorage.getItem('voiceSettings');
     return saved ? JSON.parse(saved) : { enabled: true, voice: 'default', rate: 1, pitch: 1, volume: 1, autoSpeak: true };
   });
-
-  // Load conversation context from previous consultations
   useEffect(() => {
     const loadContext = async () => {
       if (!userId) return;
@@ -213,16 +189,12 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     
     loadContext();
   }, [userId]);
-
-  // Reset conversation history when consultation starts
   useEffect(() => {
     if (consultationId) {
       setConversationHistory([]);
       accumulatedResponseRef.current = '';
     }
   }, [consultationId]);
-
-  // Speak function using voice settings
   const speakResponse = useCallback((text: string) => {
     if (!voiceSettings.enabled || !window.speechSynthesis) return;
     
@@ -250,8 +222,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   }, [voiceSettings.enabled, voiceSettings.rate, voiceSettings.pitch, voiceSettings.volume, voiceSettings.voice]);
-
-  // Refs to sync voiceSettings and speakResponse callback to prevent socket recreation
   const voiceSettingsRef = useRef(voiceSettings);
   const speakResponseRef = useRef(speakResponse);
 
@@ -259,9 +229,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     voiceSettingsRef.current = voiceSettings;
     speakResponseRef.current = speakResponse;
   }, [voiceSettings, speakResponse]);
-
-  // Get AI response with streaming and conversation history.
-  // Uses refs to read the latest values, making it safe to call from speech recognition callbacks.
   const getAIResponseStream = useCallback((symptoms: string, source: 'voice' | 'text' = 'voice'): boolean => {
     const currentSocket = socketRef.current;
     console.log(`📤 [${source}] Attempting to send streaming request. Socket:`, currentSocket?.id, 'Connected:', currentSocket?.connected);
@@ -275,7 +242,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       contextPrompt: contextPromptRef.current || undefined,
       conversationHistory: conversationHistoryRef.current,
       language: languageRef.current,
-      source, // For backend logging
+      source, 
     };
 
     const sent = sendMessage('get-ai-response-stream', payload);
@@ -286,8 +253,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     }
     return sent;
   }, [sendMessage]);
-
-  // Analyze symptoms for triage
   const analyzeSymptomsForTriage = async (symptoms: string) => {
     setIsAnalyzing(true);
     try {
@@ -316,8 +281,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       setIsAnalyzing(false);
     }
   };
-
-  // Listen for voice settings changes
   useEffect(() => {
     const handleStorageChange = () => {
       const saved = localStorage.getItem('voiceSettings');
@@ -326,19 +289,12 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-
-  // Initialize speech recognition with multi-language support.
-  // IMPORTANT: All values accessed inside onresult/onerror/onend callbacks MUST use refs,
-  // because this useEffect only re-runs when `language` changes. Using state/prop variables
-  // directly would capture stale values (the root cause of the original bug).
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
-      
-      // Set language based on selected language
       const speechLang = getSpeechRecognitionCode(language);
       recognitionInstance.lang = speechLang;
       console.log(`🎤 [VoiceRecorder] Speech recognition language set to: ${speechLang} (${language})`);
@@ -363,10 +319,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
           alert(tRef.current('errors.microphone'));
         }
       };
-      
-      // This is the critical callback that was previously broken due to stale closures.
-      // It now reads ALL values from refs, ensuring it always has the latest socket,
-      // consultationId, specialistType, etc.
       recognitionInstance.onend = () => {
         console.log('🎤 [VoiceRecorder] Recognition ended. Transcript:', finalTranscriptRef.current);
         console.log('🔌 [VoiceRecorder] Socket state at onend — ref:', socketRef.current?.id, 'connected:', socketRef.current?.connected);
@@ -375,12 +327,8 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
           const spokenText = finalTranscriptRef.current;
           const userMessage = { role: 'user', content: spokenText };
           setConversationHistory(prev => [...prev, userMessage]);
-          
-          // Use ref to call onTranscriptUpdate with latest callback
           onTranscriptUpdateRef.current(spokenText);
           setIsProcessing(true);
-
-          // getAIResponseStream reads from refs internally, so it's safe here
           const sent = getAIResponseStream(spokenText, 'voice');
           if (!sent) {
             console.error('❌ [VoiceRecorder] Voice message failed — socket not connected. socketRef:', socketRef.current);
@@ -400,8 +348,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       setUseTextInput(true);
     }
   }, [language, getAIResponseStream, setConversationHistory]);
-
-  // WebSocket event listeners
   useEffect(() => {
     if (!socket) return;
     
@@ -551,8 +497,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       };
 
       mediaRecorder.start();
-
-      // Record first 3 seconds of speaker input for verification
       setTimeout(() => {
         if (mediaRecorder.state !== 'inactive') {
           mediaRecorder.stop();
@@ -571,8 +515,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       recognition.start();
       setIsRecording(true);
       console.log('🎤 Voice recording started');
-      
-      // Start recording verification audio sample concurrently
       startVerificationRecording();
     } else {
       alert(t('errors.microphone'));
@@ -831,7 +773,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         )}
       </div>
 
-      {/* Triage Alert Modal */}
+      {}
       {showTriageAlert && triageResult && (
         <TriageDisplay
           result={triageResult}
@@ -863,7 +805,7 @@ const styles = {
     fontWeight: 'bold',
   },
   statusAuthFailed: {
-    color: '#f59e0b', // Amber/orange for auth failure warning
+    color: '#f59e0b', 
     fontWeight: 'bold',
   },
   statusDisconnected: {
@@ -1032,8 +974,6 @@ const styles = {
     fontWeight: 'bold',
   },
 };
-
-// Add animation CSS
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
   @keyframes blink {

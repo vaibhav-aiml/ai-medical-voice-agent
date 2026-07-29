@@ -241,7 +241,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
 
         {step === 'symptoms' && (
           <div style={styles.content}>
-            {/* Symptoms Section */}
+            {}
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>Add Your Symptoms</h3>
               <div style={styles.inputGroup}>
@@ -286,7 +286,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
               </div>
             </div>
 
-            {/* Quick Common Symptoms */}
+            {}
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>Quick Add Common Symptoms</h3>
               <div style={styles.commonSymptoms}>
@@ -306,7 +306,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
               </div>
             </div>
 
-            {/* Patient Profile Section */}
+            {}
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>Patient Profile</h3>
               <div style={styles.formRow}>
@@ -411,7 +411,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
 
         {step === 'results' && result && (
           <div style={styles.resultsContent}>
-            {/* Urgency Banner */}
+            {}
             <div style={{ ...styles.urgencyBanner, background: getUrgencyColor(result.urgencyLevel).bg }}>
               <span style={styles.urgencyIcon}>{getUrgencyColor(result.urgencyLevel).icon}</span>
               <div>
@@ -425,7 +425,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
               </div>
             </div>
 
-            {/* Tabs */}
+            {}
             <div style={styles.tabs}>
               <button onClick={() => setActiveTab('diagnosis')} style={{ ...styles.tab, ...(activeTab === 'diagnosis' ? styles.activeTab : {}) }}>
                 <Brain size={16} /> Diagnosis
@@ -442,7 +442,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
 
             {activeTab === 'diagnosis' && (
               <div style={styles.diagnosisSection}>
-                {/* Primary Diagnosis */}
+                {}
                 <div style={styles.primaryDiagnosis}>
                   <h3>Primary Diagnosis</h3>
                   <div style={styles.diagnosisName}>{result.primaryDiagnosis}</div>
@@ -454,7 +454,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
                   )}
                 </div>
 
-                {/* Differential Diagnoses */}
+                {}
                 <h3 style={styles.sectionTitle}>Differential Diagnoses</h3>
                 <div style={styles.differentialList}>
                   {result.differentialDiagnoses.map((diag, idx) => (

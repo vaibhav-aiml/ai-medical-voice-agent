@@ -1,10 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import backendStatus, { BackendState } from '../../services/backendStatus';
-
-/**
- * Non-blocking inline banner shown when the backend is waking up from cold start.
- * Subscribes to backendStatus (read-only). Dismisses automatically when awake.
- */
 export default function ColdStartBanner() {
   const [state, setState] = useState<BackendState>(backendStatus.getState());
   const [elapsed, setElapsed] = useState(0);
@@ -16,8 +11,6 @@ export default function ColdStartBanner() {
     });
     return unsub;
   }, []);
-
-  // Elapsed timer when waking
   useEffect(() => {
     if (state === 'waking') {
       setElapsed(0);
@@ -62,7 +55,7 @@ export default function ColdStartBanner() {
           </div>
         </div>
 
-        {/* Progress bar (only while waking) */}
+        {}
         {!isUnavailable && (
           <div style={styles.progressTrack}>
             <div
@@ -74,7 +67,7 @@ export default function ColdStartBanner() {
           </div>
         )}
 
-        {/* Retry button (only when unavailable) */}
+        {}
         {isUnavailable && (
           <button
             onClick={() => backendStatus.userRetry()}
@@ -85,7 +78,7 @@ export default function ColdStartBanner() {
         )}
       </div>
 
-      {/* Inline CSS for spinner animation */}
+      {}
       <style>{`
         @keyframes csb-spin {
           0% { transform: rotate(0deg); }

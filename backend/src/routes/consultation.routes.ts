@@ -10,8 +10,6 @@ import { validate } from '../middleware/validate';
 import { createConsultationSchema, saveConsultationSchema } from '../validators/consultation.validator';
 
 const router = Router();
-
-// Helper to get or create DB user from Clerk ID
 async function getOrCreateInternalUserId(clerkId: string, email?: string, name?: string): Promise<string> {
   try {
     const existingUser = await db.select()
@@ -21,8 +19,6 @@ async function getOrCreateInternalUserId(clerkId: string, email?: string, name?:
     if (existingUser.length > 0) {
       return existingUser[0].id;
     }
-
-    // Create user on the fly if not found
     const newUser = await db.insert(users).values({
       clerkId: clerkId,
       email: email || `${clerkId}@example.com`,
@@ -36,8 +32,6 @@ async function getOrCreateInternalUserId(clerkId: string, email?: string, name?:
     throw new AppError('Database user resolution failed', 500);
   }
 }
-
-// Start new consultation
 router.post('/start', validate(createConsultationSchema), catchAsync(async (req: Request, res: Response) => {
   const { userId, specialistType, symptoms, notes, email, name } = req.body;
   
@@ -57,8 +51,6 @@ router.post('/start', validate(createConsultationSchema), catchAsync(async (req:
   logger.info(`Started consultation: ${consultation[0].id} for user: ${clerkId}`);
   res.json({ success: true, consultation: consultation[0] });
 }));
-
-// Save completed consultation (direct frontend request fallback)
 router.post('/save', validate(saveConsultationSchema), catchAsync(async (req: Request, res: Response) => {
   const { id, userId, specialistType, specialistName, status, symptoms, notes, duration, startedAt, endedAt, email, name } = req.body;
   
@@ -96,8 +88,6 @@ router.post('/save', validate(saveConsultationSchema), catchAsync(async (req: Re
   logger.info(`Saved consultation: ${consultation[0].id} for user: ${userId}`);
   res.json({ success: true, consultation: consultation[0] });
 }));
-
-// End consultation
 router.post('/:id/end', catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { duration, notes } = req.body;
@@ -119,8 +109,6 @@ router.post('/:id/end', catchAsync(async (req: Request, res: Response) => {
   logger.info(`Ended consultation: ${id}`);
   res.json({ success: true, message: 'Consultation ended successfully', consultation: result[0] });
 }));
-
-// Get user's consultation history
 router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
   
@@ -140,8 +128,6 @@ router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
   .leftJoin(voiceSessions, eq(consultations.id, voiceSessions.consultationId))
   .where(eq(consultations.userId, dbUser[0].id))
   .orderBy(consultations.startedAt);
-
-  // Group by consultation ID to avoid duplicates (retaining latest session's emotion if multiple exist)
   const uniqueConsultations = new Map<string, any>();
   for (const row of rows) {
     const cons = {
@@ -154,8 +140,6 @@ router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
   
   res.json(Array.from(uniqueConsultations.values()));
 }));
-
-// Get single consultation by ID
 router.get('/:id', catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const consultation = await db.select()
@@ -168,8 +152,6 @@ router.get('/:id', catchAsync(async (req: Request, res: Response) => {
   
   res.json(consultation[0]);
 }));
-
-// Delete consultation
 router.delete('/:id', catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const result = await db.delete(consultations)

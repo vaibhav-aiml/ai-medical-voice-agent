@@ -20,7 +20,7 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
     contextPrompt?: string;
     conversationHistory?: Array<{role: string, content: string}>;
     language?: string;
-    source?: 'voice' | 'text'; // Frontend indicates whether this came from voice or text mode
+    source?: 'voice' | 'text'; 
   }) => {
     const { consultationId, transcript, specialistType, userId, contextPrompt, conversationHistory, language = 'en', source = 'unknown' } = data;
     
@@ -47,11 +47,7 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
       historyLength: conversationHistory?.length || 0,
       language
     });
-
-    // Async emotion detection in background
     handleSocketEmotionDetection(socket, transcript, consultationId);
-    
-    // Load user's past consultations as medical background context
     let pastConsultationsContext = '';
     if (userId && userId !== 'dev-user-123') {
       try {
@@ -61,7 +57,7 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
             .from(consultations)
             .where(eq(consultations.userId, dbUser[0].id))
             .orderBy(consultations.startedAt)
-            .limit(5); // Load up to 5 past sessions
+            .limit(5); 
             
           if (pastConsultationsList.length > 0) {
             pastConsultationsContext = pastConsultationsList.map((c, idx) => {
@@ -113,7 +109,7 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
     }
     
     try {
-      // Redact PHI from messages before sending to Groq/OpenAI
+      
       const redactedMessages = await Promise.all(messages.map(async (msg) => {
         if (msg.role === 'user') {
           const cleanContent = await phiService.prepareTextForAI(msg.content, 'socket-user', consultationId);
@@ -123,8 +119,6 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
       }));
 
       logger.info('Starting Groq streaming completion', { consultationId });
-      
-      // Revert to llama-3.3-70b-versatile as mandated
       const stream = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
         messages: redactedMessages as any,

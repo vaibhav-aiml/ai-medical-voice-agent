@@ -69,8 +69,6 @@ export async function saveTranscriptWithTranslation(
       });
       logger.info('Created new voice session to save translated dialogue turns', { consultationId });
     }
-
-    // Emit translations to client
     socket.emit('translation-complete', {
       consultationId,
       userMessage,

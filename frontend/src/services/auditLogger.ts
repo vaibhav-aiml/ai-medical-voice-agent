@@ -35,7 +35,7 @@ class AuditLogger {
     this.loadFromStorage();
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => this.syncOfflineQueue());
-      // Periodically attempt to sync queue every 30 seconds
+      
       setInterval(() => this.syncOfflineQueue(), 30000);
     }
   }
@@ -65,8 +65,6 @@ class AuditLogger {
     this.persistToStorage(entry);
     
     console.log(`[AUDIT] ${entry.timestamp} - ${action}: ${message.substring(0, 100)}`);
-    
-    // Attempt asynchronous push to backend
     this.sendToBackend(entry);
     
     return entry;
@@ -81,7 +79,7 @@ class AuditLogger {
   }
 
   verifyIntegrity(_entry: AuditLogEntry): boolean {
-    // Client-side verification is disabled as signatures are computed and validated exclusively on the server side
+    
     return true;
   }
 
@@ -177,8 +175,6 @@ class AuditLogger {
       
       entry.synced = true;
       this.updateStorageEntry(entry);
-      
-      // Also update in memory
       const memIdx = this.logs.findIndex(l => l.id === entry.id);
       if (memIdx !== -1) {
         this.logs[memIdx].synced = true;

@@ -5,7 +5,7 @@ export const consultations = pgTable('consultations', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id),
   specialistType: text('specialist_type').notNull(),
-  specialistName: text('specialist_name'), // stores the display name of the specialist
+  specialistName: text('specialist_name'), 
   status: text('status').default('active'),
   symptoms: text('symptoms'),
   notes: text('notes'),

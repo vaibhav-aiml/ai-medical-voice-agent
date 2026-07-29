@@ -77,7 +77,7 @@ export default function Footer({
     <footer style={styles.footer}>
       <div style={styles.container}>
         <div style={styles.mainContent}>
-          {/* Brand Column */}
+          {}
           <div style={styles.brandColumn}>
             <div style={styles.logo}>
               <Heart size={28} color="#3b82f6" />
@@ -103,7 +103,7 @@ export default function Footer({
             </div>
           </div>
 
-          {/* Quick Links */}
+          {}
           <div style={styles.linksColumn}>
             <h3>Quick Links</h3>
             <ul style={styles.linkList}>
@@ -117,7 +117,7 @@ export default function Footer({
             </ul>
           </div>
 
-          {/* Our Services */}
+          {}
           <div style={styles.linksColumn}>
             <h3>Our Services</h3>
             <ul style={styles.linkList}>
@@ -131,7 +131,7 @@ export default function Footer({
             </ul>
           </div>
 
-          {/* Legal */}
+          {}
           <div style={styles.linksColumn}>
             <h3>Legal</h3>
             <ul style={styles.linkList}>
@@ -146,7 +146,7 @@ export default function Footer({
           </div>
         </div>
 
-        {/* Newsletter Section */}
+        {}
         <div style={styles.newsletterSection}>
           <div style={styles.newsletterContent}>
             <h3>Subscribe to Our Newsletter</h3>
@@ -162,7 +162,7 @@ export default function Footer({
           </div>
         </div>
 
-        {/* Social Links */}
+        {}
         <div style={styles.socialSection}>
           <div style={styles.socialLinks}>
             {socialIcons.map((social, index) => (
@@ -178,7 +178,7 @@ export default function Footer({
           </div>
         </div>
 
-        {/* Copyright */}
+        {}
         <div style={styles.copyright}>
           <p>&copy; {currentYear} MediVoice AI. All rights reserved.</p>
           <p style={styles.disclaimer}>
