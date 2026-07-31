@@ -7,6 +7,8 @@ import Header from './components/shared/Header';
 import Footer from './components/shared/Footer';
 import SkeletonLoader from './components/shared/SkeletonLoader';
 import ColdStartBanner from './components/shared/ColdStartBanner';
+import StartupExperience from './components/shared/StartupExperience';
+import ScrollProgress from './components/shared/ScrollProgress';
 import { useLanguage } from './context/LanguageContext';
 import { ConsultationProvider, useConsultation } from './context/ConsultationContext';
 import { useAuthInterceptor } from './hooks/useAuthInterceptor';
@@ -80,8 +82,14 @@ function AppContent() {
   const showPageNav = location.pathname !== '/' &&
     !['/about', '/contact', '/terms', '/privacy', '/hipaa', '/cookies', '/voice-consultation'].includes(location.pathname);
 
-  return (
+    return (
     <div style={styles.app}>
+      {/* Startup Experience — shows once per login session */}
+      <StartupExperience appReady={true} />
+
+      {/* Scroll Progress — home page only */}
+      {location.pathname === '/' && <ScrollProgress />}
+
       {}
       <ColdStartBanner />
 

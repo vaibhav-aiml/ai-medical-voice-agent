@@ -16,6 +16,15 @@ export default function SkeletonLoader() {
           <div style={styles.skeletonCard}></div>
           <div style={styles.skeletonCard}></div>
           <div style={styles.skeletonCard}></div>
+          {/* Subtle waveform branding icon */}
+          <svg style={styles.skeletonWaveformIcon} viewBox="0 0 80 40" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <rect x="8" y="12" width="6" height="16" rx="2" />
+            <rect x="20" y="6" width="6" height="28" rx="2" />
+            <rect x="32" y="10" width="6" height="20" rx="2" />
+            <rect x="44" y="4" width="6" height="32" rx="2" />
+            <rect x="56" y="14" width="6" height="12" rx="2" />
+            <rect x="68" y="8" width="6" height="24" rx="2" />
+          </svg>
         </div>
       </div>
 
@@ -113,10 +122,18 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  skeletonWaveformIcon: {
+    position: 'absolute' as const,
+    width: '80px',
+    height: '40px',
+    color: 'var(--text-muted)',
+    opacity: 0.15,
+    animation: 'skeletonPulse 2s ease-in-out infinite',
+  },
   skeletonBadge: {
     width: '150px',
     height: '28px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '20px',
@@ -125,7 +142,7 @@ const styles = {
   skeletonHeroTitle: {
     width: '80%',
     height: '60px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '8px',
@@ -134,7 +151,7 @@ const styles = {
   skeletonHeroSubtitle: {
     width: '100%',
     height: '80px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '8px',
@@ -147,7 +164,7 @@ const styles = {
   skeletonButton: {
     width: '160px',
     height: '50px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '12px',
@@ -155,7 +172,7 @@ const styles = {
   skeletonButtonOutline: {
     width: '140px',
     height: '50px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '12px',
@@ -164,7 +181,7 @@ const styles = {
     position: 'absolute' as const,
     width: '200px',
     height: '60px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '16px',
@@ -189,7 +206,7 @@ const styles = {
   skeletonIcon: {
     width: '56px',
     height: '56px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '16px',
@@ -198,7 +215,7 @@ const styles = {
   skeletonStat: {
     width: '60px',
     height: '36px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '8px',
@@ -207,7 +224,7 @@ const styles = {
   skeletonLabel: {
     width: '80px',
     height: '14px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '4px',
@@ -221,7 +238,7 @@ const styles = {
   skeletonSectionHeader: {
     width: '300px',
     height: '30px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '8px',
@@ -242,7 +259,7 @@ const styles = {
   skeletonFeatureIcon: {
     width: '64px',
     height: '64px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '20px',
@@ -251,7 +268,7 @@ const styles = {
   skeletonFeatureTitle: {
     width: '150px',
     height: '24px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '6px',
@@ -260,7 +277,7 @@ const styles = {
   skeletonFeatureDesc: {
     width: '100%',
     height: '60px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '8px',
@@ -292,7 +309,7 @@ const styles = {
     left: '20px',
     width: '40px',
     height: '30px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '8px',
@@ -300,7 +317,7 @@ const styles = {
   skeletonStepIcon: {
     width: '64px',
     height: '64px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '50%',
@@ -309,7 +326,7 @@ const styles = {
   skeletonStepTitle: {
     width: '120px',
     height: '20px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '6px',
@@ -318,7 +335,7 @@ const styles = {
   skeletonStepDesc: {
     width: '80%',
     height: '40px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '6px',
@@ -344,7 +361,7 @@ const styles = {
   skeletonStars: {
     width: '100px',
     height: '20px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '4px',
@@ -353,7 +370,7 @@ const styles = {
   skeletonTestimonialText: {
     width: '100%',
     height: '80px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '8px',
@@ -367,7 +384,7 @@ const styles = {
   skeletonAvatar: {
     width: '48px',
     height: '48px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '50%',
@@ -378,7 +395,7 @@ const styles = {
   skeletonName: {
     width: '80px',
     height: '16px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '4px',
@@ -387,7 +404,7 @@ const styles = {
   skeletonAuthorTitle: {
     width: '60px',
     height: '12px',
-    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+    background: 'linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-end) 37%, var(--skeleton-start) 63%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
     borderRadius: '4px',
@@ -427,6 +444,10 @@ styleSheet.textContent = `
     100% {
       background-position: -200% 0;
     }
+  }
+  @keyframes skeletonPulse {
+    0%, 100% { opacity: 0.15; transform: scale(1); }
+    50% { opacity: 0.25; transform: scale(1.05); }
   }
 `;
 document.head.appendChild(styleSheet);

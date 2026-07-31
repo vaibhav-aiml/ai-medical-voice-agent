@@ -512,3 +512,41 @@ html[lang="te"] .small-text { line-height: 1.6; }
   line-height: 1.6;
   letter-spacing: normal;
 }
+
+/* === Visual Enhancement Keyframes === */
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes heroWaveformPulse {
+  0%, 100% { opacity: 0.06; transform: scaleX(1); }
+  50% { opacity: 0.09; transform: scaleX(1.05); }
+}
+
+/* === Reduced Motion Support === */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .card-gradient:hover,
+  .feature-card:hover,
+  .report-card:hover,
+  .stat-card-modern:hover,
+  .feature-card-modern:hover {
+    transform: none;
+  }
+}

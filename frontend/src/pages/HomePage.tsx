@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import {
   Mic, Stethoscope, ClipboardList, ArrowRight,
   Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Calendar
@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router';
 import { useLanguage } from '../context/LanguageContext';
 import { useConsultation } from '../context/ConsultationContext';
 import SkeletonLoader from '../components/shared/SkeletonLoader';
+import heroMedicalImg from '../assets/images/hero_medical.png';
+import ctaMedicalImg from '../assets/images/cta_medical.png';
 
 const EnhancedSymptomChecker = lazy(() => import('../components/health/EnhancedSymptomChecker'));
 
@@ -17,10 +19,102 @@ export default function HomePage() {
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
   const [showEnhancedSymptomChecker, setShowEnhancedSymptomChecker] = useState(false);
 
+  // --- Visual enhancement state (no logic changes) ---
+  const [parallaxOffset, setParallaxOffset] = useState({ x: 0, y: 0 });
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const howItWorksRef = useRef<HTMLDivElement>(null);
+  const testimonialsRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+
+  const [statsVisible, setStatsVisible] = useState(false);
+  const [featuresVisible, setFeaturesVisible] = useState(false);
+  const [howItWorksVisible, setHowItWorksVisible] = useState(false);
+  const [testimonialsVisible, setTestimonialsVisible] = useState(false);
+  const [ctaVisible, setCtaVisible] = useState(false);
+
+  // Detect reduced motion preference
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  // Hero mouse parallax (±5px, disabled on touch/reduced-motion)
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (prefersReducedMotion) return;
+    const { clientX, clientY, currentTarget } = e;
+    const rect = currentTarget.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width - 0.5) * 10; // ±5px
+    const y = ((clientY - rect.top) / rect.height - 0.5) * 10;
+    setParallaxOffset({ x, y });
+  }, [prefersReducedMotion]);
+
+  const handleMouseLeave = useCallback(() => {
+    setParallaxOffset({ x: 0, y: 0 });
+  }, []);
+
+  // Intersection Observer for scroll fade-up effects across all sections
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setStatsVisible(true);
+      setFeaturesVisible(true);
+      setHowItWorksVisible(true);
+      setTestimonialsVisible(true);
+      setCtaVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (entry.target === statsRef.current) setStatsVisible(true);
+            if (entry.target === featuresRef.current) setFeaturesVisible(true);
+            if (entry.target === howItWorksRef.current) setHowItWorksVisible(true);
+            if (entry.target === testimonialsRef.current) setTestimonialsVisible(true);
+            if (entry.target === ctaRef.current) setCtaVisible(true);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (statsRef.current) observer.observe(statsRef.current);
+    if (featuresRef.current) observer.observe(featuresRef.current);
+    if (howItWorksRef.current) observer.observe(howItWorksRef.current);
+    if (testimonialsRef.current) observer.observe(testimonialsRef.current);
+    if (ctaRef.current) observer.observe(ctaRef.current);
+
+    return () => observer.disconnect();
+  }, [prefersReducedMotion]);
+
   return (
     <>
       <div style={styles.homeContainer}>
-        {}
+        {/* --- Hero with background image + parallax --- */}
+        <div
+          style={styles.heroWrapper}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          {/* Background image layer */}
+          <div style={{
+            ...styles.heroBgImage,
+            backgroundImage: `url(${heroMedicalImg})`,
+            transform: prefersReducedMotion ? 'none' : `translate(${parallaxOffset.x}px, ${parallaxOffset.y}px) scale(1.05)`,
+          }} />
+          {/* Dark overlay */}
+          <div style={styles.heroBgOverlay} />
+          {/* Waveform accent behind heading */}
+          {!prefersReducedMotion && (
+            <svg style={styles.heroWaveformAccent} viewBox="0 0 200 40" preserveAspectRatio="none">
+              <path d="M0,20 Q10,5 20,20 T40,20 T60,20 T80,20 T100,20 T120,20 T140,20 T160,20 T180,20 T200,20" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+          )}
         <div style={styles.heroSection}>
           <div style={styles.heroContent}>
             <div style={styles.heroBadge}>
@@ -58,11 +152,36 @@ export default function HomePage() {
               <span>{t('home.medicalReports')}</span>
             </div>
             <div style={styles.heroCircle}></div>
+            {/* Floating medical icons (3, very low opacity) */}
+            {!prefersReducedMotion && (
+              <>
+                <svg style={{ ...styles.floatingIcon, top: '10%', left: '5%', animationDuration: '10s' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 2v20M2 12h20" />
+                </svg>
+                <svg style={{ ...styles.floatingIcon, bottom: '15%', right: '5%', animationDuration: '12s', animationDelay: '2s' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <svg style={{ ...styles.floatingIcon, top: '60%', left: '60%', animationDuration: '8s', animationDelay: '1s' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="2" y="6" width="4" height="12" rx="1" />
+                  <rect x="10" y="2" width="4" height="20" rx="1" />
+                  <rect x="18" y="8" width="4" height="8" rx="1" />
+                </svg>
+              </>
+            )}
           </div>
         </div>
+        </div>
 
-        {}
-        <div style={styles.statsSection}>
+        {/* Stats Section with scroll fade-up */}
+        <div
+          ref={statsRef}
+          style={{
+            ...styles.statsSection,
+            opacity: statsVisible ? 1 : 0,
+            transform: statsVisible ? 'translateY(0)' : 'translateY(24px)',
+            transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
           <div style={styles.statsContainer}>
             <div style={styles.statCard}>
               <div style={styles.statIconBg}><MessageCircle size={24} /></div>
@@ -91,8 +210,16 @@ export default function HomePage() {
           </div>
         </div>
 
-        {}
-        <div style={styles.featuresSection}>
+        {/* Features with scroll fade-up */}
+        <div
+          ref={featuresRef}
+          style={{
+            ...styles.featuresSection,
+            opacity: featuresVisible ? 1 : 0,
+            transform: featuresVisible ? 'translateY(0)' : 'translateY(24px)',
+            transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
           <div style={styles.sectionHeader}>
             <h2>{t('home.whyChoose')} <span style={styles.sectionHeaderAccent}>{t('home.mediVoiceAI')}</span></h2>
             <p>{t('home.featureDesc')}</p>
@@ -137,8 +264,20 @@ export default function HomePage() {
           </div>
         </div>
 
-        {}
-        <div style={styles.howItWorksSection}>
+        {/* How It Works with animated gradient & scroll fade-up */}
+        <div
+          ref={howItWorksRef}
+          style={{
+            ...styles.howItWorksSection,
+            background: prefersReducedMotion
+              ? 'linear-gradient(135deg, rgba(37,99,235,0.04), rgba(79,70,229,0.04))'
+              : undefined,
+            ...(prefersReducedMotion ? {} : styles.animatedGradientBg),
+            opacity: howItWorksVisible ? 1 : 0,
+            transform: howItWorksVisible ? 'translateY(0)' : 'translateY(24px)',
+            transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
           <div style={styles.sectionHeader}>
             <h2>{t('home.howItWorks')} <span style={styles.sectionHeaderAccent}>{t('home.works')}</span></h2>
             <p>{t('home.clickToLearn')}</p>
@@ -212,8 +351,16 @@ export default function HomePage() {
           </div>
         </div>
 
-        {}
-        <div style={styles.testimonialsSection}>
+        {/* Testimonials with scroll fade-up */}
+        <div
+          ref={testimonialsRef}
+          style={{
+            ...styles.testimonialsSection,
+            opacity: testimonialsVisible ? 1 : 0,
+            transform: testimonialsVisible ? 'translateY(0)' : 'translateY(24px)',
+            transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
           <div style={styles.sectionHeader}>
             <h2>{t('home.whatUsersSay')} <span style={styles.sectionHeaderAccent}>{t('home.aboutUs')}</span></h2>
             <p>{t('home.trustedBy')}</p>
@@ -255,7 +402,22 @@ export default function HomePage() {
           </div>
         </div>
 
-        {}
+        {/* CTA with background image + scroll fade-up */}
+        <div
+          ref={ctaRef}
+          style={{
+            ...styles.ctaWrapper,
+            opacity: ctaVisible ? 1 : 0,
+            transform: ctaVisible ? 'translateY(0)' : 'translateY(24px)',
+            transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          <img
+            src={ctaMedicalImg}
+            alt=""
+            loading="lazy"
+            style={styles.ctaBgImage}
+          />
         <div style={styles.ctaSection}>
           <div style={styles.ctaContent}>
             <h2>{t('home.readyTitle')}</h2>
@@ -265,6 +427,7 @@ export default function HomePage() {
               <ArrowRight size={18} />
             </button>
           </div>
+        </div>
         </div>
       </div>
 
@@ -285,16 +448,65 @@ const styles: Record<string, React.CSSProperties> = {
   homeContainer: {
     overflowX: 'hidden' as const,
   },
+  // --- Hero wrapper with bg image ---
+  heroWrapper: {
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+    margin: '0 24px 40px',
+    borderRadius: '20px',
+  },
+  heroBgImage: {
+    position: 'absolute' as const,
+    top: '-10px',
+    left: '-10px',
+    right: '-10px',
+    bottom: '-10px',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    transition: 'transform 0.15s ease-out',
+    zIndex: 0,
+  },
+  heroBgOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(135deg, rgba(15,23,42,0.88) 0%, rgba(30,27,75,0.82) 50%, rgba(15,23,42,0.88) 100%)',
+    zIndex: 1,
+  },
+  heroWaveformAccent: {
+    position: 'absolute' as const,
+    top: '35%',
+    left: '5%',
+    width: '200px',
+    height: '40px',
+    opacity: 0.06,
+    color: '#3b82f6',
+    zIndex: 1,
+    animation: 'heroWaveformPulse 3s ease-in-out infinite',
+  },
+  floatingIcon: {
+    position: 'absolute' as const,
+    width: '28px',
+    height: '28px',
+    opacity: 0.05,
+    color: '#3b82f6',
+    animation: 'floatSlow ease-in-out infinite',
+    zIndex: 1,
+    pointerEvents: 'none' as const,
+  },
   heroSection: {
+    position: 'relative' as const,
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '60px',
     padding: '60px 40px',
-    background: 'var(--hero-bg)',
+    background: 'transparent',
     alignItems: 'center',
     borderRadius: '20px',
-    margin: '0 24px 40px',
-    boxShadow: 'var(--card-shadow)',
+    margin: '0',
+    zIndex: 2,
   },
   heroContent: {
     maxWidth: '560px',
@@ -406,10 +618,33 @@ const styles: Record<string, React.CSSProperties> = {
   featureCard: { padding: '32px', background: 'var(--bg-card)', borderRadius: '24px', border: '1px solid var(--border-color)', position: 'relative' as const, boxShadow: 'var(--card-shadow)', transition: 'all 0.3s ease' },
   featureIcon: { width: '64px', height: '64px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', color: 'white' },
   featureTag: { position: 'absolute' as const, top: '20px', right: '20px', padding: '4px 12px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '9999px', fontSize: '12px', color: '#3b82f6' },
-  ctaSection: { margin: '40px 24px 60px', padding: '60px', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', borderRadius: '20px', textAlign: 'center' as const, color: 'white', boxShadow: '0 8px 32px rgba(37, 99, 235, 0.3)' },
+  // --- CTA wrapper with bg image ---
+  ctaWrapper: {
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+    margin: '40px 24px 60px',
+    borderRadius: '20px',
+    minHeight: '200px',
+  },
+  ctaBgImage: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover' as const,
+    opacity: 0.65,
+    zIndex: 0,
+  },
+  ctaSection: { position: 'relative' as const, zIndex: 1, margin: '0', padding: '60px', background: 'linear-gradient(135deg, rgba(37,99,235,0.5), rgba(124,58,237,0.5))', borderRadius: '20px', textAlign: 'center' as const, color: 'white', boxShadow: '0 8px 32px rgba(37, 99, 235, 0.3)' },
   ctaContent: { maxWidth: '600px', margin: '0 auto' },
   ctaButton: { display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 32px', background: 'white', color: '#2563eb', border: 'none', borderRadius: '9999px', cursor: 'pointer', fontSize: '16px', fontWeight: 600, marginTop: '24px', transition: 'all 0.25s ease' },
   howItWorksSection: { padding: '60px 24px', background: 'var(--bg-secondary)' },
+  animatedGradientBg: {
+    background: 'linear-gradient(-45deg, rgba(37,99,235,0.04), rgba(79,70,229,0.04), rgba(124,58,237,0.04), rgba(37,99,235,0.04))',
+    backgroundSize: '400% 400%',
+    animation: 'gradientShift 20s ease infinite',
+  },
   stepsContainer: { maxWidth: '1000px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px' },
   stepCard: { flex: 1, textAlign: 'center' as const, padding: '32px 24px', background: 'var(--bg-card)', borderRadius: '24px', position: 'relative' as const, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', border: '1px solid var(--border-color)', cursor: 'pointer', boxShadow: 'var(--card-shadow)' },
   stepCardExpanded: { transform: 'scale(1.02)', boxShadow: '0 0 0 3px #3b82f6, 0 20px 40px -10px rgba(0,0,0,0.25)', borderColor: '#3b82f6' },
