@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Shield, Smartphone, Mail, Key, CheckCircle, AlertCircle, Copy, RefreshCw } from 'lucide-react';
+import { X, Shield, Smartphone, Mail, Key, CheckCircle, AlertCircle, Copy } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -28,7 +28,6 @@ export default function TwoFactorAuth({ onClose }: Props) {
   };
 
   const generateSecret = () => {
-    
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     let secret = '';
     for (let i = 0; i < 16; i++) {
@@ -56,8 +55,6 @@ export default function TwoFactorAuth({ onClose }: Props) {
         setIsEnabled(true);
         localStorage.setItem('twoFactorEnabled', 'true');
         localStorage.setItem('twoFactorMethod', method);
-        localStorage.setItem('twoFactorSecret', secretKey);
-        localStorage.setItem('backupCodes', JSON.stringify(backupCodes));
         setSetupMode(false);
         setShowBackupCodes(true);
       } else {
@@ -71,7 +68,6 @@ export default function TwoFactorAuth({ onClose }: Props) {
       setIsEnabled(true);
       localStorage.setItem('twoFactorEnabled', 'true');
       localStorage.setItem('twoFactorMethod', method);
-      localStorage.setItem('twoFactorPhone', phoneNumber);
       setSetupMode(false);
       alert('Verification code sent to your phone!');
     } else if (method === 'email') {
@@ -82,7 +78,6 @@ export default function TwoFactorAuth({ onClose }: Props) {
       setIsEnabled(true);
       localStorage.setItem('twoFactorEnabled', 'true');
       localStorage.setItem('twoFactorMethod', method);
-      localStorage.setItem('twoFactorEmail', email);
       setSetupMode(false);
       alert('Verification code sent to your email!');
     }
@@ -93,10 +88,6 @@ export default function TwoFactorAuth({ onClose }: Props) {
       setIsEnabled(false);
       localStorage.removeItem('twoFactorEnabled');
       localStorage.removeItem('twoFactorMethod');
-      localStorage.removeItem('twoFactorSecret');
-      localStorage.removeItem('backupCodes');
-      localStorage.removeItem('twoFactorPhone');
-      localStorage.removeItem('twoFactorEmail');
       alert('Two-Factor Authentication has been disabled');
     }
   };

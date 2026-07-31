@@ -62,7 +62,7 @@ Groq llama-3.3-70b streams clinical response via WebSocket
         │
         ├──► Triage Engine scores urgency  (🔴🟠🟡🟢)
         │
-        ├──► RAG Knowledge Base enriches diagnosis context
+        ├──► Rule-based medical knowledge lookup
         │
         └──► SOAP Report → PDF / Email / WhatsApp
 ```
@@ -283,10 +283,10 @@ flowchart TD
 ┌────────────────────▼────────────────────────────────────────────────────┐
 │                    Backend (Express 5 + Socket.IO)                      │
 │                                                                         │
-│  ┌─────────────────┐  ┌──────────┐  ┌─────────┐  ┌───────────────────┐  │
-│  │   voiceSocket   │  │  Triage  │  │   RAG   │  │ Idempotency & Req │  │
-│  │  (/health/ping) │  │ Service  │  │   KB    │  │ Correlation Mware │  │
-│  └─────────────────┘  └──────────┘  └─────────┘  └───────────────────┘  │
+│  ┌─────────────────┐  ┌──────────┐  ┌──────────────────┐  ┌───────────────────┐  │
+│  │   voiceSocket   │  │  Triage  │  │   Rule-based     │  │ Idempotency & Req │  │
+│  │  (/health/ping) │  │ Service  │  │   Medical KB     │  │ Correlation Mware │  │
+│  └─────────────────┘  └──────────┘  └──────────────────┘  └───────────────────┘  │
 │                                                                         │
 │  Rate Limiter → Zod Validator → Clerk Auth → Route Handler              │
 │                        ↓                                                │
@@ -544,14 +544,14 @@ ai-medical-voice-agent/
 
 | Control | Implementation |
 |---|---|
-| **Encryption at Rest** | AES-256 on all stored PHI |
+| **Encryption at Rest** | Managed database provider encryption at rest (e.g., Neon managed PostgreSQL storage) |
 | **Encryption in Transit** | TLS 1.3 for all REST & WebSocket communications |
 | **Authentication** | Clerk with MFA & cryptographically-verified JWTs |
 | **Audit Logging** | Immutable cryptographically-signed audit trail |
 | **Log Retention** | 7-year retention policy |
 | **Access Control** | Role-based access (RBAC) scoped per clinic tenant |
 | **Session Timeout** | Auto-logout & session invalidation |
-| **Data Minimization** | Automatic PHI redaction via `phiService` before sending data to LLMs |
+| **Data Minimization** | Rule-based regex PHI masking engine (`phiService`) prior to LLM submission |
 
 Full documentation: [`README-HIPAA.md`](./README-HIPAA.md)
 

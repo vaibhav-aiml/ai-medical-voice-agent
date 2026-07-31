@@ -9,7 +9,16 @@ import { AppError } from '../utils/AppError';
 
 const router = Router();
 
-const AUDIT_SIGNING_SECRET = process.env.AUDIT_SIGNING_SECRET || 'secure-fallback-audit-secret-2026';
+function getAuditSigningSecret(): string {
+  if (process.env.AUDIT_SIGNING_SECRET) {
+    return process.env.AUDIT_SIGNING_SECRET;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL: AUDIT_SIGNING_SECRET environment variable must be set in production!');
+  }
+  return 'dev-only-fallback-audit-secret-2026';
+}
+
 export function computeLogSignature(log: {
   userId: string | null;
   sessionId: string | null;
@@ -25,10 +34,11 @@ export function computeLogSignature(log: {
     timestamp: log.timestamp ? new Date(log.timestamp).toISOString() : null
   };
   return crypto
-    .createHmac('sha256', AUDIT_SIGNING_SECRET)
+    .createHmac('sha256', getAuditSigningSecret())
     .update(JSON.stringify(dataToSign))
     .digest('hex');
 }
+
 router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) => {
   const { timestamp, userId, sessionId, action, message, metadata } = req.body;
   if (!action) {
@@ -76,6 +86,7 @@ router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) 
   
   res.status(200).json({ success: true, message: 'Audit log received and signed securely' });
 }));
+
 router.get('/logs', requireAuth, catchAsync(async (req: Request, res: Response) => {
   const logs = await db.select()
     .from(auditLogs)

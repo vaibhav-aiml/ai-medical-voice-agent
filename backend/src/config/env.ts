@@ -21,7 +21,8 @@ const envSchema = z.object({
   EMAIL_PASS: z.string().optional(),
   FRONTEND_URL: z.string().optional(),
   KEEP_AWAKE_URL: z.string().optional(),
-  KEEP_AWAKE_INTERVAL: z.string().default('840000'), 
+  KEEP_AWAKE_INTERVAL: z.string().default('840000'),
+  AUDIT_SIGNING_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -47,6 +48,10 @@ function validateEnv(): Env {
     process.exit(1);
   }
   const env = result.data;
+  if (env.NODE_ENV === 'production' && !env.AUDIT_SIGNING_SECRET) {
+    console.error('\n🚨 Security Configuration Error: AUDIT_SIGNING_SECRET is required in production environment.\n');
+    process.exit(1);
+  }
   const optionalWarnings: string[] = [];
 
   if (!env.OPENAI_API_KEY) optionalWarnings.push('OPENAI_API_KEY — OpenAI fallback disabled');

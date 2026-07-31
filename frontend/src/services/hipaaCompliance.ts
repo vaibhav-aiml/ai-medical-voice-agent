@@ -106,9 +106,13 @@ class HIPAACompliance {
 
   private persistToStorage(entry: PHIData): void {
     try {
+      const sanitizedEntry = {
+        ...entry,
+        value: entry.value ? this.anonymizeForAI(entry.value) : ''
+      };
       const existing = localStorage.getItem('hipaa_logs');
       const logs = existing ? JSON.parse(existing) : [];
-      logs.push(entry);
+      logs.push(sanitizedEntry);
       if (logs.length > 1000) {
         logs.shift();
       }

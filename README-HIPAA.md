@@ -1,52 +1,55 @@
-# HIPAA Compliance Reference & Architecture
+# HIPAA Compliance Reference & Technical Security Architecture
 
-This document describes the HIPAA-compliant security measures built directly into the MediVoice AI application code, and details how the deploying organization can satisfy remaining physical/administrative safeguards.
+This document describes the technical security measures implemented in the MediVoice AI application codebase and details the infrastructure and administrative safeguards required for HIPAA compliance.
 
-## Implemented Technical Controls
-
-The following security controls are implemented at the application and database level:
-
-### 1. Secure Access Controls
-- **Clerk Authentication**: All patient data routes are protected via authenticated session checks (`requireAuth`). The backend performs cryptographic verification of Clerk JWT tokens (`clerkClient.verifyToken`) to validate user identities.
-- **Route Protection**: Access controls are strictly enforced on all sensitive endpoints (e.g., consultations, voice records, reports, triage results, RAG queries, and clinic dashboards).
-
-### 2. Audit & Access Logging
-- **Database Persistence**: Audit logs and HIPAA logs are persisted to a PostgreSQL database (via Drizzle ORM) rather than in-memory storage, maintaining permanent records of data access.
-- **Cryptographic Signatures**: The frontend client-side logger cryptographically signs audit log entries to ensure their integrity. Any subsequent modification of log files can be detected by signature mismatch.
-- **Admin Access API**: Secure `/api/hipaa/logs` and `/api/audit/logs` endpoints are built and restricted to authenticated users.
-
-### 3. Client-Side Data Minimization (PHI Sanitization)
-- **Local Anonymization**: The application includes a client-side utility (`hipaaCompliance.ts`) that runs prior to any third-party AI inferences. It detects and redacts standard Protected Health Information (PHI) identifiers (e.g., names, emails, phone numbers, and street addresses).
+> **Technical Compliance Disclaimer**: HIPAA compliance is an end-to-end organizational responsibility involving infrastructure security, vendor BAAs, access policies, and administrative procedures. MediVoice AI provides technical security controls at the application layer, but application code alone does not grant compliance.
 
 ---
 
-## Deployer Compliance Checklist (Infrastructure & Administrative)
+## Implemented Application Safeguards
 
-Because HIPAA compliance is a property of the overall system deployment and organizational policies, the organization deploying this application must implement the following safeguards:
+### 1. Access Control & Authentication
+- **Clerk Session Verification**: Sensitive patient API routes are protected via authentication middleware (`requireAuth`). The backend performs cryptographic verification of Clerk JWT tokens (`clerkClient.verifyToken`) to validate user identity.
+- **Role & Route Scoping**: Endpoint authorization checks ensure users can only access their own consultations, audit logs, and clinic records.
 
-### 1. Data Encryption at Rest and in Transit
-- **Database & Storage**: Ensure your production database (e.g., Neon / Amazon RDS) has encryption at rest enabled (AES-256).
-- **Transport Security**: Configure hosting platforms (e.g., Netlify, Render, Vercel) to enforce TLS 1.3 for all communications.
+### 2. Audit Trail & Integrity Signatures
+- **Database Log Persistence**: Audit events and data access logs are stored in PostgreSQL tables (`audit_logs`, `hipaa_logs`) using Drizzle ORM.
+- **HMAC SHA-256 Signatures**: Audit log entries compute HMAC SHA-256 cryptographic signatures using `AUDIT_SIGNING_SECRET` to detect unauthorized tampering or log modification. In production environments, server startup fails if `AUDIT_SIGNING_SECRET` is unconfigured.
+- **Audit APIs**: Restricted endpoints (`/api/hipaa/logs` and `/api/audit/logs`) allow authorized users to review access logs and verify signature integrity.
+
+### 3. Data Minimization & Pattern Redaction
+- **Rule-Based Regex Masking**: Client-side (`hipaaCompliance.ts`) and server-side (`phiService.ts`) utilities apply 15 structured regular expressions to mask standard identifiers (email, phone, SSN, MRN, date of birth, street address) prior to sending text to third-party LLM APIs.
+- **Implementation Limitation**: This feature uses deterministic regular expression matching. It does not employ statistical Natural Language Processing (NLP) or Clinical Named Entity Recognition (NER). Unstructured names or non-standard date formats may not be detected by regex patterns alone.
+
+---
+
+## Required Deployment Infrastructure & Safeguards
+
+To maintain compliance, the deploying entity must configure the following operational controls:
+
+### 1. Database & Infrastructure Encryption
+- **Managed Database Encryption at Rest**: Deploy on cloud database providers with storage volume encryption at rest enabled (e.g., Neon managed PostgreSQL storage).
+- **Transport Layer Security**: Enforce HTTPS and TLS 1.3 for all REST API endpoints and Socket.IO WebSocket streaming connections.
 
 ### 2. Business Associate Agreements (BAAs)
-Deployers must sign BAAs with all third-party vendors handling PHI in their deployment environment:
-- **Authentication**: Clerk (requires Enterprise or custom plans for BAA).
-- **AI Processing**: OpenAI / Groq (requires enterprise agreements).
-- **Database & Hosting**: Neon / AWS / Render.
+Deployers MUST execute BAAs with all third-party vendors processing PHI in production:
+- **Authentication**: Clerk (requires Enterprise plan for BAA execution).
+- **AI / LLM Inferences**: Groq / OpenAI (requires enterprise deployment BAA).
+- **Database & Hosting**: Neon PostgreSQL / Render / Netlify.
 
-### 3. Administrative Policies
-- Establish a HIPAA training regimen for all medical/administrative staff.
-- Set up automated database backups with clear Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO).
-- Formulate a 60-day Breach Notification procedure and SLA.
+### 3. Administrative Safeguards
+- Establish employee security training and role-based data access policies.
+- Configure automated database backups with verified Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO).
+- Establish formal data breach response and incident reporting protocols.
 
 ---
 
-## Active Checklist
+## Technical Security Feature Matrix
 
 - [x] Application-level Access Controls (Clerk JWT Signature Verification)
-- [x] Permanent Database Logging (Audit & HIPAA tables)
-- [x] Cryptographic Integrity Verification for client-side audit logs
-- [x] Local PHI Data Minimization & Redaction (Regex Anonymizer)
-- [ ] Infrastructure-level Encryption (To be configured by Deployer)
-- [ ] BAA Contracts signed with vendors (To be executed by Deployer)
-- [ ] Administrative policies and team training (To be established by Deployer)
+- [x] Permanent Database Audit Logging (`audit_logs` & `hipaa_logs` PostgreSQL tables)
+- [x] Cryptographic Integrity Verification (HMAC SHA-256 signatures with mandatory production secret assertion)
+- [x] Rule-Based Regex PHI Masking (`phiService` pattern anonymizer)
+- [ ] Managed Database Encryption at Rest (Configured by Deployer on Neon PostgreSQL)
+- [ ] BAA Contracts Signed with Infrastructure Vendors (Executed by Deployer)
+- [ ] Administrative Policies & Incident Procedures (Established by Deployer)
