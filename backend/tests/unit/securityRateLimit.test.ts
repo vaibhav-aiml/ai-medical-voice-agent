@@ -14,7 +14,11 @@ describe('Security & Rate Limiter Store Tests', () => {
     });
 
     const mockReq: any = { ip: '127.0.0.1', headers: {} };
-    const mockRes: any = { setHeader: () => {}, status: () => ({ json: () => {} }) };
+    const mockRes: any = {
+      setHeader: (name: string, value: string) => {},
+      getHeader: (name: string) => undefined,
+      status: () => ({ json: () => {} })
+    };
     const mockNext = () => {};
 
     // 3 requests allowed

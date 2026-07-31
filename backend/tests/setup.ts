@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/pglite';
 import * as schema from '../src/db/schema/index';
 import { beforeAll, afterAll } from 'vitest';
 
-export let pgliteClient: PGlite;
+export let pgliteClient: any;
 export let testDb: ReturnType<typeof drizzle>;
 
 beforeAll(async () => {
@@ -11,7 +11,7 @@ beforeAll(async () => {
   testDb = drizzle(pgliteClient, { schema });
 
   // Initialize schema DDL in pglite in-memory database
-  await pgliteClient.query(`
+  await pgliteClient.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       clerk_id TEXT UNIQUE NOT NULL,
@@ -66,7 +66,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (pgliteClient) {
+  if (pgliteClient && typeof pgliteClient.close === 'function') {
     await pgliteClient.close();
   }
 });

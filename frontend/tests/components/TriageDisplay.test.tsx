@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+import '@testing-library/jest-dom';
 import React from 'react';
 import TriageDisplay from '../../src/components/consultation/TriageDisplay';
 
