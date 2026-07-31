@@ -40,6 +40,9 @@
   },
   "home": {
     "aiPowered": "AI-Powered Healthcare",
+    "voiceConsultation": "Voice Consultation",
+    "specialists": "Specialists",
+    "medicalReports": "Medical Reports",
     "yourHealth": "Your Health",
     "ourPriority": "Our Priority",
     "subtitle": "Experience the future of healthcare with AI-powered consultations. Get instant medical advice from specialized doctors, anytime, anywhere.",

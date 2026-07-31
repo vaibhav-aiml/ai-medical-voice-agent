@@ -141,15 +141,15 @@ export default function HomePage() {
           <div style={styles.heroImage}>
             <div style={styles.floatingCard1}>
               <Mic size={24} color="#3b82f6" />
-              <span>{t('home.voiceConsultation')}</span>
+              <span>{t('home.voiceConsultation') === 'home.voiceConsultation' ? 'Voice Consultation' : t('home.voiceConsultation')}</span>
             </div>
             <div style={styles.floatingCard2}>
               <Stethoscope size={24} color="#10b981" />
-              <span>{t('home.specialists')}</span>
+              <span>{t('home.specialists') === 'home.specialists' ? 'Specialists' : t('home.specialists')}</span>
             </div>
             <div style={styles.floatingCard3}>
               <ClipboardList size={24} color="#f59e0b" />
-              <span>{t('home.medicalReports')}</span>
+              <span>{t('home.medicalReports') === 'home.medicalReports' ? 'Medical Reports' : t('home.medicalReports')}</span>
             </div>
             <div style={styles.heroCircle}></div>
             {/* Floating medical icons (3, very low opacity) */}
