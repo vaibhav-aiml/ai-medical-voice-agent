@@ -557,6 +557,35 @@ Full documentation: [`README-HIPAA.md`](./README-HIPAA.md)
 
 ---
 
+## 🧪 Testing Suite
+
+MediVoice AI includes a production-grade 6-tier test architecture:
+
+```bash
+# 1. Backend Vitest Suite (Unit, Integration, OpenAPI Contracts, pglite DB)
+cd backend
+npm test                          # Run all backend tests
+npm test -- --coverage            # Generate V8 coverage report
+
+# 2. Frontend Vitest Suite (React Testing Library + MSW Components & Hooks)
+cd frontend
+npm test                          # Run frontend component & hook tests
+
+# 3. Playwright E2E Suite (Cross-Browser & Mobile Viewports)
+npx playwright test               # Runs Chromium, Firefox, WebKit, iPhone 14, Pixel 7
+npx playwright show-report        # View HTML test report & failure traces
+
+# 4. k6 Load & Stress Testing
+# Install k6 binary: macOS (`brew install k6`), Linux (`sudo apt-get install k6`), Windows (`winget install k6`)
+k6 run load-tests/concurrent-users.js    # 50-user ramp-up & latency threshold assertions
+k6 run load-tests/websocket-load.js       # 50-socket heartbeat load test
+
+# 5. Chaos & Resilience Testing
+npx vitest run chaos-tests/               # Network, Service, DB & Browser fault injection
+```
+
+---
+
 ## 🚢 Deployment
 
 ### Backend → Render
