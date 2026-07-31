@@ -8,6 +8,7 @@
     "stripe": "^22.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1"
+    "@playwright/test": "^1.62.1",
+    "vitest": "^4.1.10"
   }
 }

@@ -16,7 +16,7 @@ describe('TriageDisplay Component Tests', () => {
       requiresAmbulance: true
     };
 
-    render(<TriageDisplay result={mockResult} />);
+    render(<TriageDisplay result={mockResult} onClose={() => {}} />);
     expect(screen.getByText(/Seek Immediate Emergency Care/i)).toBeInTheDocument();
   });
 });
