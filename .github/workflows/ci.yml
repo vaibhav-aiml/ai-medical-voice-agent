@@ -83,7 +83,7 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Execute Playwright E2E Tests
-        run: npx playwright test
+        run: npx playwright test --config e2e/playwright.config.ts
 
       - name: Upload Playwright Test Report Artifact
         if: always()
