@@ -11,13 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
-      - name: Install Backend Dependencies
-        run: cd backend && npm ci
+      - name: Install Dependencies
+        run: |
+          npm install
+          cd backend && npm install
 
       - name: Execute Chaos Test Suite
-        run: cd backend && npx vitest run ../chaos-tests/
+        run: npx vitest run chaos-tests
+
