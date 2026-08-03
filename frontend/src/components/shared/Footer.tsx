@@ -1,4 +1,5 @@
 import { Heart, Phone, Mail, MapPin } from 'lucide-react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
@@ -20,6 +21,7 @@ export default function Footer({
   setShowHealthGoals,
   setShowAppointmentsList 
 }: FooterProps) {
+  const { isMobile, isTablet } = useBreakpoint();
   const currentYear = new Date().getFullYear();
 
   const handleNavigation = (page: string) => {
@@ -76,9 +78,13 @@ export default function Footer({
   return (
     <footer style={styles.footer}>
       <div style={styles.container}>
-        <div style={styles.mainContent}>
+        <div style={{
+          ...styles.mainContent,
+          gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '2fr 1fr 1fr 1fr',
+          gap: isMobile ? '24px' : '40px',
+        }}>
           {}
-          <div style={styles.brandColumn}>
+          <div style={{ ...styles.brandColumn, maxWidth: isMobile ? '100%' : '300px' }}>
             <div style={styles.logo}>
               <Heart size={28} color="#3b82f6" />
               <h2>MediVoice AI</h2>
@@ -151,7 +157,7 @@ export default function Footer({
           <div style={styles.newsletterContent}>
             <h3>Subscribe to Our Newsletter</h3>
             <p>Get the latest health tips and updates directly in your inbox.</p>
-            <div style={styles.newsletterForm}>
+            <div style={{ ...styles.newsletterForm, flexWrap: 'wrap' as const }}>
               <input
                 type="email"
                 placeholder="Enter your email"

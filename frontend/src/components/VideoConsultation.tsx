@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import { X, Mic, MicOff, Video, VideoOff, PhoneOff, Camera, MessageSquare } from 'lucide-react';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function VideoConsultation({ consultationId, specialistName, specialistType, onClose, onEndCall }: Props) {
+  const { isMobile, isTablet } = useBreakpoint();
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -109,10 +111,12 @@ export default function VideoConsultation({ consultationId, specialistName, spec
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const responsiveStyles = getResponsiveStyles(isMobile, isTablet);
+
   return (
     <div style={styles.overlay}>
       <div style={styles.container}>
-        <div style={styles.header}>
+        <div style={responsiveStyles.header}>
           <div>
             <h2 style={styles.title}>Video Consultation</h2>
             <p style={styles.subtitle}>
@@ -124,8 +128,8 @@ export default function VideoConsultation({ consultationId, specialistName, spec
           </button>
         </div>
 
-        <div style={styles.videoGrid}>
-          <div style={styles.remoteVideoContainer}>
+        <div style={responsiveStyles.videoGrid}>
+          <div style={responsiveStyles.remoteVideoContainer}>
             {isConnecting ? (
               <div style={styles.connectingOverlay}>
                 <div style={styles.spinner}></div>
@@ -142,7 +146,7 @@ export default function VideoConsultation({ consultationId, specialistName, spec
             )}
           </div>
 
-          <div style={styles.localVideoContainer}>
+          <div style={responsiveStyles.localVideoContainer}>
             <video
               ref={localVideoRef}
               autoPlay
@@ -161,7 +165,7 @@ export default function VideoConsultation({ consultationId, specialistName, spec
           </div>
         </div>
 
-        <div style={styles.chatSection}>
+        <div style={responsiveStyles.chatSection}>
           <div style={styles.chatHeader}>
             <MessageSquare size={16} />
             <span>Chat with {specialistName}</span>
@@ -200,6 +204,39 @@ export default function VideoConsultation({ consultationId, specialistName, spec
       </div>
     </div>
   );
+}
+
+function getResponsiveStyles(isMobile: boolean, isTablet: boolean) {
+  return {
+    header: {
+      ...styles.header,
+      flexWrap: 'wrap' as const,
+      padding: isMobile ? '12px 16px' : '16px 24px',
+      gap: isMobile ? '8px' : undefined,
+    },
+    videoGrid: {
+      ...styles.videoGrid,
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+      padding: isMobile ? '12px' : '20px',
+      gap: isMobile ? '12px' : '16px',
+    },
+    remoteVideoContainer: {
+      ...styles.remoteVideoContainer,
+      minHeight: isMobile ? '200px' : '400px',
+    },
+    localVideoContainer: {
+      ...styles.localVideoContainer,
+      minHeight: isMobile ? '200px' : '400px',
+    },
+    chatSection: {
+      ...styles.chatSection,
+      width: isMobile ? '100%' : '320px',
+      position: (isMobile ? 'relative' : 'absolute') as 'relative' | 'absolute',
+      borderLeft: isMobile ? 'none' : '1px solid #0f3460',
+      borderTop: isMobile ? '1px solid #0f3460' : 'none',
+      maxHeight: isMobile ? '300px' : undefined,
+    },
+  };
 }
 
 const styles = {

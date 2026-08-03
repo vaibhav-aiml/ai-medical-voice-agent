@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { 
   Menu, ChevronDown, Home, LayoutDashboard, FileText, Calendar, Plus, 
   Sparkles, Activity, Heart, Shield, Download, CreditCard, Settings, 
-  TrendingUp, Target, Bell, User, Mic, Database
+  TrendingUp, Target, Bell, User, Mic, Database, X
 } from 'lucide-react';
 import ProfileDropdown from '../profile/ProfileDropdown';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 interface Props {
   setShowSymptomChecker: (show: boolean) => void;
@@ -44,20 +45,56 @@ export default function Header({
 }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isMobile, isTablet } = useBreakpoint();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
+
+  const showMobileNav = isMobile || isTablet;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        hamburgerRef.current &&
+        !hamburgerRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Close mobile menu on escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+        hamburgerRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen]);
+
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+
+  const handleMobileNavClick = useCallback((action: () => void) => {
+    action();
+    setIsMobileMenuOpen(false);
+  }, []);
 
   const essentialButtons = [
     { icon: <Home size={18} />, label: 'Home', onClick: () => navigate('/'), active: location.pathname === '/' },
@@ -77,6 +114,14 @@ export default function Header({
     { icon: <Shield size={18} />, label: '2FA Settings', onClick: () => setShowTwoFactorAuth(true) },
     { icon: <Mic size={18} />, label: 'Voice Biometrics', onClick: () => setShowVoiceBiometricsEnrollment(true) },
     { icon: <Database size={18} />, label: 'EHR Connection', onClick: () => setShowFHIRConnector(true) },
+  ];
+
+  const allMobileItems = [
+    ...essentialButtons.map(b => ({ icon: b.icon, label: b.label, onClick: b.onClick })),
+    { icon: <Bell size={18} />, label: 'Reminders', onClick: () => onOpenReminders?.() },
+    { icon: <CreditCard size={18} />, label: 'Upgrade', onClick: onUpgrade },
+    { icon: <Plus size={18} />, label: 'New Consultation', onClick: onNewConsultation },
+    ...dropdownItems,
   ];
 
   return (
@@ -101,66 +146,111 @@ export default function Header({
           <h1 style={styles.logo}>MediVoice AI</h1>
         </div>
 
-        <div style={styles.navLinks}>
-          {essentialButtons.map((btn, idx) => (
+        {showMobileNav ? (
+          /* ── Mobile / Tablet: hamburger + slide-down menu ── */
+          <div style={styles.mobileNavContainer}>
+            <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
+            <button
+              ref={hamburgerRef}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              style={styles.hamburgerButton}
+              aria-expanded={isMobileMenuOpen}
+              aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            >
+              {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+        ) : (
+          /* ── Desktop: original navigation ── */
+          <div style={styles.navLinks}>
+            {essentialButtons.map((btn, idx) => (
+              <button
+                key={idx}
+                onClick={btn.onClick}
+                style={{
+                  ...styles.navButton,
+                  ...(btn.active ? styles.navButtonActive : {}),
+                }}
+              >
+                {btn.icon}
+                <span>{btn.label}</span>
+              </button>
+            ))}
+
+            {}
+            <button onClick={onOpenReminders} style={styles.reminderButton}>
+              <Bell size={18} />
+              <span>Reminders</span>
+            </button>
+
+            <button onClick={onUpgrade} style={styles.upgradeButton}>
+              <CreditCard size={18} />
+              <span>Upgrade</span>
+            </button>
+
+            <button onClick={onNewConsultation} style={styles.consultButton}>
+              <Plus size={18} />
+              <span>New Consultation</span>
+            </button>
+
+            <div ref={dropdownRef} style={styles.dropdownContainer}>
+              <button onClick={toggleDropdown} style={styles.dropdownButton}>
+                <Menu size={18} />
+                <span>More</span>
+                <ChevronDown size={14} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+
+              {isDropdownOpen && (
+                <div style={styles.dropdownMenu}>
+                  {dropdownItems.map((item, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        item.onClick();
+                        setIsDropdownOpen(false);
+                      }}
+                      style={styles.dropdownItem}
+                    >
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
+          </div>
+        )}
+      </div>
+
+      {/* ── Mobile slide-down menu ── */}
+      {showMobileNav && (
+        <div
+          ref={mobileMenuRef}
+          style={{
+            ...styles.mobileMenu,
+            maxHeight: isMobileMenuOpen ? '80vh' : '0',
+            opacity: isMobileMenuOpen ? 1 : 0,
+            padding: isMobileMenuOpen ? '8px 0' : '0',
+            borderTop: isMobileMenuOpen ? '1px solid var(--border-color)' : 'none',
+          }}
+          role="navigation"
+          aria-label="Mobile navigation"
+        >
+          {allMobileItems.map((item, idx) => (
             <button
               key={idx}
-              onClick={btn.onClick}
-              style={{
-                ...styles.navButton,
-                ...(btn.active ? styles.navButtonActive : {}),
-              }}
+              onClick={() => handleMobileNavClick(item.onClick)}
+              style={styles.mobileMenuItem}
+              tabIndex={isMobileMenuOpen ? 0 : -1}
             >
-              {btn.icon}
-              <span>{btn.label}</span>
+              {item.icon}
+              <span>{item.label}</span>
             </button>
           ))}
-
-          {}
-          <button onClick={onOpenReminders} style={styles.reminderButton}>
-            <Bell size={18} />
-            <span>Reminders</span>
-          </button>
-
-          <button onClick={onUpgrade} style={styles.upgradeButton}>
-            <CreditCard size={18} />
-            <span>Upgrade</span>
-          </button>
-
-          <button onClick={onNewConsultation} style={styles.consultButton}>
-            <Plus size={18} />
-            <span>New Consultation</span>
-          </button>
-
-          <div ref={dropdownRef} style={styles.dropdownContainer}>
-            <button onClick={toggleDropdown} style={styles.dropdownButton}>
-              <Menu size={18} />
-              <span>More</span>
-              <ChevronDown size={14} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-            </button>
-
-            {isDropdownOpen && (
-              <div style={styles.dropdownMenu}>
-                {dropdownItems.map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      item.onClick();
-                      setIsDropdownOpen(false);
-                    }}
-                    style={styles.dropdownItem}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <ProfileDropdown onOpen2FA={() => setShowTwoFactorAuth(true)} />
         </div>
-      </div>
+      )}
     </nav>
   );
 }
@@ -331,6 +421,47 @@ const styles = {
     color: 'var(--text-primary)',
     textAlign: 'left' as const,
     transition: 'all 0.15s ease',
+  },
+  /* ── Mobile-specific styles ── */
+  mobileNavContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  hamburgerButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '40px',
+    height: '40px',
+    background: 'transparent',
+    border: '1px solid var(--border-color)',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    color: 'var(--text-primary)',
+    transition: 'all 0.2s ease',
+  },
+  mobileMenu: {
+    overflow: 'hidden' as const,
+    transition: 'max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease',
+    background: 'var(--bg-nav)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+  },
+  mobileMenuItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    width: '100%',
+    padding: '12px 24px',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 500,
+    color: 'var(--text-primary)',
+    textAlign: 'left' as const,
+    transition: 'background 0.15s ease',
   },
 };
 const hoverStyles = document.createElement('style');
