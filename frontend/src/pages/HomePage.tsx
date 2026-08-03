@@ -647,7 +647,7 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundSize: '400% 400%',
     animation: 'gradientShift 20s ease infinite',
   },
-  stepsContainer: { maxWidth: '1000px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px' },
+  stepsContainer: { maxWidth: '1000px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' as const },
   stepCard: { flex: 1, textAlign: 'center' as const, padding: '32px 24px', background: 'var(--bg-card)', borderRadius: '24px', position: 'relative' as const, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', border: '1px solid var(--border-color)', cursor: 'pointer', boxShadow: 'var(--card-shadow)' },
   stepCardExpanded: { transform: 'scale(1.02)', boxShadow: '0 0 0 3px #3b82f6, 0 20px 40px -10px rgba(0,0,0,0.25)', borderColor: '#3b82f6' },
   stepNumber: { position: 'absolute' as const, top: '-12px', left: '20px', fontSize: '48px', fontWeight: 800, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', opacity: 0.3 },

@@ -17,7 +17,7 @@ export default function DashboardPage() {
       <Suspense fallback={<SkeletonLoader />}>
         <EnhancedDashboard consultations={consultations} stats={stats} />
       </Suspense>
-      <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+      <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         <button
           onClick={() => setShowAnalytics(true)}
           style={styles.analyticsButton}
