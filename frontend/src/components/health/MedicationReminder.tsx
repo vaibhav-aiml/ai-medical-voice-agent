@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { API_URL } from '../../config/api';
 import { Bell, Plus, Edit2, Trash2, Clock, Calendar, Mail, Phone, MessageCircle, X, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -32,6 +33,7 @@ interface ReminderStats {
 }
 
 const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({ userId, onClose }) => {
+  const { isMobile, isTablet } = useBreakpoint();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [preferences, setPreferences] = useState<NotificationPrefs | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -211,7 +213,7 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
 
         {}
         {stats && (
-          <div style={styles.statsContainer}>
+          <div style={{...styles.statsContainer, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
             <div style={styles.statCard}>
               <div style={styles.statValue}>{stats.adherenceRate?.toFixed(0) || 0}%</div>
               <div style={styles.statLabel}>Adherence Rate</div>
@@ -526,7 +528,6 @@ const styles = {
   },
   statsContainer: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
     gap: '16px',
     marginBottom: '24px',
   },

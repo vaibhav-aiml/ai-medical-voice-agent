@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { API_URL } from '../../config/api';
 import { Activity, AlertCircle, CheckCircle, Clock, Heart, Brain, Stethoscope, Pill, TrendingUp, AlertTriangle, Shield, Plus, Trash2 } from 'lucide-react';
 
@@ -52,6 +53,7 @@ interface AnalysisResult {
 }
 
 const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultation?: (specialist: string, symptoms: string) => void }> = ({ onClose, onStartConsultation }) => {
+  const { isMobile } = useBreakpoint();
   const [step, setStep] = useState<'symptoms' | 'patient' | 'results'>('symptoms');
   const [symptoms, setSymptoms] = useState<Symptom[]>([]);
   const [currentSymptom, setCurrentSymptom] = useState('');
@@ -309,7 +311,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
             {}
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>Patient Profile</h3>
-              <div style={styles.formRow}>
+              <div style={{...styles.formRow, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Age</label>
                   <input type="number" value={patientInfo.age} onChange={(e) => setPatientInfo({ ...patientInfo, age: parseInt(e.target.value) })} style={styles.input} />
@@ -324,7 +326,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
                 </div>
               </div>
 
-              <div style={styles.formRow}>
+              <div style={{...styles.formRow, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Medical History</label>
                   <div style={styles.inputWithButton}>
@@ -342,7 +344,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
                 </div>
               </div>
 
-              <div style={styles.formRow}>
+              <div style={{...styles.formRow, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Current Medications</label>
                   <div style={styles.inputWithButton}>
@@ -360,7 +362,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
                 </div>
               </div>
 
-              <div style={styles.formRow}>
+              <div style={{...styles.formRow, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Family History</label>
                   <div style={styles.inputWithButton}>
@@ -378,7 +380,7 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
                 </div>
               </div>
 
-              <div style={styles.formRow}>
+              <div style={{...styles.formRow, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Lifestyle</label>
                   <div style={styles.checkboxGroup}>

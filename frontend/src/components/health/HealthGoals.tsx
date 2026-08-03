@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { X, Target, TrendingUp, Droplet, Moon, Activity, Apple, Brain, Heart, Award, Flame, Calendar, CheckCircle, Circle, Edit2, Trash2, Plus, BarChart3 } from 'lucide-react';
 
 interface Goal {
@@ -47,6 +48,7 @@ interface Props {
 }
 
 export default function HealthGoals({ onClose }: Props) {
+  const { isMobile, isTablet } = useBreakpoint();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [dailyLog, setDailyLog] = useState<DailyLog>({
     id: '',
@@ -318,7 +320,7 @@ export default function HealthGoals({ onClose }: Props) {
               <h3>📊 Weekly Average</h3>
               <BarChart3 size={18} color="#64748b" />
             </div>
-            <div style={styles.weeklyStats}>
+            <div style={{...styles.weeklyStats, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
               <div style={styles.statCard}>
                 <Droplet size={18} />
                 <span>{weeklyProgress.avgWater} glasses</span>

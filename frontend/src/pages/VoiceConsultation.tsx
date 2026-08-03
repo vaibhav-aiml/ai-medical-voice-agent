@@ -1,6 +1,8 @@
 import { Mic, Headphones, Clock, CheckCircle, ArrowRight } from 'lucide-react';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function VoiceConsultation() {
+  const { isMobile, isTablet } = useBreakpoint();
   return (
     <div style={styles.container}>
       <div style={styles.hero}>
@@ -14,7 +16,7 @@ export default function VoiceConsultation() {
       <div style={styles.content}>
         <section style={styles.section}>
           <h2>How It Works</h2>
-          <div style={styles.steps}>
+          <div style={{...styles.steps, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
             <div style={styles.step}>
               <div style={styles.stepNumber}>1</div>
               <h3>Click "Start Speaking"</h3>
@@ -35,7 +37,7 @@ export default function VoiceConsultation() {
 
         <section style={styles.section}>
           <h2>Benefits</h2>
-          <div style={styles.benefits}>
+          <div style={{...styles.benefits, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
             <div style={styles.benefit}>
               <Headphones size={24} color="#3b82f6" />
               <div>

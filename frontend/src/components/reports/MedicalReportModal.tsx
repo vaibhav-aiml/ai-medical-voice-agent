@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { Download, Mail, X, MessageCircle, Database } from 'lucide-react';
 import { generateCompletePDFReport, generateMockCompleteReport } from '../../utils/pdfGenerator';
 import EmailReportModal from './EmailReportModal';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function MedicalReportModal({ consultationId, specialistType, symptoms, patientName = "Patient", onClose, onResume }: Props) {
+  const { isMobile } = useBreakpoint();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [generatedPdfData, setGeneratedPdfData] = useState<string>('');
@@ -104,7 +106,7 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
             
             <div style={styles.infoSection}>
               <h3 style={styles.sectionTitle}>What's included in the report:</h3>
-              <div style={styles.featuresGrid}>
+              <div style={{...styles.featuresGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)'}}>
                 <div style={styles.featureItem}>✅ Patient Information</div>
                 <div style={styles.featureItem}>✅ Vital Signs Monitoring</div>
                 <div style={styles.featureItem}>✅ Detailed Symptoms Analysis</div>

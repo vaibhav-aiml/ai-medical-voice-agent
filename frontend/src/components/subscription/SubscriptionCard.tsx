@@ -1,6 +1,8 @@
 import { useSubscription } from '../../context/SubscriptionContext';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 export default function SubscriptionCard({ onUpgrade }: { onUpgrade: () => void }) {
+  const { isMobile } = useBreakpoint();
   const { subscription, getRemainingConsultations, getTierBenefits } = useSubscription();
   const remaining = getRemainingConsultations();
   const benefits = getTierBenefits();
@@ -21,7 +23,7 @@ export default function SubscriptionCard({ onUpgrade }: { onUpgrade: () => void 
         )}
       </div>
       
-      <div style={styles.statsGrid}>
+      <div style={{...styles.statsGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)'}}>
         <div style={styles.statItem}>
           <div style={styles.statValue}>{remaining}</div>
           <div style={styles.statLabel}>Consultations Left</div>

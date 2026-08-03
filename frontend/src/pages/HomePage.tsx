@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import {
   Mic, Stethoscope, ClipboardList, ArrowRight,
   Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Calendar
@@ -13,6 +14,7 @@ import ctaMedicalImg from '../assets/images/cta_medical.png';
 const EnhancedSymptomChecker = lazy(() => import('../components/health/EnhancedSymptomChecker'));
 
 export default function HomePage() {
+  const { isMobile, isTablet } = useBreakpoint();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { stats, handleSymptomCheckerConsultation } = useConsultation();
@@ -115,7 +117,7 @@ export default function HomePage() {
               <path d="M0,20 Q10,5 20,20 T40,20 T60,20 T80,20 T100,20 T120,20 T140,20 T160,20 T180,20 T200,20" fill="none" stroke="currentColor" strokeWidth="1.5" />
             </svg>
           )}
-        <div style={styles.heroSection}>
+        <div style={{...styles.heroSection, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
           <div style={styles.heroContent}>
             <div style={styles.heroBadge}>
               <Sparkles size={16} />
@@ -182,7 +184,7 @@ export default function HomePage() {
             transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <div style={styles.statsContainer}>
+          <div style={{...styles.statsContainer, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)'}}>
             <div style={styles.statCard}>
               <div style={styles.statIconBg}><MessageCircle size={24} /></div>
               <div style={styles.statNumber}>{stats.totalConsultations}</div>
@@ -224,7 +226,7 @@ export default function HomePage() {
             <h2>{t('home.whyChoose')} <span style={styles.sectionHeaderAccent}>{t('home.mediVoiceAI')}</span></h2>
             <p>{t('home.featureDesc')}</p>
           </div>
-          <div style={styles.featuresGrid}>
+          <div style={{...styles.featuresGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
             <div style={styles.featureCard}>
               <div style={styles.featureIcon}><Mic size={32} /></div>
               <h3>{t('home.featureVoice')}</h3>
@@ -365,7 +367,7 @@ export default function HomePage() {
             <h2>{t('home.whatUsersSay')} <span style={styles.sectionHeaderAccent}>{t('home.aboutUs')}</span></h2>
             <p>{t('home.trustedBy')}</p>
           </div>
-          <div style={styles.testimonialsGrid}>
+          <div style={{...styles.testimonialsGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
             <div style={styles.testimonialCard}>
               <div style={styles.testimonialStars}>★★★★★</div>
               <p>{t('home.testimonial1')}</p>

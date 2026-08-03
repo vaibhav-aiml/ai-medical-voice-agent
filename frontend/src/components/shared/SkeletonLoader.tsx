@@ -1,8 +1,11 @@
+import { useBreakpoint } from '../../hooks/useBreakpoint';
+
 export default function SkeletonLoader() {
+  const { isMobile, isTablet } = useBreakpoint();
   return (
     <div style={styles.container}>
       {}
-      <div style={styles.heroSection}>
+      <div style={{...styles.heroSection, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
         <div style={styles.heroContent}>
           <div style={styles.skeletonBadge}></div>
           <div style={styles.skeletonHeroTitle}></div>
@@ -30,7 +33,7 @@ export default function SkeletonLoader() {
 
       {}
       <div style={styles.statsSection}>
-        <div style={styles.statsGrid}>
+        <div style={{...styles.statsGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)'}}>
           {[1, 2, 3, 4].map((i) => (
             <div key={i} style={styles.statCard}>
               <div style={styles.skeletonIcon}></div>
@@ -44,7 +47,7 @@ export default function SkeletonLoader() {
       {}
       <div style={styles.featuresSection}>
         <div style={styles.skeletonSectionHeader}></div>
-        <div style={styles.featuresGrid}>
+        <div style={{...styles.featuresGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} style={styles.featureCard}>
               <div style={styles.skeletonFeatureIcon}></div>
@@ -73,7 +76,7 @@ export default function SkeletonLoader() {
       {}
       <div style={styles.testimonialsSection}>
         <div style={styles.skeletonSectionHeader}></div>
-        <div style={styles.testimonialsGrid}>
+        <div style={{...styles.testimonialsGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
           {[1, 2, 3].map((i) => (
             <div key={i} style={styles.testimonialCard}>
               <div style={styles.skeletonStars}></div>

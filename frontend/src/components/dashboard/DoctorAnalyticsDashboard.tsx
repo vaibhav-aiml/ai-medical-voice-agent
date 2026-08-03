@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import {
   TrendingUp, Users, Calendar, Star, Activity, BarChart3,
   Clock, Stethoscope, Heart, Brain, Bone, Baby,
@@ -42,6 +43,7 @@ interface Props {
 }
 
 const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onClose }) => {
+  const { isMobile, isTablet } = useBreakpoint();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -264,7 +266,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
           </div>
         </div>
 
-        <div style={styles.statsGrid}>
+        <div style={{...styles.statsGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)'}}>
           <div style={styles.statCard}>
             <div style={styles.statIcon}><Users size={20} /></div>
             <div>
@@ -337,7 +339,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
                 </div>
               </div>
 
-              <div style={styles.twoColumnGrid}>
+              <div style={{...styles.twoColumnGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
                 <div style={styles.infoCard}>
                   <h3 style={styles.infoTitle}><Clock size={16} /> Peak Consultation Hours</h3>
                   {analytics.peakHours.map((hour: any) => (
@@ -401,7 +403,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
           )}
 
           {activeTab === 'patients' && (
-            <div style={styles.twoColumnGrid}>
+            <div style={{...styles.twoColumnGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
               <div style={styles.infoCard}>
                 <h3 style={styles.infoTitle}>Age Distribution</h3>
                 {analytics.patientDemographics.ageGroups.map((group: any) => (
@@ -437,7 +439,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
         <div style={styles.recentSection}>
           <h3 style={styles.recentTitle}>📋 Recent Consultations</h3>
           {analytics.recentConsultations.map((c: any) => (
-            <div key={c.id} style={styles.recentRow}>
+            <div key={c.id} style={{...styles.recentRow, gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr 2fr 0.8fr'}}>
               <div><span style={{ fontWeight: 600 }}>{c.patientName}</span><br /><span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{new Date(c.date).toLocaleDateString()}</span></div>
               <div><span style={{ color: '#00C2FF' }}>{getSpecialistTypeName(c.specialistType)}</span><br /><span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{c.duration} min</span></div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{c.symptoms?.substring(0, 40)}...</div>

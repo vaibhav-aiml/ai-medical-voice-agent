@@ -1,5 +1,6 @@
 import { Star, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { X, TrendingUp, Activity, Droplet, Moon, Flame, Brain, Calendar, Award, Target, BarChart3, LineChart, PieChart } from 'lucide-react';
 
 interface HealthData {
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export default function ProgressDashboard({ onClose }: Props) {
+  const { isMobile, isTablet } = useBreakpoint();
   const [healthData, setHealthData] = useState<HealthData[]>([]);
   const [consultations, setConsultations] = useState<ConsultationData[]>([]);
   const [activeTab, setActiveTab] = useState<'health' | 'consultations' | 'insights'>('health');
@@ -214,7 +216,7 @@ export default function ProgressDashboard({ onClose }: Props) {
               {}
               <div style={styles.section}>
                 <h3>Mood Tracker</h3>
-                <div style={styles.moodGrid}>
+                <div style={{...styles.moodGrid, gridTemplateColumns: isMobile ? 'repeat(4, 1fr)' : isTablet ? 'repeat(7, 1fr)' : 'repeat(7, 1fr)'}}>
                   {getFilteredHealthData().slice(-7).map((day, i) => (
                     <div key={i} style={styles.moodDay}>
                       <div style={styles.moodEmoji}>{getMoodEmoji(day.mood)}</div>

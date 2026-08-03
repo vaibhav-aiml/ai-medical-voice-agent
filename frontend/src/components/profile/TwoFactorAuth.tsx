@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { X, Shield, Smartphone, Mail, Key, CheckCircle, AlertCircle, Copy } from 'lucide-react';
 
 interface Props {
@@ -6,6 +7,7 @@ interface Props {
 }
 
 export default function TwoFactorAuth({ onClose }: Props) {
+  const { isMobile, isTablet } = useBreakpoint();
   const [isEnabled, setIsEnabled] = useState(false);
   const [setupMode, setSetupMode] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
@@ -155,7 +157,7 @@ export default function TwoFactorAuth({ onClose }: Props) {
 
               <div style={styles.featuresSection}>
                 <h4>Why enable 2FA?</h4>
-                <div style={styles.featuresGrid}>
+                <div style={{...styles.featuresGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
                   <div style={styles.featureItem}>
                     <Shield size={20} />
                     <span>Extra security layer</span>
@@ -175,7 +177,7 @@ export default function TwoFactorAuth({ onClose }: Props) {
             <div style={styles.backupSection}>
               <h3>Save Your Backup Codes</h3>
               <p>These codes can be used to access your account if you lose your device. Store them in a safe place.</p>
-              <div style={styles.backupCodesGrid}>
+              <div style={{...styles.backupCodesGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)'}}>
                 {backupCodes.map((code, i) => (
                   <div key={i} style={styles.backupCode}>{code}</div>
                 ))}

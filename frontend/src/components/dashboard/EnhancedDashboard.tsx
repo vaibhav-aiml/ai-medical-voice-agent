@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
 import { Calendar, TrendingUp, Activity, Clock, Award, Brain, Heart, Star, Users } from 'lucide-react';
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function EnhancedDashboard({ consultations, stats }: Props) {
+  const { isMobile, isTablet } = useBreakpoint();
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
   const [chartData, setChartData] = useState<any>(null);
   const [specialistChart, setSpecialistChart] = useState<any>(null);
@@ -264,7 +266,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
       </div>
 
       {}
-      <div style={styles.chartsGrid}>
+      <div style={{...styles.chartsGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)'}}>
         <div style={styles.chartCard}>
           <h3 style={styles.chartTitle}>Consultations Trend</h3>
           <div style={styles.chartWrapper}>

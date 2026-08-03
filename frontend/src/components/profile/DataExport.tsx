@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { X, Download, FileJson, FileText, FileSpreadsheet, Database, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface ExportData {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function DataExport({ onClose }: Props) {
+  const { isMobile } = useBreakpoint();
   const [exportData, setExportData] = useState<ExportData | null>(null);
   const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json');
   const [selectedData, setSelectedData] = useState({
@@ -208,7 +210,7 @@ export default function DataExport({ onClose }: Props) {
           {}
           <div style={styles.section}>
             <h3>Select Data to Export</h3>
-            <div style={styles.checkboxGrid}>
+            <div style={{...styles.checkboxGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)'}}>
               <label style={styles.checkboxLabel}>
                 <input
                   type="checkbox"

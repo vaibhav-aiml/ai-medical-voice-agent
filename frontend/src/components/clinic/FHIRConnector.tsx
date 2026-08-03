@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { API_URL } from '../../config/api';
 import { useAuth } from '@clerk/clerk-react';
 import { 
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function FHIRConnector({ userId, onClose, consultations }: Props) {
+  const { isMobile, isTablet } = useBreakpoint();
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -337,7 +339,7 @@ export default function FHIRConnector({ userId, onClose, consultations }: Props)
                     <>
                       {activeTab === 'profile' && (
                         <div>
-                          <div style={styles.profileGrid}>
+                          <div style={{...styles.profileGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)'}}>
                             <div style={styles.profileItem}>
                               <strong>Patient Name</strong>
                               <p>{clinicalData.patient?.name?.[0]?.text || clinicalData.patient?.name?.[0]?.family || 'N/A'}</p>

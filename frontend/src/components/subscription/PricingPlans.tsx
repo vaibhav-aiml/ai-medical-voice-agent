@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { Check, Crown, Users, Sparkles, X } from 'lucide-react';
 import { useSubscription } from '../../context/SubscriptionContext';
 
 export default function PricingPlans({ onClose }: { onClose: () => void }) {
+  const { isMobile, isTablet } = useBreakpoint();
   const { setSubscriptionTier, subscription } = useSubscription();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
@@ -104,7 +106,7 @@ export default function PricingPlans({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <div style={styles.plansContainer}>
+        <div style={{...styles.plansContainer, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
           {plans.map((plan) => (
             <div
               key={plan.name}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { BACKEND_URL } from '../../config/api';
 import { 
   Users, Calendar, Stethoscope, Building2, Settings, 
@@ -45,6 +46,7 @@ interface ClinicDashboardProps {
 }
 
 const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
+  const { isMobile, isTablet } = useBreakpoint();
   const [activeTab, setActiveTab] = useState('overview');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -480,7 +482,7 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
         {}
         {activeTab === 'overview' && (
           <div>
-            <div style={styles.statsGrid}>
+            <div style={{...styles.statsGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)'}}>
               <div style={styles.statCard}>
                 <div style={{...styles.statIcon, background: '#e0f2fe'}}>
                   <Users size={24} color="#0284c7" />
