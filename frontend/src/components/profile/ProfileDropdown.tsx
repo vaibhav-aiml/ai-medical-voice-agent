@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { useUser, useClerk } from '@clerk/clerk-react';
 import { User, Settings, LogOut, Shield, Moon, Sun, Globe, Users, ChevronRight, Camera, Check } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function ProfileDropdown({ onOpen2FA }: Props) {
+  const { isMobile } = useBreakpoint();
   const { user, isSignedIn } = useUser();
   const { signOut } = useClerk();
   const { theme, toggleTheme } = useTheme();
@@ -130,7 +132,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
       </button>
 
       {isOpen && (
-        <div style={styles.dropdown}>
+        <div style={{...styles.dropdown, width: isMobile ? 'calc(100vw - 32px)' : '300px', maxWidth: '300px'}}>
           {}
           <div style={styles.userInfo}>
             <div style={styles.avatarLarge}>

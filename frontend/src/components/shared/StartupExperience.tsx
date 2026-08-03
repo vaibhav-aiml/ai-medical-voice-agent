@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 interface StartupExperienceProps {
   /** Whether the underlying application is ready (auth loaded, route set) */
@@ -15,6 +16,7 @@ const STEPS = [
 ];
 
 export default function StartupExperience({ appReady }: StartupExperienceProps) {
+  const { isMobile } = useBreakpoint();
   const [visible, setVisible] = useState(() => {
     // Show only once per login session
     if (sessionStorage.getItem('medivoice_startup_shown') === '1') return false;
@@ -104,7 +106,7 @@ export default function StartupExperience({ appReady }: StartupExperienceProps) 
         <p style={styles.statusText}>{STEPS[currentStep]}</p>
 
         {/* Progress bar */}
-        <div style={styles.progressTrack}>
+        <div style={{...styles.progressTrack, width: isMobile ? '80%' : '240px', maxWidth: '240px'}}>
           <div
             style={{
               ...styles.progressFill,

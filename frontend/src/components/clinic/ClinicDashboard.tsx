@@ -425,9 +425,9 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   }
 
   return (
-    <div style={styles.container}>
+    <div style={{...styles.container, flexDirection: isMobile ? 'column' : 'row'}}>
       {}
-      <div style={styles.sidebar}>
+      <div style={{...styles.sidebar, width: isMobile ? '100%' : '260px', borderRight: isMobile ? 'none' : '1px solid var(--border-color)', borderBottom: isMobile ? '1px solid var(--border-color)' : 'none'}}>
         <div style={styles.logo}>
           <Building2 size={28} color="#10b981" />
           <span>Clinic Dashboard</span>
