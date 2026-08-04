@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import {
   Mic, Stethoscope, ClipboardList, ArrowRight,
-  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Calendar
+  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Calendar,
+  Volume2, VolumeX
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useLanguage } from '../context/LanguageContext';
@@ -10,6 +11,7 @@ import { useConsultation } from '../context/ConsultationContext';
 import SkeletonLoader from '../components/shared/SkeletonLoader';
 import heroMedicalImg from '../assets/images/hero_medical.png';
 import ctaMedicalImg from '../assets/images/cta_medical.png';
+import heroMedicalVideo from '../assets/videos/hero_medical.mp4';
 
 const EnhancedSymptomChecker = lazy(() => import('../components/health/EnhancedSymptomChecker'));
 
@@ -20,6 +22,12 @@ export default function HomePage() {
   const { stats, handleSymptomCheckerConsultation } = useConsultation();
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
   const [showEnhancedSymptomChecker, setShowEnhancedSymptomChecker] = useState(false);
+
+  // --- Hero video state ---
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
 
   // --- Visual enhancement state (no logic changes) ---
   const [parallaxOffset, setParallaxOffset] = useState({ x: 0, y: 0 });
@@ -44,6 +52,47 @@ export default function HomePage() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+
+  // Determine whether video should render at all
+  const showVideo = !prefersReducedMotion && !isMobile && !videoFailed;
+
+  // Sync the muted DOM property via ref (not just JSX attribute)
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  // Attempt autoplay explicitly and handle rejection gracefully
+  useEffect(() => {
+    if (!showVideo || !videoRef.current) return;
+
+    videoRef.current
+      .play()
+      .then(() => setIsVideoPlaying(true))
+      .catch(() => {
+        // Autoplay was rejected — leave the poster visible, keep the mute
+        // button hidden, and do not surface an error to the console.
+        setIsVideoPlaying(false);
+      });
+  }, [showVideo]);
+
+  // Pause when the tab is hidden, resume when visible
+  useEffect(() => {
+    if (!showVideo) return;
+
+    const handleVisibility = () => {
+      if (!videoRef.current) return;
+      if (document.hidden) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play().catch(() => {});
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [showVideo]);
 
   // Hero mouse parallax (±5px, disabled on touch/reduced-motion)
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -103,14 +152,63 @@ export default function HomePage() {
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >
-          {/* Background image layer */}
-          <div style={{
-            ...styles.heroBgImage,
-            backgroundImage: `url(${heroMedicalImg})`,
-            transform: prefersReducedMotion ? 'none' : `translate(${parallaxOffset.x}px, ${parallaxOffset.y}px) scale(1.05)`,
-          }} />
+          {/* Background video or static image fallback layer */}
+          {showVideo ? (
+            <video
+              ref={videoRef}
+              style={{
+                ...styles.heroBgImage,
+                objectFit: 'cover' as const,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none' as const,
+              }}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={heroMedicalImg}
+              onError={() => setVideoFailed(true)}
+            >
+              <source src={heroMedicalVideo} type="video/mp4" />
+            </video>
+          ) : (
+            <div style={{
+              ...styles.heroBgImage,
+              backgroundImage: `url(${heroMedicalImg})`,
+              transform: prefersReducedMotion ? 'none' : `translate(${parallaxOffset.x}px, ${parallaxOffset.y}px) scale(1.05)`,
+            }} />
+          )}
           {/* Dark overlay */}
           <div style={styles.heroBgOverlay} />
+          {/* Mute/unmute toggle — only shown once video is confirmed playing */}
+          {showVideo && isVideoPlaying && (
+            <button
+              onClick={() => setIsMuted(m => !m)}
+              aria-label={isMuted ? 'Unmute background video' : 'Mute background video'}
+              style={{
+                position: 'absolute' as const,
+                bottom: 16,
+                right: 16,
+                zIndex: 2,
+                background: 'rgba(15,23,42,0.6)',
+                border: 'none',
+                borderRadius: '50%',
+                width: 36,
+                height: 36,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                cursor: 'pointer',
+                backdropFilter: 'blur(4px)',
+                transition: 'background 0.2s ease',
+              }}
+            >
+              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
+          )}
           {/* Waveform accent behind heading */}
           {!prefersReducedMotion && (
             <svg style={styles.heroWaveformAccent} viewBox="0 0 200 40" preserveAspectRatio="none">
