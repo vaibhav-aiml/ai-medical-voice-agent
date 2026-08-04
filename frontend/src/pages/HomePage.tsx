@@ -185,13 +185,20 @@ export default function HomePage() {
           {/* Mute/unmute toggle — only shown once video is confirmed playing */}
           {showVideo && isVideoPlaying && (
             <button
-              onClick={() => setIsMuted(m => !m)}
+              onClick={(e) => {
+                e.stopPropagation();
+                const nextMuted = !isMuted;
+                if (videoRef.current) {
+                  videoRef.current.muted = nextMuted;
+                }
+                setIsMuted(nextMuted);
+              }}
               aria-label={isMuted ? 'Unmute background video' : 'Mute background video'}
               style={{
                 position: 'absolute' as const,
                 bottom: 16,
                 right: 16,
-                zIndex: 2,
+                zIndex: 10,
                 background: 'rgba(15,23,42,0.6)',
                 border: 'none',
                 borderRadius: '50%',
