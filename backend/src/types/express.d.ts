@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { Clinic } from '../models/Clinic';
 
 /**
  * Augment Express Request to include properties set by application middleware.
@@ -14,12 +15,7 @@ declare global {
     interface Request {
       userId?: string;
       requestId?: string;
-      clinic?: {
-        id: string;
-        name: string;
-        subdomain: string;
-        [key: string]: unknown;
-      };
+      clinic?: Clinic;
     }
   }
 }
