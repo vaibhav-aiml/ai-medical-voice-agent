@@ -129,7 +129,7 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
       logger.info('Starting Groq streaming completion', { consultationId });
       const candidateModels = [
         process.env.GROQ_MODEL,
-        'qwen/qwen3.8-27b',
+        'qwen/qwen3.6-27b',
         'groq/compound-mini',
         'openai/gpt-oss-120b',
       ].filter(Boolean) as string[];

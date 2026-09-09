@@ -87,7 +87,7 @@ export function registerGetAIResponseHandler(socket: Socket, groq: Groq | null) 
 
       const candidateModels = [
         process.env.GROQ_MODEL,
-        'qwen/qwen3.8-27b',
+        'qwen/qwen3.6-27b',
         'groq/compound-mini',
         'openai/gpt-oss-120b',
       ].filter(Boolean) as string[];

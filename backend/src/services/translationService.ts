@@ -97,7 +97,7 @@ Provide ONLY the raw translated text. Do NOT include any explanations, introduct
 
     if (aiProvider === 'groq' && groq) {
       const completion = await groq.chat.completions.create({
-        model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
+        model: process.env.GROQ_MODEL || 'qwen/qwen3.6-27b',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: cleanText }

@@ -143,6 +143,10 @@ router.post('/:clinicId/doctors/sync', (req: Request, res: Response) => {
 router.get('/:clinicId/doctors', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
+    const auth = verifyClinicAccess(req, clinicId);
+    if (!auth.allowed) {
+      return res.status(auth.status).json({ success: false, error: auth.error });
+    }
     const doctors = clinicService.getClinicDoctors(clinicId);
     res.json({ success: true, data: doctors });
   } catch (error: any) {
@@ -165,6 +169,10 @@ router.post('/:clinicId/patients', (req: Request, res: Response) => {
 router.get('/:clinicId/patients', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
+    const auth = verifyClinicAccess(req, clinicId);
+    if (!auth.allowed) {
+      return res.status(auth.status).json({ success: false, error: auth.error });
+    }
     const patients = clinicService.getClinicPatients(clinicId);
     res.json({ success: true, data: patients });
   } catch (error: any) {
@@ -174,6 +182,10 @@ router.get('/:clinicId/patients', (req: Request, res: Response) => {
 router.post('/:clinicId/appointments', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
+    const auth = verifyClinicAccess(req, clinicId);
+    if (!auth.allowed) {
+      return res.status(auth.status).json({ success: false, error: auth.error });
+    }
     const appointment = clinicService.bookAppointment({ ...req.body, clinicId });
     res.json({ success: true, data: appointment });
   } catch (error: any) {
@@ -197,6 +209,10 @@ router.post('/:clinicId/appointments/sync', (req: Request, res: Response) => {
 router.get('/:clinicId/appointments', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
+    const auth = verifyClinicAccess(req, clinicId);
+    if (!auth.allowed) {
+      return res.status(auth.status).json({ success: false, error: auth.error });
+    }
     const appointments = clinicService.getClinicAppointments(clinicId);
     res.json({ success: true, data: appointments });
   } catch (error: any) {
@@ -216,12 +232,13 @@ router.get('/:clinicId/appointments/doctor/:doctorId', (req: Request, res: Respo
 const handleAppointmentStatusUpdate = (req: Request, res: Response) => {
   try {
     const appointmentId = safeString(req.params.appointmentId || req.params.id);
-    const clinicId = safeString(req.params.clinicId);
-    if (clinicId) {
-      const auth = verifyClinicAccess(req, clinicId);
-      if (!auth.allowed) {
-        return res.status(auth.status).json({ success: false, error: auth.error });
-      }
+    const resolvedClinicId = safeString(req.params.clinicId) || clinicService.getAppointmentClinicId(appointmentId);
+    if (!resolvedClinicId) {
+      return res.status(404).json({ success: false, error: 'Appointment not found' });
+    }
+    const auth = verifyClinicAccess(req, resolvedClinicId);
+    if (!auth.allowed) {
+      return res.status(auth.status).json({ success: false, error: auth.error });
     }
     const { status } = req.body;
     const result = clinicService.updateAppointmentStatus(appointmentId, status);
@@ -241,6 +258,10 @@ router.put('/:clinicId/appointments/:id', handleAppointmentStatusUpdate);
 router.get('/:clinicId/settings', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
+    const auth = verifyClinicAccess(req, clinicId);
+    if (!auth.allowed) {
+      return res.status(auth.status).json({ success: false, error: auth.error });
+    }
     const settings = clinicService.getClinicSettings(clinicId);
     res.json({ success: true, data: settings });
   } catch (error: any) {
@@ -263,6 +284,10 @@ router.put('/:clinicId/settings', (req: Request, res: Response) => {
 router.get('/:clinicId/branding', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
+    const auth = verifyClinicAccess(req, clinicId);
+    if (!auth.allowed) {
+      return res.status(auth.status).json({ success: false, error: auth.error });
+    }
     const branding = clinicService.getClinicBranding(clinicId);
     res.json({ success: true, data: branding });
   } catch (error: any) {
@@ -285,6 +310,10 @@ router.put('/:clinicId/branding', (req: Request, res: Response) => {
 router.get('/:clinicId/stats', (req: Request, res: Response) => {
   try {
     const clinicId = safeString(req.params.clinicId);
+    const auth = verifyClinicAccess(req, clinicId);
+    if (!auth.allowed) {
+      return res.status(auth.status).json({ success: false, error: auth.error });
+    }
     const stats = clinicService.getClinicStats(clinicId);
     res.json({ success: true, data: stats });
   } catch (error: any) {

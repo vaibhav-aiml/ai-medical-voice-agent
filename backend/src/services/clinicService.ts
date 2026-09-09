@@ -208,6 +208,15 @@ export function getAppointmentsByDoctor(clinicId: string, doctorId: string): Cli
   return appointments.filter(a => a.doctorId === doctorId);
 }
 
+export function getAppointmentClinicId(appointmentId: string): string | null {
+  for (const [clinicId, appointments] of clinicAppointments) {
+    if (appointments.some(a => a.id === appointmentId)) {
+      return clinicId;
+    }
+  }
+  return null;
+}
+
 export function updateAppointmentStatus(appointmentId: string, status: ClinicAppointment['status']): boolean {
   for (const [clinicId, appointments] of clinicAppointments) {
     const index = appointments.findIndex(a => a.id === appointmentId);
@@ -281,6 +290,7 @@ export const clinicService = {
   bookAppointment,
   getClinicAppointments,
   getAppointmentsByDoctor,
+  getAppointmentClinicId,
   updateAppointmentStatus,
   getClinicSettings,
   updateClinicSettings,

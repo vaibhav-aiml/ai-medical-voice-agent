@@ -217,7 +217,7 @@ export async function getAIResponse(transcript: string, specialistType: string, 
 
     if (aiProvider === 'groq' && groq) {
       const completion = await groq.chat.completions.create({
-        model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
+        model: process.env.GROQ_MODEL || 'qwen/qwen3.6-27b',
         // Cast needed: redactedMessages is typed as Array<{role: 'system'|'user'|'assistant', content: string}>
         // which is structurally compatible with ChatCompletionMessageParam but TS requires explicit narrowing
         messages: redactedMessages as Array<{role: 'system' | 'user' | 'assistant', content: string}>,
@@ -299,7 +299,7 @@ export async function generateMedicalReport(consultationId: string, transcript: 
       
       if (groq) {
         const completion = await groq.chat.completions.create({
-          model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
+          model: process.env.GROQ_MODEL || 'qwen/qwen3.6-27b',
           messages: [
             { 
               role: 'system', 
