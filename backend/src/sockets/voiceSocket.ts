@@ -16,8 +16,17 @@ try {
   } else {
     logger.warn('GROQ_API_KEY not set or invalid. AI responses will use fallback mode.');
   }
-} catch (error: any) {
-  logger.error('Failed to initialize Groq client', { error: error.message });
+} catch (error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  logger.error('Failed to initialize Groq client', { error: message });
+}
+
+/**
+ * Checks whether the narrow test-bypass is active for socket auth.
+ * Mirrors the same guard used in HTTP auth middleware.
+ */
+function isTestBypassActive(): boolean {
+  return process.env.VITEST === 'true' && process.env.TEST_BYPASS_AUTH === 'true';
 }
 
 export function setupVoiceSocket(io: Server) {
@@ -26,28 +35,33 @@ export function setupVoiceSocket(io: Server) {
     try {
       const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
       if (!token) {
-        if (process.env.NODE_ENV === 'production') {
-          return next(new Error('Authentication error: Token required'));
+        // Test harness bypass: allow unauthenticated sockets only in Vitest
+        if (isTestBypassActive()) {
+          socket.data.userId = 'test-user-vitest';
+          return next();
         }
-        socket.data.userId = 'dev-user-123';
-        return next();
+        return next(new Error('Authentication error: Token required'));
       }
-      const payload = await clerkClient.verifyToken(token);
+
+      let payload;
+      try {
+        payload = await clerkClient.verifyToken(token);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e);
+        logger.error('Socket Clerk token verification failed', { error: message });
+        // Verification error is always a rejection — never downgraded to a fake user.
+        return next(new Error('Authentication error: Token verification failed'));
+      }
+
       if (!payload || !payload.sub) {
-        if (process.env.NODE_ENV === 'production') {
-          return next(new Error('Authentication error: Invalid claims'));
-        }
-        socket.data.userId = 'dev-user-123';
-        return next();
+        return next(new Error('Authentication error: Invalid claims'));
       }
       socket.data.userId = payload.sub;
       next();
-    } catch (err: any) {
-      if (process.env.NODE_ENV === 'production') {
-        return next(new Error('Authentication error: Token verification failed'));
-      }
-      socket.data.userId = 'dev-user-123';
-      next();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error('Socket authentication unexpected error', { error: message });
+      return next(new Error('Authentication error: Unexpected failure'));
     }
   });
 

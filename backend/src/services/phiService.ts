@@ -8,11 +8,32 @@ export interface PHIPattern {
   regex: RegExp;
 }
 
+/**
+ * IMPORTANT: Regex-based PHI detection is best-effort, not a compliance guarantee.
+ * These patterns use deterministic string matching and do NOT employ statistical NLP
+ * or clinical Named Entity Recognition (NER). Unstructured identifiers, non-standard
+ * formats, or identifiers embedded within longer strings may not be detected.
+ * See README-HIPAA.md and README-DPDP.md for compliance context.
+ */
 export const PHI_PATTERNS: PHIPattern[] = [
   {
     id: 'email',
     label: '[EMAIL REDACTED]',
     regex: /\b[\w\.-]+@[\w\.-]+\.\w{2,}\b/gi
+  },
+  {
+    // Aadhaar (ungrouped): 12 consecutive digits preceded by a contextual keyword.
+    // MUST appear before the phone pattern to prevent the phone regex from consuming
+    // the first 10 digits of a 12-digit Aadhaar number.
+    // NOTE: We intentionally do NOT match bare 12-digit numbers without a keyword
+    // anchor, because that would false-positive against UPI transaction IDs,
+    // timestamps, and other long numeric sequences. Ungrouped Aadhaar numbers
+    // without a preceding keyword will NOT be caught — this is an intentional
+    // trade-off to avoid false positives. This is a known limitation of
+    // regex-based PHI detection.
+    id: 'aadhaar_ungrouped',
+    label: '[AADHAAR REDACTED]',
+    regex: /(?:aadhaa?r|uid|uidai)\s*(?:no\.?|number|num|#|:)?\s*\d{12}\b/gi
   },
   {
     id: 'phone',
@@ -83,6 +104,28 @@ export const PHI_PATTERNS: PHIPattern[] = [
     id: 'name',
     label: '[NAME REDACTED]',
     regex: /\b(?:Dr\.|Mr\.|Mrs\.|Ms\.)\s+[A-Z][a-z]+\b|\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/g
+  },
+  // --- Indian PII Patterns ---
+  {
+    // Aadhaar: 12-digit UID, commonly formatted as 4-4-4 with spaces or hyphens
+    id: 'aadhaar_grouped',
+    label: '[AADHAAR REDACTED]',
+    regex: /\b\d{4}[\s-]\d{4}[\s-]\d{4}\b/g
+  },
+  {
+    // PAN: Permanent Account Number — format: 5 uppercase letters, 4 digits, 1 uppercase letter
+    // Example: ABCDE1234F
+    id: 'pan',
+    label: '[PAN REDACTED]',
+    regex: /\b[A-Z]{5}[0-9]{4}[A-Z]\b/g
+  },
+  {
+    // Indian PIN code: 6-digit postal code. First digit is 1-9 (never 0).
+    // NOTE: This may match other 6-digit numbers in non-address contexts.
+    // Consider combining with address-context keywords for higher precision.
+    id: 'indian_pincode',
+    label: '[PINCODE REDACTED]',
+    regex: /\b[1-9]\d{5}\b/g
   }
 ];
 

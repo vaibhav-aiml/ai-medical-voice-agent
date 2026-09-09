@@ -16,7 +16,7 @@ function getParam(param: string | string[] | undefined): string {
 router.use(requireAuth);
 
 router.post('/medication', validate(createMedicationSchema), catchAsync(async (req: Request, res: Response) => {
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
   if (req.body.userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot create medications for other users', 403);
   }
@@ -26,7 +26,7 @@ router.post('/medication', validate(createMedicationSchema), catchAsync(async (r
 
 router.get('/medications/:userId', catchAsync(async (req: Request, res: Response) => {
   const userId = getParam(req.params.userId);
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
   if (userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot access other users\' medication records', 403);
   }
@@ -36,7 +36,7 @@ router.get('/medications/:userId', catchAsync(async (req: Request, res: Response
 
 router.put('/medication/:id', validate(updateMedicationSchema), catchAsync(async (req: Request, res: Response) => {
   const id = getParam(req.params.id);
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
   
   const medication = await reminderService.getMedicationById(id);
   if (!medication) {
@@ -52,7 +52,7 @@ router.put('/medication/:id', validate(updateMedicationSchema), catchAsync(async
 
 router.delete('/medication/:id', catchAsync(async (req: Request, res: Response) => {
   const id = getParam(req.params.id);
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
 
   const medication = await reminderService.getMedicationById(id);
   if (!medication) {
@@ -72,7 +72,7 @@ router.post('/preferences', catchAsync(async (req: Request, res: Response) => {
     throw new AppError('userId is required', 400);
   }
 
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
   if (userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot modify other users\' preferences', 403);
   }
@@ -84,7 +84,7 @@ router.post('/preferences', catchAsync(async (req: Request, res: Response) => {
 
 router.get('/preferences/:userId', catchAsync(async (req: Request, res: Response) => {
   const userId = getParam(req.params.userId);
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
   if (userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot access other users\' preferences', 403);
   }
@@ -98,7 +98,7 @@ router.post('/acknowledge', catchAsync(async (req: Request, res: Response) => {
     throw new AppError('reminderId and userId are required', 400);
   }
 
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
   if (userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot acknowledge reminders for other users', 403);
   }
@@ -109,7 +109,7 @@ router.post('/acknowledge', catchAsync(async (req: Request, res: Response) => {
 
 router.get('/stats/:userId', catchAsync(async (req: Request, res: Response) => {
   const userId = getParam(req.params.userId);
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
   if (userId !== authenticatedUserId) {
     throw new AppError('Forbidden: Cannot access other users\' stats', 403);
   }

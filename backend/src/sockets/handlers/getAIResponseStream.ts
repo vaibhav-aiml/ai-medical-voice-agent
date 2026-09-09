@@ -121,7 +121,8 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
       logger.info('Starting Groq streaming completion', { consultationId });
       const stream = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
-        messages: redactedMessages as any,
+        // Cast: structurally compatible with ChatCompletionMessageParam
+        messages: redactedMessages as Array<{role: 'system' | 'user' | 'assistant', content: string}>,
         temperature: 0.7,
         max_tokens: 800,
         stream: true,

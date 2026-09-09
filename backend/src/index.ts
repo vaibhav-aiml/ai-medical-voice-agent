@@ -64,9 +64,22 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://clerk.accounts.dev"],
+      // scriptSrc: 'unsafe-inline' REMOVED.
+      // This backend serves only JSON API responses and one HTML preview
+      // endpoint (enhanced-report.routes.ts /preview) which contains no
+      // inline <script> tags. Clerk's frontend SDK runs on the Netlify SPA,
+      // not on this backend, so its domain is kept here only for completeness
+      // if the backend ever serves the frontend in a unified deployment.
+      scriptSrc: ["'self'", "https://clerk.accounts.dev"],
       connectSrc: ["'self'", "wss://*", "https://*"],
       imgSrc: ["'self'", "data:", "https://*"],
+      // styleSrc: 'unsafe-inline' is INTENTIONALLY KEPT.
+      // Reason: The /api/enhanced-report/preview endpoint (enhanced-report.routes.ts)
+      // serves a complete HTML page with an inline <style> block for the
+      // medical report preview. Removing 'unsafe-inline' would break this
+      // preview rendering. To eliminate this exception, the inline styles
+      // would need to be moved to an external stylesheet served from a
+      // known origin, or replaced with hash-based CSP directives.
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
@@ -105,7 +118,7 @@ app.use(express.text({ type: ['text/plain', 'application/hl7-v2'], limit: '10mb'
 app.use((req, res, next) => {
   const requestId = (req.headers['x-request-id'] as string) || crypto.randomUUID();
   res.setHeader('X-Request-ID', requestId);
-  (req as any).requestId = requestId;
+  req.requestId = requestId;
   logger.info(`Request received`, { requestId, method: req.method, path: req.path, ip: req.ip });
   next();
 });

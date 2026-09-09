@@ -55,7 +55,7 @@ describe('Socket.IO Authentication & Authorization Integration Tests', () => {
     expect(socketMock.data.userId).toBe('user-789');
   });
 
-  it('should fallback to dev-user-123 in development if token validation fails', async () => {
+  it('should reject connection when token validation fails (fail-closed, no dev-user-123 fallback)', async () => {
     process.env.NODE_ENV = 'development';
     setupVoiceSocket(ioMock);
 
@@ -64,8 +64,11 @@ describe('Socket.IO Authentication & Authorization Integration Tests', () => {
     const nextFn = vi.fn();
     await handshakeMiddleware(socketMock, nextFn);
 
-    expect(nextFn).toHaveBeenCalledWith();
-    expect(socketMock.data.userId).toBe('dev-user-123');
+    // Verify fail-closed: next() is called with an Error, NOT called with no args
+    expect(nextFn).toHaveBeenCalledWith(expect.any(Error));
+    expect(nextFn.mock.calls[0][0].message).toContain('Token verification failed');
+    // userId should NOT be set to dev-user-123
+    expect(socketMock.data.userId).not.toBe('dev-user-123');
   });
 
   it('should reject join-consultation if user does not own consultation', async () => {

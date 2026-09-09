@@ -79,7 +79,8 @@ export function registerGetAIResponseHandler(socket: Socket, groq: Groq | null) 
 
       const completion = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
-        messages: redactedMessages as any,
+        // Cast: structurally compatible with ChatCompletionMessageParam
+        messages: redactedMessages as Array<{role: 'system' | 'user' | 'assistant', content: string}>,
         temperature: 0.7,
         max_tokens: 800,
       });

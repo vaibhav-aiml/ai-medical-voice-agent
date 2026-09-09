@@ -205,7 +205,9 @@ export async function getAIResponse(transcript: string, specialistType: string, 
     if (aiProvider === 'groq' && groq) {
       const completion = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
-        messages: redactedMessages as any,
+        // Cast needed: redactedMessages is typed as Array<{role: 'system'|'user'|'assistant', content: string}>
+        // which is structurally compatible with ChatCompletionMessageParam but TS requires explicit narrowing
+        messages: redactedMessages as Array<{role: 'system' | 'user' | 'assistant', content: string}>,
         temperature: 0.7,
         max_tokens: 500,
       });
@@ -214,7 +216,9 @@ export async function getAIResponse(transcript: string, specialistType: string, 
     } else if (openai) {
       const completion = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
-        messages: redactedMessages as any,
+        // Cast needed: redactedMessages is typed as Array<{role: 'system'|'user'|'assistant', content: string}>
+        // which is structurally compatible with ChatCompletionMessageParam but TS requires explicit narrowing
+        messages: redactedMessages as Array<{role: 'system' | 'user' | 'assistant', content: string}>,
         temperature: 0.7,
         max_tokens: 500,
       });

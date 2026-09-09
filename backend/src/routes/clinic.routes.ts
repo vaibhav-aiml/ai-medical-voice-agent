@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { clinicService } from '../services/clinicService';
+import logger from '../utils/logger';
 
 const router = Router();
 const safeString = (value: string | string[] | undefined): string => {
@@ -11,7 +12,7 @@ router.post('/create', (req: Request, res: Response) => {
     const clinic = clinicService.createClinic(req.body);
     res.json({ success: true, data: clinic });
   } catch (error: any) {
-    console.error('Error creating clinic:', error);
+    logger.error('Error creating clinic', { error });
     res.status(500).json({ success: false, error: error.message || 'Failed to create clinic' });
   }
 });

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import logger from '../utils/logger';
 const conversationStore: Map<string, any[]> = new Map();
 
 const router = Router();
@@ -20,7 +21,7 @@ router.get('/history/:userId', async (req: Request, res: Response) => {
     
     res.json({ success: true, data: history });
   } catch (error) {
-    console.error('Error fetching history:', error);
+    logger.error('Error fetching history', { error });
     res.status(500).json({ success: false, error: 'Failed to fetch history' });
   }
 });
@@ -66,7 +67,7 @@ router.get('/previous-symptoms/:userId', async (req: Request, res: Response) => 
     
     res.json({ success: true, data: allSymptoms.slice(0, 5) });
   } catch (error) {
-    console.error('Error fetching previous symptoms:', error);
+    logger.error('Error fetching previous symptoms', { error });
     res.status(500).json({ success: false, error: 'Failed to fetch symptoms' });
   }
 });
@@ -90,10 +91,10 @@ router.post('/session', async (req: Request, res: Response) => {
       userConversations.shift();
     }
     
-    console.log(`💾 Saved conversation for user: ${userId}`);
+    logger.info('Saved conversation session', { userId });
     res.json({ success: true, message: 'Session saved', sessionId: session.id });
   } catch (error) {
-    console.error('Error saving session:', error);
+    logger.error('Error saving session', { error });
     res.status(500).json({ success: false, error: 'Failed to save session' });
   }
 });
@@ -129,7 +130,7 @@ router.post('/context', async (req: Request, res: Response) => {
     
     res.json({ success: true, data: { contextPrompt } });
   } catch (error) {
-    console.error('Error generating context:', error);
+    logger.error('Error generating context', { error });
     res.status(500).json({ success: false, error: 'Failed to generate context' });
   }
 });

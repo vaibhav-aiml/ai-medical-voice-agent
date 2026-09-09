@@ -7,7 +7,7 @@ import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 router.get('/connection-status', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   const connection = await FHIRService.getConnection(userId);
   if (!connection) {
     return res.json({ connected: false });
@@ -21,7 +21,7 @@ router.get('/connection-status', requireAuth, catchAsync(async (req: Request, re
   });
 }));
 router.post('/connect', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   const { provider, fhirServerUrl, clientId, redirectUri, scope } = req.body;
 
   if (!provider || !fhirServerUrl || !clientId || !redirectUri) {
@@ -97,27 +97,27 @@ router.get('/callback', catchAsync(async (req: Request, res: Response) => {
   }
 }));
 router.get('/patient', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   const data = await FHIRService.getPatient(userId);
   res.json({ success: true, data });
 }));
 router.post('/patient', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   const data = await FHIRService.createPatient(userId, req.body);
   res.json({ success: true, data });
 }));
 router.put('/patient', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   const data = await FHIRService.updatePatient(userId, req.body);
   res.json({ success: true, data });
 }));
 router.get('/clinical-data', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   const data = await FHIRService.getClinicalData(userId);
   res.json({ success: true, data });
 }));
 router.post('/sync/:consultationId', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   const { consultationId } = req.params;
   const result = await FHIRService.syncConsultationToFHIR(userId, consultationId as string);
   res.json({ success: true, message: 'Consultation successfully synced to EHR', data: result });

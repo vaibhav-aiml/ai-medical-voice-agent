@@ -11,7 +11,7 @@ import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 router.get('/sync-logs', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   logger.info('Fetching FHIR synchronization transaction logs', { userId });
 
   const logs = await db
@@ -23,7 +23,7 @@ router.get('/sync-logs', requireAuth, catchAsync(async (req: Request, res: Respo
   res.json(logs);
 }));
 router.post('/reconcile', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   logger.info('Manual demographics reconciliation request received', { userId });
 
   try {

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { ragKnowledgeBase } from '../services/ragKnowledgeBase';
+import logger from '../utils/logger';
 
 const router = Router();
 router.post('/search', (req: Request, res: Response) => {
@@ -19,7 +20,7 @@ router.post('/search', (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('RAG search error:', error);
+    logger.error('RAG search error', { error });
     res.status(500).json({ error: 'Failed to search knowledge base' });
   }
 });
@@ -42,7 +43,7 @@ router.post('/enhance', (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('RAG enhance error:', error);
+    logger.error('RAG enhance error', { error });
     res.status(500).json({ error: 'Failed to generate enhanced response' });
   }
 });

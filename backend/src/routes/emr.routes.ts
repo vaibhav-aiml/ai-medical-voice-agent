@@ -7,7 +7,7 @@ import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 router.get('/export/:consultationId', requireAuth, catchAsync(async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.userId;
   const consultationId = req.params.consultationId as string;
   const format = (req.query.format as string || 'structured').toLowerCase();
 

@@ -45,7 +45,7 @@ router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) 
     throw new AppError('Action is required', 400);
   }
   
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
   if (userId && authenticatedUserId && authenticatedUserId !== userId) {
     throw new AppError('Forbidden: Cannot log events on behalf of another user', 403);
   }

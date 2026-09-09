@@ -10,7 +10,7 @@ export const clinicMiddleware = async (req: Request, res: Response, next: NextFu
   
   const clinic = clinicService.getClinicBySubdomain(subdomain);
   if (clinic) {
-    (req as any).clinic = clinic;
+    req.clinic = clinic;
     
     res.setHeader('X-Clinic-ID', clinic.id);
     res.setHeader('X-Clinic-Name', clinic.name);

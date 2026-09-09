@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { analyticsService } from '../services/analyticsService';
+import logger from '../utils/logger';
 
 const router = Router();
 router.post('/dashboard', async (req: Request, res: Response) => {
@@ -14,7 +15,7 @@ router.post('/dashboard', async (req: Request, res: Response) => {
     
     res.json({ success: true, data: analytics });
   } catch (error) {
-    console.error('Error generating analytics:', error);
+    logger.error('Error generating analytics', { error });
     res.status(500).json({ success: false, error: 'Failed to generate analytics' });
   }
 });
@@ -24,7 +25,7 @@ router.post('/trends', async (req: Request, res: Response) => {
     const trends = analyticsService.generateAnalytics(consultations, {}).consultationTrends;
     res.json({ success: true, data: trends });
   } catch (error) {
-    console.error('Error fetching trends:', error);
+    logger.error('Error fetching trends', { error });
     res.status(500).json({ success: false, error: 'Failed to fetch trends' });
   }
 });
@@ -34,7 +35,7 @@ router.post('/symptoms', async (req: Request, res: Response) => {
     const analytics = analyticsService.generateAnalytics(consultations, {});
     res.json({ success: true, data: analytics.commonSymptoms });
   } catch (error) {
-    console.error('Error fetching symptoms:', error);
+    logger.error('Error fetching symptoms', { error });
     res.status(500).json({ success: false, error: 'Failed to fetch symptoms' });
   }
 });

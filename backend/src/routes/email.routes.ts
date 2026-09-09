@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { sendTestEmail, sendMedicalReportEmail } from '../services/email.service';
+import logger from '../utils/logger';
 
 const router = Router();
 router.post('/test', async (req, res) => {
-  console.log('📧 Test email request received');
+  logger.info('Test email request received');
   try {
     const { email } = req.body;
     
@@ -14,17 +15,17 @@ router.post('/test', async (req, res) => {
     const result = await sendTestEmail(email);
     res.json({ success: true, message: 'Test email sent!', messageId: result.messageId });
   } catch (error: any) {
-    console.error('Error:', error.message);
+    logger.error('Email test error', { error: error.message });
     res.status(500).json({ error: error.message });
   }
 });
 router.post('/send-report', async (req, res) => {
-  console.log('📧 Send report request received');
+  logger.info('Send report email request received');
   try {
     const result = await sendMedicalReportEmail(req.body);
     res.json({ success: true, message: 'Report sent!', messageId: result.messageId });
   } catch (error: any) {
-    console.error('Error:', error.message);
+    logger.error('Email send-report error', { error: error.message });
     res.status(500).json({ error: error.message });
   }
 });

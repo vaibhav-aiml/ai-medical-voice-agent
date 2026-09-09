@@ -7,7 +7,7 @@
 <h1>AI Medical Voice Consultation Platform</h1>
 
 <p><strong>Talk to an AI specialist doctor. Get real clinical insights. Download your report.</strong><br/>
-Built for the Indian healthcare market — 9 languages, 5 specialist personas, HIPAA-aware, zero-downtime reliability architecture.</p>
+Built for the Indian healthcare market — 9 languages, 5 specialist personas, <a href="README-HIPAA.md">HIPAA-aware</a> + <a href="README-DPDP.md">DPDP-aware</a>, zero-downtime reliability architecture.</p>
 
 <br/>
 

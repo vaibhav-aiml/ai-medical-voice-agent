@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { reportGenerator, ConsultationReport, SOAPData } from '../services/reportGenerator';
 import { v4 as uuidv4 } from 'uuid';
+import logger from '../utils/logger';
 
 const router = Router();
 router.post('/generate-soap', async (req: Request, res: Response) => {
@@ -70,7 +71,7 @@ router.post('/generate-soap', async (req: Request, res: Response) => {
     res.send(pdfBuffer);
     
   } catch (error) {
-    console.error('Error generating SOAP report:', error);
+    logger.error('Error generating SOAP report', { error });
     res.status(500).json({ success: false, error: 'Failed to generate report', details: String(error) });
   }
 });
@@ -331,7 +332,7 @@ router.post('/preview', async (req: Request, res: Response) => {
     res.send(html);
     
   } catch (error) {
-    console.error('Error generating preview:', error);
+    logger.error('Error generating preview', { error });
     res.status(500).json({ success: false, error: 'Failed to generate preview', details: String(error) });
   }
 });
@@ -406,7 +407,7 @@ router.post('/generate-and-email', async (req: Request, res: Response) => {
     res.send(pdfBuffer);
     
   } catch (error) {
-    console.error('Error generating report:', error);
+    logger.error('Error generating report', { error });
     res.status(500).json({ success: false, error: 'Failed to generate report', details: String(error) });
   }
 });

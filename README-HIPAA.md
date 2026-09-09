@@ -1,5 +1,7 @@
 # HIPAA Compliance Reference & Technical Security Architecture
 
+> **Scope Note**: HIPAA (Health Insurance Portability and Accountability Act) is United States federal law. This document is provided for international users and deployments subject to US healthcare regulations. **For India-based deployments**, the primary applicable framework is India's Digital Personal Data Protection (DPDP) Act 2023 — see [README-DPDP.md](README-DPDP.md) for the corresponding compliance reference.
+
 This document describes the technical security measures implemented in the MediVoice AI application codebase and details the infrastructure and administrative safeguards required for HIPAA compliance.
 
 > **Technical Compliance Disclaimer**: HIPAA compliance is an end-to-end organizational responsibility involving infrastructure security, vendor BAAs, access policies, and administrative procedures. MediVoice AI provides technical security controls at the application layer, but application code alone does not grant compliance.

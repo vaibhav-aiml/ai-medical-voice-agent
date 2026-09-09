@@ -27,6 +27,14 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+/**
+ * Validates environment variables at startup.
+ *
+ * NOTE: This function intentionally uses console.error/console.warn instead of
+ * the Winston logger. The logger (utils/logger.ts) depends on env.ts completing
+ * first (it reads NODE_ENV to choose log format), so the logger is not yet
+ * initialized when this function runs. Using console here is correct.
+ */
 function validateEnv(): Env {
   const result = envSchema.safeParse(process.env);
 

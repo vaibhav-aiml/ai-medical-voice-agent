@@ -14,7 +14,7 @@ router.post('/log', requireAuth, catchAsync(async (req: Request, res: Response) 
     throw new AppError('Type and accessedBy are required', 400);
   }
 
-  const authenticatedUserId = (req as any).userId;
+  const authenticatedUserId = req.userId;
   if (accessedBy && authenticatedUserId && authenticatedUserId !== accessedBy) {
     throw new AppError('Forbidden: Cannot log HIPAA events on behalf of another user', 403);
   }
