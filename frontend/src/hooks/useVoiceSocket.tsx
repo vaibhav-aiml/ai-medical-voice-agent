@@ -75,10 +75,13 @@ export function useVoiceSocket(consultationId: string) {
           if (currentSock && currentSock.connected) {
             missedHeartbeatsRef.current++;
             if (missedHeartbeatsRef.current > 2) {
-              logger.warn('socket_heartbeat_missed', { missed: missedHeartbeatsRef.current });
+              logger.warn('socket_heartbeat_timeout_reconnecting', { missed: missedHeartbeatsRef.current });
               setConnectionStatus('Reconnecting (Heartbeat lost)...');
               setIsReconnecting(true);
-              currentSock.connect(); 
+              // Force clean transport disconnect before initiating fresh handshake
+              if (socketRef.current) {
+                socketRef.current.disconnect().connect();
+              }
               missedHeartbeatsRef.current = 0;
             } else {
               currentSock.emit('ping-heartbeat', { timestamp: Date.now() });
@@ -87,8 +90,17 @@ export function useVoiceSocket(consultationId: string) {
         }, 30000);
       });
 
+      // Activity-based keep-alive: Any incoming packet resets the missed heartbeats counter
+      socketInstance.onAny(() => {
+        missedHeartbeatsRef.current = 0;
+      });
+
       socketInstance.on('pong-heartbeat', () => {
         missedHeartbeatsRef.current = 0;
+        if (socketRef.current?.connected) {
+          setIsReconnecting(false);
+          setConnectionStatus('Connected');
+        }
       });
 
       socketInstance.on('disconnect', (reason) => {

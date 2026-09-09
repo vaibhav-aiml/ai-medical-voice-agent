@@ -150,4 +150,33 @@ describe('Socket.IO Authentication & Authorization Integration Tests', () => {
     expect(socketMock.join).toHaveBeenCalledWith('consultation_consult-id-777');
     expect(socketMock.emit).not.toHaveBeenCalledWith('error-event', expect.any(Object));
   });
+
+  it('should respond to ping-heartbeat with pong-heartbeat payload', () => {
+    let onConnection: any;
+    ioMock.on = vi.fn((event, cb) => {
+      if (event === 'connection') onConnection = cb;
+    });
+
+    setupVoiceSocket(ioMock);
+
+    const registeredListeners: any = {};
+    socketMock.on = vi.fn((event, cb) => {
+      registeredListeners[event] = cb;
+    });
+
+    onConnection(socketMock);
+
+    expect(registeredListeners['ping-heartbeat']).toBeDefined();
+    const pingHeartbeatCb = registeredListeners['ping-heartbeat'];
+    const clientTimestamp = 1710000000000;
+    pingHeartbeatCb({ timestamp: clientTimestamp });
+
+    expect(socketMock.emit).toHaveBeenCalledWith(
+      'pong-heartbeat',
+      expect.objectContaining({
+        timestamp: expect.any(Number),
+        clientTimestamp,
+      })
+    );
+  });
 });

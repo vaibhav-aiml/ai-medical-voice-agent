@@ -5,6 +5,7 @@ import { API_URL } from '../../config/api';
 import { useVoiceSocket } from '../../hooks/useVoiceSocket';
 import TriageDisplay from '../consultation/TriageDisplay';
 import { useLanguage } from '../../context/LanguageContext';
+import { cleanTextForSpeech, splitIntoSentences } from '../../utils/cleanTextForSpeech';
 
 interface Props {
   consultationId: string;
@@ -200,30 +201,47 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   }, [consultationId]);
   const speakResponse = useCallback((text: string) => {
     if (!voiceSettings.enabled || !window.speechSynthesis) return;
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = voiceSettings.rate;
-    utterance.pitch = voiceSettings.pitch;
-    utterance.volume = voiceSettings.volume;
-    
-    if (voiceSettings.voice !== 'default') {
-      const voices = window.speechSynthesis.getVoices();
-      const voiceMap: Record<string, string> = {
-        'google-us-female': 'Google UK English Female',
-        'google-us-male': 'Google UK English Male',
-        'google-uk-female': 'Google UK English Female',
-        'google-uk-male': 'Google UK English Male',
-        'amazon-joanna': 'Joanna',
-        'amazon-matthew': 'Matthew',
-        'microsoft-jenny': 'Microsoft Jenny',
-      };
-      const voiceName = voiceMap[voiceSettings.voice];
-      const selectedVoice = voices.find(v => v.name.includes(voiceName || ''));
-      if (selectedVoice) utterance.voice = selectedVoice;
-    }
-    
+
+    const cleaned = cleanTextForSpeech(text);
+    if (!cleaned) return;
+
     window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+
+    const sentences = splitIntoSentences(cleaned);
+    if (sentences.length === 0) return;
+
+    const voices = window.speechSynthesis.getVoices();
+    const voiceMap: Record<string, string> = {
+      'google-us-female': 'Google UK English Female',
+      'google-us-male': 'Google UK English Male',
+      'google-uk-female': 'Google UK English Female',
+      'google-uk-male': 'Google UK English Male',
+      'amazon-joanna': 'Joanna',
+      'amazon-matthew': 'Matthew',
+      'microsoft-jenny': 'Microsoft Jenny',
+    };
+    const voiceName = voiceSettings.voice !== 'default' ? voiceMap[voiceSettings.voice] : undefined;
+    const selectedVoice = voiceName ? voices.find(v => v.name.includes(voiceName)) : undefined;
+
+    // Enqueue sentence chunks to prevent Chromium 15-second utterance truncation bug
+    sentences.forEach((sentence) => {
+      const utterance = new SpeechSynthesisUtterance(sentence);
+      utterance.rate = voiceSettings.rate;
+      utterance.pitch = voiceSettings.pitch;
+      utterance.volume = voiceSettings.volume;
+      if (selectedVoice) utterance.voice = selectedVoice;
+      window.speechSynthesis.speak(utterance);
+    });
+
+    // Chromium keep-alive guard: periodically resume synthesis if stalled
+    const keepAliveInterval = setInterval(() => {
+      if (!window.speechSynthesis || !window.speechSynthesis.speaking) {
+        clearInterval(keepAliveInterval);
+      } else {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }
+    }, 10000);
   }, [voiceSettings.enabled, voiceSettings.rate, voiceSettings.pitch, voiceSettings.volume, voiceSettings.voice]);
   const voiceSettingsRef = useRef(voiceSettings);
   const speakResponseRef = useRef(speakResponse);
@@ -516,7 +534,19 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     }
   };
 
+  // Audio queue reset on component unmount
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
   const startVoiceRecording = () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     if (recognition) {
       setTranscript('');
       finalTranscriptRef.current = '';
@@ -541,6 +571,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
 
   const sendTextMessage = () => {
     if (manualText.trim()) {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
       console.log('📤 [VoiceRecorder] Sending text message:', manualText);
       
       const userMessage = { role: 'user', content: manualText };

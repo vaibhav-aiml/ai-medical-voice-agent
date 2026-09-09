@@ -101,7 +101,9 @@ Provide advice on:
 IMPORTANT: Remember the child's age and symptoms mentioned earlier.
 If parents ask follow-up questions, provide specific answers for their child's condition.`,
   };
-  return prompts[specialistType] || prompts.general;
+  const base = prompts[specialistType] || prompts.general;
+  return `${base}\n\nVOICE AND SPEECH FORMATTING INSTRUCTION:
+Your response will be read aloud to the patient by a speech synthesizer. Write in clear, natural, spoken sentences. Do NOT use markdown symbols, asterisks, hash signs, bullet points, emojis, or markdown tables. Use standard sentence punctuation.`;
 }
 
 function getFallbackResponse(transcript: string, specialistType: string): string {
@@ -112,7 +114,7 @@ function getFallbackResponse(transcript: string, specialistType: string): string
 3. Monitoring your symptoms for the next 24-48 hours
 4. Taking over-the-counter medication if needed
 
-⚠️ If symptoms worsen or persist beyond 3 days, please consult a doctor in person.
+If symptoms worsen or persist beyond 3 days, please consult a doctor in person.
 
 Do you have any other symptoms you'd like to share?`,
     
@@ -122,7 +124,7 @@ Do you have any other symptoms you'd like to share?`,
 3. Gentle stretching if not painful
 4. Consider over-the-counter anti-inflammatory medication
 
-⚠️ If pain persists for more than 5 days or worsens, please consult an orthopedic specialist.
+If pain persists for more than 5 days or worsens, please consult an orthopedic specialist.
 
 Can you tell me more about when the pain started?`,
     
@@ -132,7 +134,7 @@ Can you tell me more about when the pain started?`,
 3. Light walking for 20 minutes daily
 4. Practice stress management techniques
 
-⚠️ If you experience chest pain or shortness of breath, seek immediate medical attention.
+If you experience chest pain or shortness of breath, seek immediate medical attention.
 
 Would you like to know more about heart-healthy lifestyle changes?`,
     
@@ -142,7 +144,7 @@ Would you like to know more about heart-healthy lifestyle changes?`,
 3. Stay hydrated with 8-10 glasses of water daily
 4. Keep a headache diary to track triggers
 
-⚠️ If headaches worsen or you experience vision changes, consult a doctor immediately.
+If headaches worsen or you experience vision changes, consult a doctor immediately.
 
 Would you like me to suggest some relaxation techniques?`,
     
@@ -152,7 +154,7 @@ Would you like me to suggest some relaxation techniques?`,
 3. Monitor temperature every 4 hours
 4. Provide light, nutritious meals
 
-⚠️ If fever exceeds 103°F or symptoms worsen, consult your pediatrician immediately.
+If fever exceeds 103 degrees Fahrenheit or symptoms worsen, consult your pediatrician immediately.
 
 Would you like to know more about when to give fever medication?`,
   };

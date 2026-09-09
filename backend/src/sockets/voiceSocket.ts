@@ -71,6 +71,13 @@ export function setupVoiceSocket(io: Server) {
     registerGetAIResponseStreamHandler(socket, groq);
     registerGetAIResponseHandler(socket, groq);
     
+    socket.on('ping-heartbeat', (data?: { timestamp?: number }) => {
+      socket.emit('pong-heartbeat', {
+        timestamp: Date.now(),
+        clientTimestamp: data?.timestamp,
+      });
+    });
+
     socket.on('disconnect', () => {
       logger.debug('Client disconnected from socket', { socketId: socket.id });
     });

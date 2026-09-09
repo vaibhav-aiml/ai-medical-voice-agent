@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Mic, Volume2, Play, Square, Check, ChevronRight, User, Bot, Radio, Settings, Volume1, VolumeX } from 'lucide-react';
+import { cleanTextForSpeech } from '../../utils/cleanTextForSpeech';
 
 interface VoiceSettings {
   enabled: boolean;
@@ -81,7 +82,8 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    const cleaned = cleanTextForSpeech(text) || text;
+    const utterance = new SpeechSynthesisUtterance(cleaned);
     utterance.rate = settings.rate;
     utterance.pitch = settings.pitch;
     utterance.volume = settings.volume;
