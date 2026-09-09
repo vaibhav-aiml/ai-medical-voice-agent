@@ -58,9 +58,17 @@ export function registerGetAIResponseHandler(socket: Socket, groq: Groq | null) 
     }
     
     messages.push({ role: 'user', content: transcript });
+    const promptLength = messages.reduce((acc, m) => acc + (m.content?.length || 0), 0);
     
     if (!groq) {
-      logger.warn('Groq client not available, using fallback response', { consultationId });
+      logger.warn('llm_provider_fallback_triggered', {
+        reason: 'groq_client_uninitialized',
+        error: 'Groq client not initialized',
+        promptLength,
+        consultationId,
+        specialistType,
+        transcriptLength: transcript.length,
+      });
       const response = getFallbackResponse(transcript, specialistType, conversationHistory);
       socket.emit('ai-response', { response, consultationId });
       saveTranscriptWithTranslation(socket, consultationId, transcript, response, language);
@@ -118,6 +126,14 @@ export function registerGetAIResponseHandler(socket: Socket, groq: Groq | null) 
       
     } catch (error: any) {
       logger.error('Non-streaming completion error', { consultationId, error: error.message });
+      logger.warn('llm_provider_fallback_triggered', {
+        reason: 'completion_exception',
+        error: error?.message || String(error),
+        promptLength,
+        consultationId,
+        specialistType,
+        transcriptLength: transcript.length,
+      });
       const fallbackResponse = getFallbackResponse(transcript, specialistType, conversationHistory);
       socket.emit('ai-response', {
         response: fallbackResponse,

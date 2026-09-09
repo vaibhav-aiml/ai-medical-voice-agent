@@ -102,7 +102,11 @@ IMPORTANT: Remember the child's age and symptoms mentioned earlier.
 If parents ask follow-up questions, provide specific answers for their child's condition.`,
   };
   const base = prompts[specialistType] || prompts.general;
-  return `${base}\n\nVOICE AND SPEECH FORMATTING INSTRUCTION:
+  return `${base}
+
+MEDICATION GUARDRAIL: When suggesting NSAIDs (such as ibuprofen or naproxen), always explicitly include a brief contraindication check (for example: "provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy, and take with food").
+
+VOICE AND SPEECH FORMATTING INSTRUCTION:
 Your response will be read aloud to the patient by a speech synthesizer. Write in clear, natural, spoken sentences. Do NOT use markdown symbols, asterisks, hash signs, bullet points, emojis, or markdown tables. Use standard sentence punctuation.`;
 }
 
@@ -112,7 +116,7 @@ function getFallbackResponse(transcript: string, specialistType: string): string
 1. Getting plenty of rest (7-8 hours of sleep)
 2. Staying hydrated with warm fluids
 3. Monitoring your symptoms for the next 24-48 hours
-4. Taking over-the-counter medication if needed
+4. Taking over-the-counter pain relief if needed (such as acetaminophen, or ibuprofen with food provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy)
 
 If symptoms worsen or persist beyond 3 days, please consult a doctor in person.
 
@@ -122,7 +126,7 @@ Do you have any other symptoms you'd like to share?`,
 1. Apply ice to the affected area for 15-20 minutes, 3-4 times daily
 2. Rest and avoid activities that cause pain
 3. Gentle stretching if not painful
-4. Consider over-the-counter anti-inflammatory medication
+4. Consider over-the-counter anti-inflammatory medication (such as ibuprofen 400 milligrams taken with food, provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy)
 
 If pain persists for more than 5 days or worsens, please consult an orthopedic specialist.
 
@@ -179,6 +183,13 @@ Recommendations:
 export async function getAIResponse(transcript: string, specialistType: string, conversationHistory: Array<{ role: string; content: string }> = []) {
   if (useMockAI) {
     logger.info('Using mock AI response');
+    logger.warn('llm_provider_fallback_triggered', {
+      reason: 'mock_ai_enabled',
+      error: 'Mock AI is enabled',
+      promptLength: transcript.length,
+      specialistType,
+      transcriptLength: transcript.length,
+    });
     return getFallbackResponse(transcript, specialistType);
   }
 
@@ -228,9 +239,31 @@ export async function getAIResponse(transcript: string, specialistType: string, 
       logger.info('OpenAI response received');
     }
 
-    return responseText || getFallbackResponse(transcript, specialistType);
-  } catch (error) {
-    logger.error(`${aiProvider} API error`, { error });
+    if (!responseText) {
+      const promptLength = messages.reduce((acc, m) => acc + (m.content?.length || 0), 0);
+      logger.warn('llm_provider_fallback_triggered', {
+        reason: 'empty_response_text',
+        error: 'LLM returned empty response',
+        promptLength,
+        provider: aiProvider,
+        specialistType,
+        transcriptLength: transcript.length,
+      });
+      return getFallbackResponse(transcript, specialistType);
+    }
+
+    return responseText;
+  } catch (error: any) {
+    logger.error(`${aiProvider} API error`, { error: error?.message || error });
+    const promptLength = messages.reduce((acc, m) => acc + (m.content?.length || 0), 0);
+    logger.warn('llm_provider_fallback_triggered', {
+      reason: 'api_call_failed',
+      provider: aiProvider,
+      error: error?.message || String(error),
+      promptLength,
+      specialistType,
+      transcriptLength: transcript.length,
+    });
     return getFallbackResponse(transcript, specialistType);
   }
 }

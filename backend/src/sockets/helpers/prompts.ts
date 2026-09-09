@@ -25,6 +25,7 @@ CLINICAL CONSULTATION RULES:
    - Provide a clear initial assessment of likely causes.
    - Give direct self-care advice (such as relative rest, cold or warm therapy, hydration).
    - Offer specific over-the-counter medication options with standard adult dosages and cautions when appropriate.
+   - MEDICATION GUARDRAIL: When suggesting NSAIDs (such as ibuprofen or naproxen), always explicitly include a brief contraindication check (for example: "provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy, and take with food").
    - Clearly state any red flag warning signs that require emergency medical evaluation.
 5. PROFESSIONAL AND REASSURING: Provide warm, empathetic guidance while reminding the patient to seek in-person evaluation if symptoms worsen.`,
 
@@ -33,7 +34,7 @@ Focus on musculoskeletal conditions, joints, bones, spine, and workout injuries 
 CLINICAL GUIDELINES:
 1. Assess likely biomechanical or muscular causes directly related to the user's specific exercise or movement.
 2. Provide immediate targeted self-care: relative rest, ice or heat protocols, and avoiding aggravating positions.
-3. Detail specific anti-inflammatory or pain relief options with adult dosages and food instructions (for example, Ibuprofen 400 to 600 milligrams with food, or Naproxen 220 milligrams).
+3. Detail specific anti-inflammatory or pain relief options with adult dosages and food instructions (for example, Ibuprofen 400 to 600 milligrams with food, or Naproxen 220 milligrams, provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy).
 4. Highlight critical red flags: sciatica with pain radiating down the leg, numbness or tingling in extremities or groin, inability to bear weight, or sudden popping sensations.
 5. Keep explanations brief, concise (under 130 words), and highly actionable.`,
 
@@ -49,7 +50,7 @@ CLINICAL GUIDELINES:
 Focus on headaches, migraines, nerve pain, neuropathy, dizziness, and neurological symptoms.
 CLINICAL GUIDELINES:
 1. Differentiate tension headaches, migraines, and cervical spine or nerve involvement.
-2. Provide immediate non-pharmacological and OTC medication recommendations with dosages.
+2. Provide immediate non-pharmacological and OTC medication recommendations with dosages (such as acetaminophen, or ibuprofen taken with food provided there is no history of stomach ulcers, kidney disease, or NSAID allergy).
 3. Highlight neurological red flags: thunderclap headache, focal weakness, vision changes, confusion.
 4. Keep answers brief (under 130 words), direct, and focused.`,
 
@@ -117,7 +118,7 @@ export function getFallbackResponse(
   ) {
     return `For acute pain following heavy lifting or exercise, the most common cause is a lumbar muscle strain or minor joint irritation.
 
-Immediate self-care involves relative rest from heavy loading for 48 to 72 hours, along with applying cold packs wrapped in a towel for 15 to 20 minutes every 3 hours. For pain and inflammation, over-the-counter ibuprofen 400 milligrams taken with food every 6 to 8 hours, or acetaminophen 500 milligrams every 6 hours can help.
+Immediate self-care involves relative rest from heavy loading for 48 to 72 hours, along with applying cold packs wrapped in a towel for 15 to 20 minutes every 3 hours. For pain and inflammation, over-the-counter ibuprofen 400 milligrams taken with food every 6 to 8 hours, or acetaminophen 500 milligrams every 6 hours can help, provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy.
 
 Seek immediate medical attention if you experience pain radiating down your leg, numbness or tingling in the legs or groin, or loss of bladder control. Would you like to share the exact location of your pain?`;
   }
@@ -127,7 +128,7 @@ Seek immediate medical attention if you experience pain radiating down your leg,
     if (hasFever && hasHeadache) {
       return `For fever and headache, recovery typically takes five to seven days. During the first two days symptoms may persist, so rest is crucial. By day three, most symptoms should improve significantly.
 
-To speed recovery, get eight to ten hours of sleep daily, drink plenty of water and electrolytes, eat light nutritious meals, and take acetaminophen or ibuprofen as needed.
+To speed recovery, get eight to ten hours of sleep daily, drink plenty of water and electrolytes, eat light nutritious meals, and take acetaminophen, or ibuprofen with food provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy.
 
 Please see a doctor immediately if your fever exceeds 103 degrees Fahrenheit, if symptoms worsen after three days, or if you experience a severe headache with a stiff neck. Would you like specific home care tips?`;
     }
@@ -150,18 +151,18 @@ To speed up recovery, rest eight to ten hours daily, drink eight or more glasses
 
 Option one is acetaminophen, also known as Tylenol. The typical dosage is 500 milligrams every four to six hours, with a maximum of 3000 milligrams per day. It is effective for both fever and headache relief.
 
-Option two is ibuprofen, also known as Advil or Motrin. The typical dosage is 200 to 400 milligrams every six to eight hours, and it should be taken with food.
+Option two is ibuprofen, also known as Advil or Motrin. The typical dosage is 200 to 400 milligrams every six to eight hours, and it should be taken with food, provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy.
 
 Important: do not take both medications together. Choose one. You can also apply a cool compress to your forehead, drink ginger or peppermint tea, and rest in a dark, quiet room. Please consult a doctor if your symptoms do not improve.`;
     }
     
     if (hasFever) {
-      return `For fever reduction, acetaminophen 500 milligrams every four to six hours is gentle on the stomach and effectively reduces fever. Alternatively, ibuprofen 400 milligrams every six to eight hours reduces both fever and inflammation, and should be taken with food.
+      return `For fever reduction, acetaminophen 500 milligrams every four to six hours is gentle on the stomach and effectively reduces fever. Alternatively, ibuprofen 400 milligrams every six to eight hours reduces both fever and inflammation, and should be taken with food, provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy.
 
 Do not exceed the recommended dosage, and choose only one of these medications. In addition, place a cool compress on your forehead, wear light clothing, and stay well hydrated. Seek medical attention if your fever reaches 103 degrees Fahrenheit or higher.`;
     }
     
-    return `For acute pain and inflammation relief, over-the-counter ibuprofen 200 to 400 milligrams taken with food every 6 to 8 hours, or acetaminophen 500 milligrams every 4 to 6 hours are standard first-line options.
+    return `For acute pain and inflammation relief, over-the-counter ibuprofen 200 to 400 milligrams taken with food every 6 to 8 hours, or acetaminophen 500 milligrams every 4 to 6 hours are standard first-line options, provided you have no history of stomach ulcers, kidney impairment, or NSAID allergy.
 
 Always follow package directions, never exceed maximum daily doses, and consult a doctor or pharmacist if you have stomach ulcers, kidney disease, or take other prescriptions. Would you like to share more about what symptoms you are treating?`;
   }
