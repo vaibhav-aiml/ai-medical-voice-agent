@@ -39,8 +39,9 @@ export default function StreamingChat({ consultationId, specialistType, userId, 
       if (data.isComplete) {
         setIsReceivingStream(false);
         setStreamingResponse('');
-        if (onMessageUpdate) {
-          onMessageUpdate(data.fullResponse, true);
+        const finalResponse = (data.fullResponse || data.chunk || '').trim();
+        if (onMessageUpdate && finalResponse) {
+          onMessageUpdate(finalResponse, true);
         }
       } else if (data.chunk) {
         setIsReceivingStream(true);

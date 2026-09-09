@@ -280,6 +280,11 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
 
   const handleAIResponse = (response: string, isComplete?: boolean) => {
     if (isComplete) {
+      if (!response || !response.trim()) {
+        setStreamingMessage('');
+        setIsStreaming(false);
+        return;
+      }
       const newMessage: Message = {
         id: Date.now().toString(),
         type: 'ai',

@@ -113,6 +113,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   }, []);
   const finalTranscriptRef = useRef<string>('');
   const accumulatedResponseRef = useRef<string>('');
+  const hasReceivedResponseRef = useRef<boolean>(false);
   const [detectedEmotion, setDetectedEmotion] = useState<string | null>(null);
   const [emotionConfidence, setEmotionConfidence] = useState<number | null>(null);
   const [biometricStatus, setBiometricStatus] = useState<string>(''); 
@@ -326,6 +327,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
           const userMessage = { role: 'user', content: spokenText };
           setConversationHistory(prev => [...prev, userMessage]);
           onTranscriptUpdateRef.current(spokenText);
+          hasReceivedResponseRef.current = false;
           setIsProcessing(true);
           const sent = getAIResponseStream(spokenText, 'voice');
           if (!sent) {
@@ -353,16 +355,21 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       if (data.isComplete) {
         console.log('✅ Streaming complete');
         setIsStreaming(false);
+        hasReceivedResponseRef.current = true;
         
-        const assistantMessage = { role: 'assistant', content: accumulatedResponseRef.current };
-        setConversationHistory(prev => [...prev, assistantMessage]);
+        const finalResponse = (data.fullResponse || accumulatedResponseRef.current || data.chunk || '').trim();
         
-        onAIResponseRef.current(accumulatedResponseRef.current, true);
+        if (finalResponse) {
+          const assistantMessage = { role: 'assistant', content: finalResponse };
+          setConversationHistory(prev => [...prev, assistantMessage]);
+          onAIResponseRef.current(finalResponse, true);
+        }
+        
         accumulatedResponseRef.current = '';
         setStreamingText('');
-        if (voiceSettingsRef.current.autoSpeak && voiceSettingsRef.current.enabled) {
+        if (voiceSettingsRef.current.autoSpeak && voiceSettingsRef.current.enabled && finalResponse) {
           try {
-            speakResponseRef.current(data.fullResponse || accumulatedResponseRef.current);
+            speakResponseRef.current(finalResponse);
           } catch (speechErr) {
             console.error('Speech synthesis error:', speechErr);
           }
@@ -372,6 +379,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         if (!isStreaming) {
           setIsStreaming(true);
         }
+        hasReceivedResponseRef.current = true;
         accumulatedResponseRef.current += data.chunk;
         setStreamingText(accumulatedResponseRef.current);
         onAIResponseRef.current(data.chunk, false);
@@ -380,12 +388,14 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     
     const handleResponse = (data: any) => {
       console.log('🤖 AI Response from Groq:', data);
-      if (data.response) {
-        setConversationHistory(prev => [...prev, { role: 'assistant', content: data.response }]);
-        onAIResponseRef.current(data.response, true);
+      if (data.response && data.response.trim()) {
+        hasReceivedResponseRef.current = true;
+        const resp = data.response.trim();
+        setConversationHistory(prev => [...prev, { role: 'assistant', content: resp }]);
+        onAIResponseRef.current(resp, true);
         if (voiceSettingsRef.current.autoSpeak && voiceSettingsRef.current.enabled) {
           try {
-            speakResponseRef.current(data.response);
+            speakResponseRef.current(resp);
           } catch (speechErr) {
             console.error('Speech synthesis error:', speechErr);
           }
@@ -401,7 +411,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.error('Streaming error:', error);
       setIsProcessing(false);
       setIsStreaming(false);
-      onAIResponseRef.current(tRef.current('errors.server') || 'Server error. Please try again.', true);
+      if (!hasReceivedResponseRef.current && !accumulatedResponseRef.current) {
+        onAIResponseRef.current(tRef.current('errors.server') || 'Server error. Please try again.', true);
+      }
     };
     
     const handleErrorEvent = (data: any) => {
@@ -537,6 +549,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       setTranscript(manualText);
       onTranscriptUpdate(manualText);
       accumulatedResponseRef.current = '';
+      hasReceivedResponseRef.current = false;
       setIsProcessing(true);
       const sent = getAIResponseStream(manualText, 'text');
       if (!sent) {

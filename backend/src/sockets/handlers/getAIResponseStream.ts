@@ -156,18 +156,22 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
       
     } catch (error: any) {
       logger.error('Streaming completion error', { consultationId, error: error.message });
-      const fallbackResponse = getFallbackResponse(transcript, specialistType, conversationHistory);
-      socket.emit('ai-response-chunk', {
-        chunk: fallbackResponse,
-        consultationId,
-        isComplete: true,
-        fullResponse: fallbackResponse,
-      });
-      socket.emit('ai-response-error', {
-        error: 'Failed to generate response, using fallback',
-        consultationId,
-      });
-      saveTranscriptWithTranslation(socket, consultationId, transcript, fallbackResponse, language);
+      try {
+        const fallbackResponse = getFallbackResponse(transcript, specialistType, conversationHistory);
+        socket.emit('ai-response-chunk', {
+          chunk: fallbackResponse,
+          consultationId,
+          isComplete: true,
+          fullResponse: fallbackResponse,
+        });
+        saveTranscriptWithTranslation(socket, consultationId, transcript, fallbackResponse, language);
+      } catch (fallbackError: any) {
+        logger.error('Fallback response generation error', { consultationId, error: fallbackError.message });
+        socket.emit('ai-response-error', {
+          error: 'Failed to generate response',
+          consultationId,
+        });
+      }
     }
   });
 }
