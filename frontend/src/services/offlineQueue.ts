@@ -1,6 +1,7 @@
 import cacheService from './cacheService';
 import logger from './logger';
 import backendStatus from './backendStatus';
+import apiClient from './apiClient';
 export interface QueuedRequest {
   id: string;
   method: 'POST' | 'PUT';
@@ -68,7 +69,6 @@ async function replayQueue(): Promise<void> {
     }
 
     try {
-      
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -76,14 +76,15 @@ async function replayQueue(): Promise<void> {
         headers['Idempotency-Key'] = item.idempotencyKey;
       }
 
-      const response = await fetch(item.url, {
+      const response = await apiClient.getInstance().request({
+        url: item.url,
         method: item.method,
         headers,
-        body: JSON.stringify(item.data),
-        signal: AbortSignal.timeout(25_000),
+        data: item.data,
+        timeout: 25_000,
       });
 
-      if (response.ok) {
+      if (response.status >= 200 && response.status < 300) {
         completed.push(item.id);
         logger.info('offline_queue_item_replayed', {
           id: item.id,
@@ -92,28 +93,54 @@ async function replayQueue(): Promise<void> {
         });
         logger.metric('offline_queue_replay_count');
         logger.metric('offline_queue_replay_success_count');
-      } else {
-        item.retries++;
-        failed.push(item.id);
-        logger.warn('offline_queue_item_failed', {
+      }
+    } catch (err: any) {
+      const status = err.response?.status;
+
+      // 1. AUTH FAILURE (401 / 403): PAUSE & RETAIN
+      // Do not evict; token may have expired offline. Retain until re-authenticated.
+      if (status === 401 || status === 403) {
+        logger.warn('offline_queue_auth_paused', {
           id: item.id,
           url: item.url,
-          status: response.status,
-          retries: item.retries,
+          status,
         });
-        logger.metric('offline_queue_replay_count');
+        break;
       }
-    } catch (err) {
+
+      // 2. TRUE POISON PILL (400, 404, 422): EVICT IMMEDIATELY
+      if (status === 400 || status === 404 || status === 422) {
+        logger.error('offline_queue_poison_pill_evicted', {
+          id: item.id,
+          url: item.url,
+          status,
+          error: err.response?.data?.error || err.message,
+        });
+        completed.push(item.id);
+        continue;
+      }
+
+      // 3. TRANSIENT NETWORK / 503 ERROR
       item.retries++;
       failed.push(item.id);
       logger.warn('offline_queue_item_error', {
         id: item.id,
         url: item.url,
-        error: err instanceof Error ? err.message : 'Unknown',
+        status: status ?? 'network_error',
+        error: err.message,
         retries: item.retries,
       });
       logger.metric('offline_queue_replay_count');
-      
+
+      if (item.retries >= MAX_RETRIES_PER_ITEM) {
+        logger.error('offline_queue_item_max_retries', {
+          id: item.id,
+          url: item.url,
+          retries: item.retries,
+        });
+        completed.push(item.id);
+      }
+
       if (typeof navigator !== 'undefined' && !navigator.onLine) break;
     }
   }

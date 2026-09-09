@@ -48,7 +48,9 @@ const instance: AxiosInstance = axios.create({
 });
 instance.interceptors.request.use(
   (config) => {
-    
+    if (config.url) {
+      config.url = config.url.replace(/^\/?api\//, '/');
+    }
     const requestId = logger.generateRequestId();
     config.headers['X-Request-ID'] = requestId;
     
@@ -183,6 +185,9 @@ export const apiClient = {
   },
   async put<T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> {
     return instance.put<T>(url, data, config);
+  },
+  async patch<T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> {
+    return instance.patch<T>(url, data, config);
   },
   async delete<T = any>(url: string, config?: any): Promise<AxiosResponse<T>> {
     return instance.delete<T>(url, config);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
-import { API_URL } from '../../config/api';
+import apiClient from '../../services/apiClient';
 import { Activity, AlertCircle, CheckCircle, Clock, Heart, Brain, Stethoscope, Pill, TrendingUp, AlertTriangle, Shield, Plus, Trash2 } from 'lucide-react';
 
 interface Symptom {
@@ -165,30 +165,26 @@ const EnhancedSymptomChecker: React.FC<{ onClose: () => void; onStartConsultatio
         severities[s.name] = s.severity;
       });
 
-      const response = await fetch(`${API_URL}/enhanced-symptom/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          symptoms: symptoms.map(s => s.name),
-          durations,
-          severities,
-          patientProfile: {
-            age: patientInfo.age,
-            gender: patientInfo.gender,
-            medicalHistory: patientInfo.medicalHistory,
-            medications: patientInfo.medications,
-            allergies: patientInfo.allergies,
-            lifestyle: {
-              smoking: patientInfo.smoking,
-              alcohol: patientInfo.alcohol,
-              stress: patientInfo.stress,
-              sleep: patientInfo.sleep,
-            },
-            familyHistory: patientInfo.familyHistory,
+      const response = await apiClient.post('/enhanced-symptom/analyze', {
+        symptoms: symptoms.map(s => s.name),
+        durations,
+        severities,
+        patientProfile: {
+          age: patientInfo.age,
+          gender: patientInfo.gender,
+          medicalHistory: patientInfo.medicalHistory,
+          medications: patientInfo.medications,
+          allergies: patientInfo.allergies,
+          lifestyle: {
+            smoking: patientInfo.smoking,
+            alcohol: patientInfo.alcohol,
+            stress: patientInfo.stress,
+            sleep: patientInfo.sleep,
           },
-        }),
+          familyHistory: patientInfo.familyHistory,
+        },
       });
-      const data = await response.json();
+      const data = response.data;
       if (data.success) {
         setResult(data.data);
         setStep('results');

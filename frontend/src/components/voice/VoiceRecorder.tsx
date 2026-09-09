@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import axios from 'axios';
+import apiClient from '../../services/apiClient';
 import { API_URL } from '../../config/api';
 import { useVoiceSocket } from '../../hooks/useVoiceSocket';
 import TriageDisplay from '../consultation/TriageDisplay';
@@ -174,8 +176,8 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       if (!userId) return;
       
       try {
-        const response = await fetch(`${API_URL}/conversation/previous-symptoms/${userId}`);
-        const data = await response.json();
+        const response = await apiClient.get(`/conversation/previous-symptoms/${userId}`);
+        const data = response.data;
         if (data.success && data.data && data.data.length > 0) {
           const previousSymptoms = data.data.slice(0, 3).join(', ');
           const context = `\n\nPreviously, you reported: ${previousSymptoms}. Please consider this history.`;
@@ -256,12 +258,8 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const analyzeSymptomsForTriage = async (symptoms: string) => {
     setIsAnalyzing(true);
     try {
-      const triageResponse = await fetch(`${API_URL}/triage/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symptoms })
-      });
-      const triageData = await triageResponse.json();
+      const triageResponse = await apiClient.post('/triage/analyze', { symptoms });
+      const triageData = triageResponse.data;
       
       if (triageData.success && triageData.data) {
         console.log('📊 Triage Result:', triageData.data);
@@ -468,26 +466,25 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
           reader.readAsDataURL(audioBlob);
           reader.onloadend = async () => {
             try {
-              const base64Audio = (reader.result as string).split(',')[1];
-              const response = await fetch(`${API_URL}/voice/biometrics/verify`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  userId,
-                  audio: base64Audio,
-                }),
+              const base64Audio = (reader.result as string)?.split(',')[1] || '';
+              const response = await apiClient.post('/voice/biometrics/verify', {
+                userId,
+                audio: base64Audio,
               });
-              const data = await response.json();
-              if (response.ok && data.success) {
+              const data = response.data;
+              if (data.success) {
                 setBiometricStatus(data.isMatch ? 'verified' : 'mismatch');
                 setBiometricConfidence(data.confidence);
-              } else if (response.status === 400 && data.message && data.message.includes('No enrolled voice signature')) {
-                setBiometricStatus('unregistered');
-                setBiometricConfidence(0);
               }
-            } catch (asyncErr) {
+            } catch (asyncErr: any) {
+              if (axios.isAxiosError(asyncErr)) {
+                const data = asyncErr.response?.data;
+                if (asyncErr.response?.status === 400 && data?.message && data.message.includes('No enrolled voice signature')) {
+                  setBiometricStatus('unregistered');
+                  setBiometricConfidence(0);
+                  return;
+                }
+              }
               console.error('Asynchronous biometrics verify failed:', asyncErr);
             }
           };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
-import { API_URL } from '../../config/api';
+import apiClient from '../../services/apiClient';
 import { Bell, Plus, Edit2, Trash2, Clock, Calendar, Mail, Phone, MessageCircle, X, CheckCircle, AlertCircle } from 'lucide-react';
 
 type FrequencyType = 'daily' | 'twice_daily' | 'thrice_daily' | 'weekly' | 'custom';
@@ -59,8 +59,8 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
 
   const fetchMedications = async () => {
     try {
-      const response = await fetch(`${API_URL}/reminder/medications/${userId}`);
-      const data = await response.json();
+      const response = await apiClient.get(`/reminder/medications/${userId}`);
+      const data = response.data;
       if (data.success) setMedications(data.data);
     } catch (error) {
       console.error('Error fetching medications:', error);
@@ -69,8 +69,8 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
 
   const fetchPreferences = async () => {
     try {
-      const response = await fetch(`${API_URL}/reminder/preferences/${userId}`);
-      const data = await response.json();
+      const response = await apiClient.get(`/reminder/preferences/${userId}`);
+      const data = response.data;
       if (data.success && data.data) setPreferences(data.data);
     } catch (error) {
       console.error('Error fetching preferences:', error);
@@ -79,8 +79,8 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_URL}/reminder/stats/${userId}`);
-      const data = await response.json();
+      const response = await apiClient.get(`/reminder/stats/${userId}`);
+      const data = response.data;
       if (data.success) setStats(data.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -94,12 +94,8 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
 
   const addMedication = async (medication: Omit<Medication, 'id'>) => {
     try {
-      const response = await fetch(`${API_URL}/reminder/medication`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...medication, userId }),
-      });
-      const data = await response.json();
+      const response = await apiClient.post('/reminder/medication', { ...medication, userId });
+      const data = response.data;
       if (data.success) {
         showMessage('success', 'Medication added successfully!');
         fetchMedications();
@@ -112,12 +108,8 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
 
   const updateMedication = async (id: string, updates: Partial<Medication>) => {
     try {
-      const response = await fetch(`${API_URL}/reminder/medication/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      });
-      const data = await response.json();
+      const response = await apiClient.put(`/reminder/medication/${id}`, updates);
+      const data = response.data;
       if (data.success) {
         showMessage('success', 'Medication updated successfully!');
         fetchMedications();
@@ -132,10 +124,8 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
     if (!confirm('Are you sure you want to delete this medication reminder?')) return;
     
     try {
-      const response = await fetch(`${API_URL}/reminder/medication/${id}`, {
-        method: 'DELETE',
-      });
-      const data = await response.json();
+      const response = await apiClient.delete(`/reminder/medication/${id}`);
+      const data = response.data;
       if (data.success) {
         showMessage('success', 'Medication deleted successfully!');
         fetchMedications();
@@ -147,12 +137,8 @@ const MedicationReminder: React.FC<{ userId: string; onClose: () => void }> = ({
 
   const savePreferences = async (prefs: NotificationPrefs) => {
     try {
-      const response = await fetch(`${API_URL}/reminder/preferences`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, preferences: prefs }),
-      });
-      const data = await response.json();
+      const response = await apiClient.post('/reminder/preferences', { userId, preferences: prefs });
+      const data = response.data;
       if (data.success) {
         showMessage('success', 'Preferences saved successfully!');
         setPreferences(prefs);

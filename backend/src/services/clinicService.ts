@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { Clinic, ClinicDoctor, ClinicPatient, ClinicAppointment, ClinicSettings, ClinicBranding } from '../models/Clinic';
 import logger from '../utils/logger';
 const clinics: Map<string, Clinic> = new Map();
@@ -43,7 +44,7 @@ function getDefaultBranding(clinicId: string): ClinicBranding {
     faviconUrl: '',
   };
 }
-export function createClinic(data: Omit<Clinic, 'id' | 'createdAt' | 'updatedAt'>): Clinic {
+export function createClinic(data: Omit<Clinic, 'id' | 'createdAt' | 'updatedAt'> & { ownerId?: string }): Clinic {
   const clinic: Clinic = {
     id: `clinic_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     ...data,
@@ -93,6 +94,72 @@ export function addDoctor(clinicId: string, doctor: Omit<ClinicDoctor, 'id' | 'c
 
 export function getClinicDoctors(clinicId: string): ClinicDoctor[] {
   return clinicDoctors.get(clinicId) || [];
+}
+
+export function updateDoctor(clinicId: string, doctorId: string, updates: Partial<ClinicDoctor>): ClinicDoctor | null {
+  const doctors = clinicDoctors.get(clinicId) || [];
+  const index = doctors.findIndex(d => d.id === doctorId);
+  if (index === -1) return null;
+  doctors[index] = { ...doctors[index], ...updates };
+  clinicDoctors.set(clinicId, doctors);
+  return doctors[index];
+}
+
+export function deleteDoctor(clinicId: string, doctorId: string): boolean {
+  const doctors = clinicDoctors.get(clinicId) || [];
+  const initialLength = doctors.length;
+  const filtered = doctors.filter(d => d.id !== doctorId);
+  if (filtered.length === initialLength) return false;
+  clinicDoctors.set(clinicId, filtered);
+  return true;
+}
+
+export function syncDoctors(clinicId: string, incomingDoctors: ClinicDoctor[]): ClinicDoctor[] {
+  const existing = clinicDoctors.get(clinicId) || [];
+  const doctorMap = new Map(existing.map(d => [d.id, d]));
+
+  for (const doc of incomingDoctors) {
+    const docId = doc.id || crypto.randomUUID();
+    if (doctorMap.has(docId)) {
+      const current = doctorMap.get(docId)!;
+      doctorMap.set(docId, { ...current, ...doc, id: docId, clinicId });
+    } else {
+      doctorMap.set(docId, {
+        ...doc,
+        id: docId,
+        clinicId,
+        createdAt: doc.createdAt ? new Date(doc.createdAt) : new Date()
+      });
+    }
+  }
+
+  const merged = Array.from(doctorMap.values());
+  clinicDoctors.set(clinicId, merged);
+  return merged;
+}
+
+export function syncAppointments(clinicId: string, incomingAppointments: ClinicAppointment[]): ClinicAppointment[] {
+  const existing = clinicAppointments.get(clinicId) || [];
+  const aptMap = new Map(existing.map(a => [a.id, a]));
+
+  for (const apt of incomingAppointments) {
+    const aptId = apt.id || crypto.randomUUID();
+    if (aptMap.has(aptId)) {
+      const current = aptMap.get(aptId)!;
+      aptMap.set(aptId, { ...current, ...apt, id: aptId, clinicId });
+    } else {
+      aptMap.set(aptId, {
+        ...apt,
+        id: aptId,
+        clinicId,
+        createdAt: apt.createdAt ? new Date(apt.createdAt) : new Date()
+      });
+    }
+  }
+
+  const merged = Array.from(aptMap.values());
+  clinicAppointments.set(clinicId, merged);
+  return merged;
 }
 
 export function addPatient(clinicId: string, patient: Omit<ClinicPatient, 'id' | 'createdAt' | 'patientId'>): ClinicPatient {
@@ -204,6 +271,10 @@ export const clinicService = {
   getClinicById,
   updateClinic,
   addDoctor,
+  updateDoctor,
+  deleteDoctor,
+  syncDoctors,
+  syncAppointments,
   getClinicDoctors,
   addPatient,
   getClinicPatients,

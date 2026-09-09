@@ -5,7 +5,7 @@ import { useLanguage } from './LanguageContext';
 import { useSubscription } from './SubscriptionContext';
 import { consultationService } from '../services/consultationService';
 import { Message, ConsultationSession, DashboardStats } from '../types/consultation.types';
-import { BACKEND_URL } from '../config/api';
+import apiClient from '../services/apiClient';
 import cacheService from '../services/cacheService';
 import logger from '../services/logger';
 
@@ -509,11 +509,9 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const API_URL = BACKEND_URL;
-      const response = await fetch(`${API_URL}/api/clinic/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await apiClient.post<{ success: boolean; data: any; error?: string }>(
+        '/clinic/create',
+        {
           name: `${getUserName()}'s Clinic`,
           subdomain: `${getUserName().toLowerCase()}clinic`,
           primaryColor: '#3b82f6',
@@ -526,12 +524,12 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
           state: 'Your State',
           pincode: '123456',
           subscriptionTier: 'enterprise'
-        }),
-        signal: controller.signal
-      });
+        },
+        { signal: controller.signal }
+      );
 
       clearTimeout(timeoutId);
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         const newClinicId = data.data.id;

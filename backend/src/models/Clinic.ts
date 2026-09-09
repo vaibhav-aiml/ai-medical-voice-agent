@@ -1,5 +1,6 @@
 export interface Clinic {
   id: string;
+  ownerId?: string;
   name: string;
   subdomain: string; 
   customDomain?: string; 

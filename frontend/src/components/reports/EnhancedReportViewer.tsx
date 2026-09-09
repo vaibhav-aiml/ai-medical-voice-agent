@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, Download, Mail, Eye, Loader2, X } from 'lucide-react';
+import apiClient from '../../services/apiClient';
 
 interface ReportData {
   consultationId: string;
@@ -30,28 +31,17 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
   const [activeTab, setActiveTab] = useState<'preview' | 'download'>('preview');
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const API_URL = 'https://ai-medical-voice-agent-ygc5.onrender.com';
-
   const generatePreview = async () => {
     setIsGenerating(true);
     setError(null);
     try {
-      
-      const response = await fetch(`${API_URL}/api/enhanced-report/preview`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(consultationData),
+      const response = await apiClient.post<string>('/enhanced-report/preview', consultationData, {
+        responseType: 'text',
       });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const html = await response.text();
-      setPreviewHtml(html);
+      setPreviewHtml(response.data);
     } catch (error: any) {
       console.error('Error generating preview:', error);
-      setError(error.message || 'Failed to generate preview');
+      setError(error.response?.data?.error || error.message || 'Failed to generate preview');
     } finally {
       setIsGenerating(false);
     }
@@ -90,18 +80,11 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
           'Seek medical attention if symptoms worsen'
         ]
       };
-      const response = await fetch(`${API_URL}/api/enhanced-report/generate-soap`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reportPayload),
+      const response = await apiClient.post('/enhanced-report/generate-soap', reportPayload, {
+        responseType: 'blob',
       });
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const blob = await response.blob();
+      const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'application/pdf' });
       if (blob.type !== 'application/pdf') {
         console.warn('Response is not PDF, type:', blob.type);
       }
@@ -116,8 +99,18 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
       document.body.removeChild(a);
     } catch (error: any) {
       console.error('Error downloading report:', error);
-      setError(error.message || 'Failed to download report');
-      alert('Failed to download report: ' + error.message);
+      let errorMessage = error.message || 'Failed to download report';
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const json = JSON.parse(text);
+          if (json.error) errorMessage = json.error;
+        } catch (_) {}
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      setError(errorMessage);
+      alert('Failed to download report: ' + errorMessage);
     } finally {
       setIsGenerating(false);
     }
@@ -130,18 +123,11 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
     setIsGenerating(true);
     setError(null);
     try {
-      
-      const response = await fetch(`${API_URL}/api/enhanced-report/generate-and-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...consultationData, email }),
+      const response = await apiClient.post('/enhanced-report/generate-and-email', { ...consultationData, email }, {
+        responseType: 'blob',
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const blob = await response.blob();
+      const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -154,8 +140,18 @@ const EnhancedReportViewer: React.FC<EnhancedReportViewerProps> = ({ consultatio
       alert('Report generated! You can now save and email it manually.');
     } catch (error: any) {
       console.error('Error:', error);
-      setError(error.message || 'Failed to generate report');
-      alert('Failed to generate report: ' + error.message);
+      let errorMessage = error.message || 'Failed to generate report';
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const json = JSON.parse(text);
+          if (json.error) errorMessage = json.error;
+        } catch (_) {}
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      setError(errorMessage);
+      alert('Failed to generate report: ' + errorMessage);
     } finally {
       setIsGenerating(false);
     }

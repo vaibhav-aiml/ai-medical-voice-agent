@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
+import axios from 'axios';
 import { X, Mic, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import { API_URL } from '../../config/api';
+import apiClient from '../../services/apiClient';
 
 interface Props {
   onClose: () => void;
@@ -108,26 +109,29 @@ export default function VoiceEnrollmentModal({ onClose, userId }: Props) {
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);
       reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-        
-        const response = await fetch(`${API_URL}/voice/biometrics/enroll`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        try {
+          const base64Audio = (reader.result as string).split(',')[1];
+          
+          const response = await apiClient.post('/voice/biometrics/enroll', {
             userId,
             audio: base64Audio,
-          }),
-        });
+          });
 
-        const data = await response.json();
-        setLoading(false);
+          const data = response.data;
+          setLoading(false);
 
-        if (response.ok && data.success) {
-          setRecordingSuccess(true);
-        } else {
-          setErrorMsg(data.message || 'Failed to register voice print.');
+          if (data.success) {
+            setRecordingSuccess(true);
+          } else {
+            setErrorMsg(data.message || 'Failed to register voice print.');
+          }
+        } catch (uploadErr: any) {
+          setLoading(false);
+          const message = axios.isAxiosError(uploadErr) 
+            ? uploadErr.response?.data?.message || uploadErr.message 
+            : 'Failed uploading voice print.';
+          setErrorMsg(message);
+          console.error(uploadErr);
         }
       };
     } catch (err: any) {

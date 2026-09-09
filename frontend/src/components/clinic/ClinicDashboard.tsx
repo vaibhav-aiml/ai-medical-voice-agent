@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
-import { BACKEND_URL } from '../../config/api';
+import axios from 'axios';
+import apiClient from '../../services/apiClient';
 import { 
   Users, Calendar, Stethoscope, Building2, Settings, 
   Layout, X, Plus, Search, Edit, Trash2, CheckCircle, 
@@ -58,7 +59,6 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const API_URL = BACKEND_URL;
   useEffect(() => {
     fetchData();
   }, [clinicId]);
@@ -67,40 +67,34 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     setLoading(true);
     setError(null);
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); 
-    
     try {
-      
       const [doctorsRes, appointmentsRes] = await Promise.all([
-        fetch(`${API_URL}/api/clinic/${clinicId}/doctors`, { signal: controller.signal }).catch(() => null),
-        fetch(`${API_URL}/api/clinic/${clinicId}/appointments`, { signal: controller.signal }).catch(() => null)
+        apiClient.get<{ success: boolean; data: Doctor[] }>(`/clinic/${clinicId}/doctors`),
+        apiClient.get<{ success: boolean; data: Appointment[] }>(`/clinic/${clinicId}/appointments`),
       ]);
 
-      clearTimeout(timeoutId);
-
-      if (doctorsRes && doctorsRes.ok) {
-        const doctorsData = await doctorsRes.json();
-        setDoctors(doctorsData.data || []);
-        localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(doctorsData.data || []));
+      if (doctorsRes.data?.data) {
+        setDoctors(doctorsRes.data.data);
+        localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(doctorsRes.data.data));
       } else {
-        
         loadLocalData();
       }
 
-      if (appointmentsRes && appointmentsRes.ok) {
-        const appointmentsData = await appointmentsRes.json();
-        setAppointments(appointmentsData.data || []);
-        localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(appointmentsData.data || []));
+      if (appointmentsRes.data?.data) {
+        setAppointments(appointmentsRes.data.data);
+        localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(appointmentsRes.data.data));
       } else {
-        
         loadLocalData();
       }
       loadLocalPatients();
-      
     } catch (error: any) {
-      clearTimeout(timeoutId);
-      console.warn('Error fetching from API or timeout, using localStorage:', error.message || error);
+      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+        const msg = error.response?.data?.error || 'Authentication error: You do not have administrative access to this clinic.';
+        setError(msg);
+        alert(msg);
+        return;
+      }
+      console.warn('Error fetching from API or network issue, using localStorage:', error.message || error);
       loadLocalData();
     } finally {
       setLoading(false);
@@ -227,12 +221,12 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     setDoctors(newDoctors);
     localStorage.setItem(`clinic_${clinicId}_doctors`, JSON.stringify(newDoctors));
     try {
-      await fetch(`${API_URL}/api/clinic/${clinicId}/doctors/sync`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doctors: newDoctors })
-      });
-    } catch (error) {
+      await apiClient.post(`/clinic/${clinicId}/doctors/sync`, { doctors: newDoctors });
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+        alert(error.response?.data?.error || 'Authorization error: You do not have permission to sync doctors.');
+        return;
+      }
       console.error('Error syncing doctors to API:', error);
     }
   };
@@ -246,12 +240,12 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
     setAppointments(newAppointments);
     localStorage.setItem(`clinic_${clinicId}_appointments`, JSON.stringify(newAppointments));
     try {
-      await fetch(`${API_URL}/api/clinic/${clinicId}/appointments/sync`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ appointments: newAppointments })
-      });
-    } catch (error) {
+      await apiClient.post(`/clinic/${clinicId}/appointments/sync`, { appointments: newAppointments });
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+        alert(error.response?.data?.error || 'Authorization error: You do not have permission to sync appointments.');
+        return;
+      }
       console.error('Error syncing appointments to API:', error);
     }
   };
@@ -259,48 +253,58 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const addDoctor = async (doctor: Omit<Doctor, 'id'>) => {
     const newDoctor = {
       ...doctor,
-      id: 'doc_' + Date.now(),
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'doc_' + Date.now(),
     };
-    const updatedDoctors = [...doctors, newDoctor];
     try {
-      const response = await fetch(`${API_URL}/api/clinic/${clinicId}/doctors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newDoctor)
-      });
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          await fetchData();
-          setShowAddDoctor(false);
-          alert('Doctor added successfully!');
-          return;
-        }
+      const response = await apiClient.post<{ success: boolean; data: Doctor }>(
+        `/clinic/${clinicId}/doctors`,
+        newDoctor
+      );
+      if (response.data.success) {
+        await fetchData();
+        setShowAddDoctor(false);
+        alert('Doctor added successfully!');
+        return;
       }
-    } catch (error) {
-      console.error('API error, saving to localStorage:', error);
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+        alert(error.response?.data?.error || 'Authorization error: You do not have administrative access to add doctors.');
+        return;
+      }
+      if (error.response) {
+        alert(`Failed to add doctor: ${error.response.data?.error || error.message}`);
+        return;
+      }
+      console.error('Network error, saving to localStorage:', error);
     }
+    const updatedDoctors = [...doctors, newDoctor];
     saveDoctors(updatedDoctors);
     setShowAddDoctor(false);
     alert('Doctor added successfully (offline mode)!');
   };
 
   const updateDoctor = async (id: string, doctorData: Partial<Doctor>) => {
-    
     try {
-      const response = await fetch(`${API_URL}/api/clinic/${clinicId}/doctors/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(doctorData)
-      });
-      if (response.ok) {
+      const response = await apiClient.put<{ success: boolean; data: Doctor }>(
+        `/clinic/${clinicId}/doctors/${id}`,
+        doctorData
+      );
+      if (response.data.success) {
         await fetchData();
         setEditingDoctor(null);
         alert('Doctor updated successfully!');
         return;
       }
-    } catch (error) {
-      console.error('API error, updating in localStorage:', error);
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+        alert(error.response?.data?.error || 'Authorization error: You do not have administrative access to update doctors.');
+        return;
+      }
+      if (error.response) {
+        alert(`Failed to update doctor: ${error.response.data?.error || error.message}`);
+        return;
+      }
+      console.error('Network error, updating in localStorage:', error);
     }
     const updatedDoctors = doctors.map(d => 
       d.id === id ? { ...d, ...doctorData } : d
@@ -313,16 +317,24 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   const deleteDoctor = async (id: string) => {
     if (!confirm('Are you sure you want to delete this doctor?')) return;
     try {
-      const response = await fetch(`${API_URL}/api/clinic/${clinicId}/doctors/${id}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
+      const response = await apiClient.delete<{ success: boolean }>(
+        `/clinic/${clinicId}/doctors/${id}`
+      );
+      if (response.data.success) {
         await fetchData();
         alert('Doctor deleted successfully!');
         return;
       }
-    } catch (error) {
-      console.error('API error, deleting from localStorage:', error);
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+        alert(error.response?.data?.error || 'Authorization error: You do not have administrative access to delete doctors.');
+        return;
+      }
+      if (error.response) {
+        alert(`Failed to delete doctor: ${error.response.data?.error || error.message}`);
+        return;
+      }
+      console.error('Network error, deleting from localStorage:', error);
     }
     const updatedDoctors = doctors.filter(d => d.id !== id);
     saveDoctors(updatedDoctors);
@@ -359,20 +371,26 @@ const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ clinicId }) => {
   };
 
   const updateAppointmentStatus = async (id: string, status: string) => {
-    
     try {
-      const response = await fetch(`${API_URL}/api/clinic/${clinicId}/appointments/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
-      if (response.ok) {
+      const response = await apiClient.patch<{ success: boolean }>(
+        `/clinic/appointments/${id}/status`,
+        { status }
+      );
+      if (response.data.success) {
         await fetchData();
         alert(`Appointment ${status}!`);
         return;
       }
-    } catch (error) {
-      console.error('API error, updating in localStorage:', error);
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+        alert(error.response?.data?.error || 'Authorization error: You do not have permission to update appointment status.');
+        return;
+      }
+      if (error.response) {
+        alert(`Failed to update appointment: ${error.response.data?.error || error.message}`);
+        return;
+      }
+      console.error('Network error, updating in localStorage:', error);
     }
     const updatedAppointments = appointments.map(apt =>
       apt.id === id ? { ...apt, status } : apt

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { API_URL } from '../../config/api';
+import apiClient from '../../services/apiClient';
 import { useVoiceSocket } from '../../hooks/useVoiceSocket';
 
 interface StreamingChatProps {
@@ -17,8 +17,8 @@ export default function StreamingChat({ consultationId, specialistType, userId, 
   useEffect(() => {
     const loadContext = async () => {
       try {
-        const response = await fetch(`${API_URL}/conversation/previous-symptoms/${userId}`);
-        const data = await response.json();
+        const response = await apiClient.get(`/conversation/previous-symptoms/${userId}`);
+        const data = response.data;
         if (data.success && data.data.length > 0) {
           const context = `\n\n[Previous consultations] You previously reported: ${data.data.slice(0, 3).join(', ')}. Consider this history.`;
           setContextPrompt(context);

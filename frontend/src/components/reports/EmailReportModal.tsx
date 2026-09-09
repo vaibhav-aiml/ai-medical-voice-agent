@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Mail, Send, X } from 'lucide-react';
+import apiClient from '../../services/apiClient';
 
 interface Props {
   consultationId: string;
@@ -39,25 +40,21 @@ export default function EmailReportModal({
     setIsSending(true);
     
     try {
-      const response = await fetch('http://localhost:3000/api/email/send-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: email,
-          patientName,
-          consultationId,
-          specialistType,
-          specialistName,
-          date: new Date(),
-          symptoms,
-          diagnosis,
-          recommendations,
-          medications,
-          pdfBuffer: pdfData,
-        }),
+      const response = await apiClient.post('/email/send-report', {
+        to: email,
+        patientName,
+        consultationId,
+        specialistType,
+        specialistName,
+        date: new Date(),
+        symptoms,
+        diagnosis,
+        recommendations,
+        medications,
+        pdfBuffer: pdfData,
       });
       
-      if (response.ok) {
+      if (response.status >= 200 && response.status < 300) {
         setSent(true);
         setTimeout(() => {
           onClose();
@@ -67,9 +64,9 @@ export default function EmailReportModal({
       } else {
         alert('Failed to send email. Please try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending email:', error);
-      alert('Error sending email. Please check your connection.');
+      alert(`Error sending email: ${error.response?.data?.error || error.message || 'Please check your connection.'}`);
     } finally {
       setIsSending(false);
     }
