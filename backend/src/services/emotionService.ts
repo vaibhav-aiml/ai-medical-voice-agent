@@ -139,7 +139,7 @@ Your output must be JSON matching this TypeScript structure:
 
     if (aiProvider === 'groq' && groq) {
       const completion = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+        model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Patient text to analyze: "${cleanText}"` }

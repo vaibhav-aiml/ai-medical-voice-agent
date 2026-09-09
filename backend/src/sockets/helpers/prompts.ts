@@ -15,30 +15,52 @@ export const languageNames: Record<string, string> = {
 
 export function getSystemPrompt(specialistType: string, contextPrompt?: string, language: string = 'en'): string {
   const basePrompts: Record<string, string> = {
-    general: `You are a compassionate General Physician AI. 
+    general: `You are an expert, compassionate clinical General Physician AI providing real-time telemedicine consultations.
 
-IMPORTANT RULES:
-1. ALWAYS remember the conversation history - answer follow-up questions based on previous messages
-2. Be conversational and contextual - NEVER repeat the same generic response
-3. For "how much time to recover" - give specific timeframes (e.g., "2-3 days", "5-7 days")
-4. For "what medicine" - give specific medication names with dosages
-5. Be warm, empathetic, and professional
-6. Include self-care tips and when to see a doctor
-7. Always end with a disclaimer to consult a real doctor
+CLINICAL CONSULTATION RULES:
+1. HIGHLY SPECIFIC AND MEANINGFUL: Directly analyze the exact symptoms, activities, or medications the patient mentions. Never output generic boilerplate or vague platitudes. If the patient mentions weightlifting, deadlifts, or exercise, immediately address acute musculoskeletal strain, lumbar spinal dynamics, or delayed onset muscle soreness.
+2. BRIEF, CRISP AND STRUCTURED: Keep responses concise and focused (around 100 to 140 words). Patients want direct, actionable answers without overwhelming walls of text.
+3. CONVERSATIONAL CLINICAL MEMORY: Fully remember prior context and follow-up details from previous messages in this consultation.
+4. ACTIONABLE PROTOCOL:
+   - Provide a clear initial assessment of likely causes.
+   - Give direct self-care advice (such as relative rest, cold or warm therapy, hydration).
+   - Offer specific over-the-counter medication options with standard adult dosages and cautions when appropriate.
+   - Clearly state any red flag warning signs that require emergency medical evaluation.
+5. PROFESSIONAL AND REASSURING: Provide warm, empathetic guidance while reminding the patient to seek in-person evaluation if symptoms worsen.`,
 
-Example of GOOD contextual response:
-- User: "I have a headache"
-- AI: "Drink water and rest. For pain, you can take acetaminophen..."
-- User: "what medicine should I take" 
-- AI: "Based on your headache, acetaminophen 500mg or ibuprofen 400mg would help..."`,
+    orthopedic: `You are an expert clinical Orthopedic and Sports Medicine Specialist AI.
+Focus on musculoskeletal conditions, joints, bones, spine, and workout injuries (such as lifting injuries, deadlift back pain, tendonitis, ligament sprains, and muscle tears).
+CLINICAL GUIDELINES:
+1. Assess likely biomechanical or muscular causes directly related to the user's specific exercise or movement.
+2. Provide immediate targeted self-care: relative rest, ice or heat protocols, and avoiding aggravating positions.
+3. Detail specific anti-inflammatory or pain relief options with adult dosages and food instructions (for example, Ibuprofen 400 to 600 milligrams with food, or Naproxen 220 milligrams).
+4. Highlight critical red flags: sciatica with pain radiating down the leg, numbness or tingling in extremities or groin, inability to bear weight, or sudden popping sensations.
+5. Keep explanations brief, concise (under 130 words), and highly actionable.`,
 
-    orthopedic: `You are an Orthopedic Specialist AI. Focus on musculoskeletal issues. ALWAYS remember conversation history and give specific medication recommendations.`,
-    
-    cardiologist: `You are a Cardiologist AI. Focus on heart health. ALWAYS remember conversation history and give specific recommendations.`,
-    
-    neurologist: `You are a Neurologist AI. Focus on headaches and nerve issues. ALWAYS remember conversation history.`,
-    
-    pediatrician: `You are a Pediatrician AI. Focus on children's health. ALWAYS remember conversation history and give child-appropriate advice.`,
+    cardiologist: `You are an expert clinical Cardiologist AI.
+Focus on cardiovascular symptoms, blood pressure, palpitations, chest sensations, and shortness of breath.
+CLINICAL GUIDELINES:
+1. Immediately prioritize triage: identify any potential emergency signs (crushing chest pain, pain radiating to jaw or left arm, diaphoresis, severe breathlessness).
+2. For non-emergent inquiries, provide brief, reassuring, evidence-based guidance.
+3. Outline lifestyle factors, hydration, sodium intake, and monitoring.
+4. Keep answers brief (under 130 words), direct, and specific.`,
+
+    neurologist: `You are an expert clinical Neurologist AI.
+Focus on headaches, migraines, nerve pain, neuropathy, dizziness, and neurological symptoms.
+CLINICAL GUIDELINES:
+1. Differentiate tension headaches, migraines, and cervical spine or nerve involvement.
+2. Provide immediate non-pharmacological and OTC medication recommendations with dosages.
+3. Highlight neurological red flags: thunderclap headache, focal weakness, vision changes, confusion.
+4. Keep answers brief (under 130 words), direct, and focused.`,
+
+    pediatrician: `You are an expert clinical Pediatrician AI.
+Focus on pediatric health, infants, children, and adolescents.
+CLINICAL GUIDELINES:
+1. Provide gentle, precise, child-appropriate clinical advice.
+2. Detail pediatric fever management, hydration, and monitoring.
+3. Emphasize weight-based dosing for pediatric medications under a doctor's care.
+4. Highlight red flags: lethargy, dehydration, respiratory distress, persistent high fever.
+5. Keep answers concise, reassuring, and brief (under 130 words).`,
   };
   
   let prompt = basePrompts[specialistType] || basePrompts.general;
@@ -65,21 +87,42 @@ export function getFallbackResponse(
   const lowerQuestion = symptoms.toLowerCase();
   
   let previousSymptoms = '';
-  let hasFever = false;
-  let hasHeadache = false;
-  let hasCough = false;
+  let hasFever = lowerQuestion.includes('fever') || lowerQuestion.includes('temperature');
+  let hasHeadache = lowerQuestion.includes('headache') || lowerQuestion.includes('head pain');
+  let hasCough = lowerQuestion.includes('cough') || lowerQuestion.includes('coughing');
   
   if (conversationHistory) {
     const userMessages = conversationHistory.filter(m => m.role === 'user').map(m => m.content.toLowerCase());
     const allUserText = userMessages.join(' ');
-    hasFever = allUserText.includes('fever') || allUserText.includes('temperature');
-    hasHeadache = allUserText.includes('headache') || allUserText.includes('head pain');
-    hasCough = allUserText.includes('cough') || allUserText.includes('coughing');
+    hasFever = hasFever || allUserText.includes('fever') || allUserText.includes('temperature');
+    hasHeadache = hasHeadache || allUserText.includes('headache') || allUserText.includes('head pain');
+    hasCough = hasCough || allUserText.includes('cough') || allUserText.includes('coughing');
     if (userMessages.length > 0) {
       previousSymptoms = userMessages[userMessages.length - 1];
     }
   }
+
+  // 1. Musculoskeletal, Workout, Deadlift, or Back Pain inquiries
+  if (
+    lowerQuestion.includes('deadlift') ||
+    lowerQuestion.includes('lift') ||
+    lowerQuestion.includes('gym') ||
+    lowerQuestion.includes('workout') ||
+    lowerQuestion.includes('back pain') ||
+    lowerQuestion.includes('muscle') ||
+    lowerQuestion.includes('strain') ||
+    lowerQuestion.includes('sprain') ||
+    lowerQuestion.includes('knee') ||
+    lowerQuestion.includes('joint')
+  ) {
+    return `For acute pain following heavy lifting or exercise, the most common cause is a lumbar muscle strain or minor joint irritation.
+
+Immediate self-care involves relative rest from heavy loading for 48 to 72 hours, along with applying cold packs wrapped in a towel for 15 to 20 minutes every 3 hours. For pain and inflammation, over-the-counter ibuprofen 400 milligrams taken with food every 6 to 8 hours, or acetaminophen 500 milligrams every 6 hours can help.
+
+Seek immediate medical attention if you experience pain radiating down your leg, numbness or tingling in the legs or groin, or loss of bladder control. Would you like to share the exact location of your pain?`;
+  }
   
+  // 2. Recovery Timeline inquiries
   if (lowerQuestion.includes('how much time') || lowerQuestion.includes('recover') || lowerQuestion.includes('how long') || lowerQuestion.includes('when will')) {
     if (hasFever && hasHeadache) {
       return `For fever and headache, recovery typically takes five to seven days. During the first two days symptoms may persist, so rest is crucial. By day three, most symptoms should improve significantly.
@@ -100,6 +143,7 @@ Be sure to stay hydrated with water and electrolytes, rest in a cool and comfort
 To speed up recovery, rest eight to ten hours daily, drink eight or more glasses of water, eat nutritious foods, and take over-the-counter medications as needed. Please consult a doctor if symptoms worsen or persist beyond seven days. Would you like to share more details about your symptoms?`;
   }
   
+  // 3. Medication inquiries
   if (lowerQuestion.includes('medicine') || lowerQuestion.includes('medication') || lowerQuestion.includes('should i take') || lowerQuestion.includes('what can i take')) {
     if (hasFever && hasHeadache) {
       return `For fever and headache, you have two main over-the-counter options.
@@ -117,11 +161,12 @@ Important: do not take both medications together. Choose one. You can also apply
 Do not exceed the recommended dosage, and choose only one of these medications. In addition, place a cool compress on your forehead, wear light clothing, and stay well hydrated. Seek medical attention if your fever reaches 103 degrees Fahrenheit or higher.`;
     }
     
-    return `For pain and fever relief, over-the-counter acetaminophen 500 milligrams every four to six hours or ibuprofen 200 to 400 milligrams every six to eight hours can help. For cold and cough, expectorants like guaifenesin or cough suppressants like dextromethorphan are commonly used.
+    return `For acute pain and inflammation relief, over-the-counter ibuprofen 200 to 400 milligrams taken with food every 6 to 8 hours, or acetaminophen 500 milligrams every 4 to 6 hours are standard first-line options.
 
-Always read the medication label carefully, follow dosage instructions, and do not exceed the maximum daily dose. If you have chronic conditions or take other prescriptions, please consult your pharmacist or doctor. Would you like to share more about your specific symptoms?`;
+Always follow package directions, never exceed maximum daily doses, and consult a doctor or pharmacist if you have stomach ulcers, kidney disease, or take other prescriptions. Would you like to share more about what symptoms you are treating?`;
   }
   
+  // 4. Multi-turn follow up
   if (conversationHistory && conversationHistory.length > 2) {
     return `Based on our conversation, I recommend continuing to monitor your symptoms, which should improve within two to three days. Take over-the-counter medication as needed for relief, drink eight to ten glasses of water daily, get seven to eight hours of quality sleep, and eat light nutritious meals.
 

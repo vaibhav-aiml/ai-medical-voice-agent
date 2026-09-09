@@ -119,14 +119,36 @@ export function registerGetAIResponseStreamHandler(socket: Socket, groq: Groq | 
       }));
 
       logger.info('Starting Groq streaming completion', { consultationId });
-      const stream = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        // Cast: structurally compatible with ChatCompletionMessageParam
-        messages: redactedMessages as Array<{role: 'system' | 'user' | 'assistant', content: string}>,
-        temperature: 0.7,
-        max_tokens: 800,
-        stream: true,
-      });
+      const candidateModels = [
+        process.env.GROQ_MODEL,
+        'qwen/qwen3.8-27b',
+        'groq/compound-mini',
+        'openai/gpt-oss-120b',
+      ].filter(Boolean) as string[];
+
+      let stream: any = null;
+      let lastModelError: any = null;
+
+      for (const modelCandidate of candidateModels) {
+        try {
+          stream = await groq.chat.completions.create({
+            model: modelCandidate,
+            // Cast: structurally compatible with ChatCompletionMessageParam
+            messages: redactedMessages as Array<{role: 'system' | 'user' | 'assistant', content: string}>,
+            temperature: 0.6,
+            max_tokens: 600,
+            stream: true,
+          });
+          break;
+        } catch (mErr: any) {
+          lastModelError = mErr;
+          logger.warn(`Groq streaming model ${modelCandidate} failed, attempting alternative`, { error: mErr.message });
+        }
+      }
+
+      if (!stream) {
+        throw lastModelError || new Error('All Groq streaming candidate models failed');
+      }
       
       let fullResponse = '';
       let chunkCount = 0;

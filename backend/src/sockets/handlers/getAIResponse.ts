@@ -77,13 +77,35 @@ export function registerGetAIResponseHandler(socket: Socket, groq: Groq | null) 
         return msg;
       }));
 
-      const completion = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        // Cast: structurally compatible with ChatCompletionMessageParam
-        messages: redactedMessages as Array<{role: 'system' | 'user' | 'assistant', content: string}>,
-        temperature: 0.7,
-        max_tokens: 800,
-      });
+      const candidateModels = [
+        process.env.GROQ_MODEL,
+        'qwen/qwen3.8-27b',
+        'groq/compound-mini',
+        'openai/gpt-oss-120b',
+      ].filter(Boolean) as string[];
+
+      let completion: any = null;
+      let lastModelError: any = null;
+
+      for (const modelCandidate of candidateModels) {
+        try {
+          completion = await groq.chat.completions.create({
+            model: modelCandidate,
+            // Cast: structurally compatible with ChatCompletionMessageParam
+            messages: redactedMessages as Array<{role: 'system' | 'user' | 'assistant', content: string}>,
+            temperature: 0.6,
+            max_tokens: 600,
+          });
+          break;
+        } catch (mErr: any) {
+          lastModelError = mErr;
+          logger.warn(`Groq non-streaming model ${modelCandidate} failed, attempting alternative`, { error: mErr.message });
+        }
+      }
+
+      if (!completion) {
+        throw lastModelError || new Error('All Groq candidate models failed');
+      }
       
       const response = completion.choices[0]?.message?.content || 'I understand. Could you please provide more details about your symptoms?';
       
