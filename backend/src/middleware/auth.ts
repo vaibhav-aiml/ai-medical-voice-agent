@@ -2,9 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { clerkClient } from '@clerk/clerk-sdk-node';
 import logger from '../utils/logger';
 
-// Import the Express augmentation so `req.userId` is typed
-import '../types/express.d.ts';
-
 /**
  * Checks whether the narrow test-bypass is active.
  * Both conditions must be true:
