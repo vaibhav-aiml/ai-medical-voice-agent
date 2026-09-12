@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { useUser, useClerk } from '@clerk/clerk-react';
-import { User, Settings, LogOut, Shield, Moon, Sun, Globe, Users, ChevronRight, Camera, Check } from 'lucide-react';
+import { User, Settings, LogOut, Shield, Moon, Sun, Globe, Users, ChevronRight, ChevronDown, Camera, Check } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -26,6 +26,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
   const [showAccounts, setShowAccounts] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [showLanguageOptions, setShowLanguageOptions] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const availableLanguages = [
@@ -50,6 +51,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
         setIsOpen(false);
         setShowAccounts(false);
         setShowAvatarMenu(false);
+        setShowLanguageOptions(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -90,6 +92,7 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
     console.log('Changing language to:', languageCode);
     setLanguage(languageCode as any);
     setIsOpen(false);
+    setShowLanguageOptions(false);
   };
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,78 +212,101 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
             <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
           </button>
 
-          {}
+          {/* Language Selector Section - Collapsed by Default behind a Toggle */}
           <div style={styles.languageSection}>
-            <div style={styles.languageHeader}>
-              <Globe size={16} />
+            <button
+              onClick={() => setShowLanguageOptions(prev => !prev)}
+              style={styles.languageToggleRow}
+              type="button"
+              aria-expanded={showLanguageOptions}
+              aria-label="Toggle language selection"
+            >
+              <Globe size={18} />
               <span>Language / भाषा</span>
-            </div>
-            
-            {}
-            <div style={styles.languageSubgroup}>
-              <div style={styles.languageSubgroupTitle}>देवनागरी / Devanagari</div>
-              {devanagariLanguages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => handleLanguageChange(lang.code)}
-                  style={{
-                    ...styles.languageOption,
-                    ...(language === lang.code ? styles.languageActive : {})
-                  }}
-                >
-                  <span style={styles.flag}>{lang.flag}</span>
-                  <span style={styles.languageName}>{lang.nativeName}</span>
-                  <span style={styles.languageCode}>({lang.name})</span>
-                  {language === lang.code && (
-                    <Check size={14} style={styles.checkIcon} />
-                  )}
-                </button>
-              ))}
-            </div>
+              <span style={styles.currentLanguageBadge}>
+                {(availableLanguages.find(l => l.code === language) || availableLanguages[0]).flag}{' '}
+                {(availableLanguages.find(l => l.code === language) || availableLanguages[0]).nativeName}
+              </span>
+              <ChevronDown
+                size={16}
+                style={{
+                  transform: showLanguageOptions ? 'rotate(180deg)' : 'none',
+                  transition: 'transform 0.2s ease',
+                  color: 'var(--text-secondary)',
+                  flexShrink: 0,
+                }}
+              />
+            </button>
 
-            {}
-            <div style={styles.languageSubgroup}>
-              <div style={styles.languageSubgroupTitle}>திராவிட / Dravidian</div>
-              {dravidianLanguages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => handleLanguageChange(lang.code)}
-                  style={{
-                    ...styles.languageOption,
-                    ...(language === lang.code ? styles.languageActive : {})
-                  }}
-                >
-                  <span style={styles.flag}>{lang.flag}</span>
-                  <span style={styles.languageName}>{lang.nativeName}</span>
-                  <span style={styles.languageCode}>({lang.name})</span>
-                  {language === lang.code && (
-                    <Check size={14} style={styles.checkIcon} />
-                  )}
-                </button>
-              ))}
-            </div>
+            {showLanguageOptions && (
+              <div style={styles.languageSubgroupsWrapper}>
+                {/* Devanagari Languages */}
+                <div style={styles.languageSubgroup}>
+                  <div style={styles.languageSubgroupTitle}>देवनागरी / Devanagari</div>
+                  {devanagariLanguages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      style={{
+                        ...styles.languageOption,
+                        ...(language === lang.code ? styles.languageActive : {})
+                      }}
+                    >
+                      <span style={styles.flag}>{lang.flag}</span>
+                      <span style={styles.languageName}>{lang.nativeName}</span>
+                      <span style={styles.languageCode}>({lang.name})</span>
+                      {language === lang.code && (
+                        <Check size={14} style={styles.checkIcon} />
+                      )}
+                    </button>
+                  ))}
+                </div>
 
-            {}
-            <div style={styles.languageSubgroup}>
-              <div style={styles.languageSubgroupTitle}>Others</div>
-              {otherLanguages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => handleLanguageChange(lang.code)}
-                  style={{
-                    ...styles.languageOption,
-                    ...(language === lang.code ? styles.languageActive : {})
-                  }}
-                >
-                  <span style={styles.flag}>{lang.flag}</span>
-                  <span style={styles.languageName}>{lang.nativeName}</span>
-                  <span style={styles.languageCode}>({lang.name})</span>
-                  {language === lang.code && (
-                    <Check size={14} style={styles.checkIcon} />
-                  )}
-                </button>
-              ))}
-            </div>
+                {/* Dravidian Languages */}
+                <div style={styles.languageSubgroup}>
+                  <div style={styles.languageSubgroupTitle}>திராவிட / Dravidian</div>
+                  {dravidianLanguages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      style={{
+                        ...styles.languageOption,
+                        ...(language === lang.code ? styles.languageActive : {})
+                      }}
+                    >
+                      <span style={styles.flag}>{lang.flag}</span>
+                      <span style={styles.languageName}>{lang.nativeName}</span>
+                      <span style={styles.languageCode}>({lang.name})</span>
+                      {language === lang.code && (
+                        <Check size={14} style={styles.checkIcon} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Other Languages */}
+                <div style={styles.languageSubgroup}>
+                  <div style={styles.languageSubgroupTitle}>Others</div>
+                  {otherLanguages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      style={{
+                        ...styles.languageOption,
+                        ...(language === lang.code ? styles.languageActive : {})
+                      }}
+                    >
+                      <span style={styles.flag}>{lang.flag}</span>
+                      <span style={styles.languageName}>{lang.nativeName}</span>
+                      <span style={styles.languageCode}>({lang.name})</span>
+                      {language === lang.code && (
+                        <Check size={14} style={styles.checkIcon} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {}
@@ -484,19 +510,43 @@ const styles = {
     textAlign: 'center' as const,
   },
   languageSection: {
-    padding: '8px 0',
+    padding: '0',
+    borderTop: '1px solid var(--border-color)',
+    borderBottom: '1px solid var(--border-color)',
   },
-  languageHeader: {
+  languageToggleRow: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    padding: '10px 16px',
+    width: '100%',
+    padding: '12px 16px',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    color: 'var(--text-primary)',
+    textAlign: 'left' as const,
+    transition: 'background 0.2s',
+  },
+  currentLanguageBadge: {
     fontSize: '12px',
-    fontWeight: 600,
     color: 'var(--text-secondary)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-    borderBottom: '1px solid var(--border-color)',
+    background: 'var(--badge-bg)',
+    padding: '2px 8px',
+    borderRadius: '6px',
+    marginLeft: 'auto',
+    marginRight: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontWeight: 500,
+  },
+  languageSubgroupsWrapper: {
+    maxHeight: '220px',
+    overflowY: 'auto' as const,
+    borderTop: '1px solid var(--border-color)',
+    background: 'var(--bg-secondary)',
+    padding: '4px 0',
   },
   languageSubgroup: {
     padding: '4px 0',

@@ -3,7 +3,7 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 import {
   Mic, Stethoscope, ClipboardList, ArrowRight,
   Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Calendar,
-  Volume2, VolumeX
+  Volume2, VolumeX, ChevronDown, LucideIcon
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useLanguage } from '../context/LanguageContext';
@@ -15,6 +15,222 @@ import heroMedicalVideo from '../assets/videos/hero_medical.mp4';
 
 const EnhancedSymptomChecker = lazy(() => import('../components/health/EnhancedSymptomChecker'));
 
+interface FeatureItem {
+  id: string;
+  panelId: string;
+  icon: LucideIcon;
+  titleKey: string;
+  tagKey: string;
+  descKey: string;
+  softBg?: boolean;
+  details: string[];
+}
+
+const FEATURE_ITEMS: FeatureItem[] = [
+  {
+    id: 'voice-consultation',
+    panelId: 'feature-details-voice-consultation',
+    icon: Mic,
+    titleKey: 'home.featureVoice',
+    tagKey: 'home.realTime',
+    descKey: 'home.featureVoiceDesc',
+    softBg: true,
+    details: [
+      'Speaks and listens in real time — describe symptoms out loud, no typing required',
+      'Streams the AI\'s response back as it\'s generated, so you\'re not staring at a loading spinner',
+      'Every conversation is automatically transcribed and saved to your consultation history',
+      'Supports multiple Indian languages, not just English',
+    ],
+  },
+  {
+    id: 'specialists',
+    panelId: 'feature-details-specialists',
+    icon: Stethoscope,
+    titleKey: 'home.featureSpecialists',
+    tagKey: 'home.multiSpecialty',
+    descKey: 'home.featureSpecialistsDesc',
+    softBg: true,
+    details: [
+      'Choose from General Physician, Orthopedic, Cardiologist, Pediatrician, or Neurologist specialist modes',
+      'Each specialist mode includes field-specific safety guidance relevant to that specialty',
+      'Switch specialists between consultations based on your symptoms — you\'re not locked into one',
+      'More specialties are planned as the platform grows',
+    ],
+  },
+  {
+    id: 'medical-reports',
+    panelId: 'feature-details-medical-reports',
+    icon: ClipboardList,
+    titleKey: 'home.featureReports',
+    tagKey: 'home.instantDownload',
+    descKey: 'home.featureReportsDesc',
+    softBg: false,
+    details: [
+      'Generates a structured SOAP-format report — the same format doctors use',
+      'Available as a PDF download immediately after your consultation ends',
+      'Includes your symptoms, the AI\'s assessment, and a triage urgency level',
+      'A useful starting point for an in-person doctor visit, not a replacement for one',
+    ],
+  },
+  {
+    id: 'appointment-booking',
+    panelId: 'feature-details-appointment-booking',
+    icon: Calendar,
+    titleKey: 'home.featureAppointments',
+    tagKey: 'home.easyBooking',
+    descKey: 'home.featureAppointmentsDesc',
+    softBg: false,
+    details: [
+      'Schedule a follow-up with your preferred specialist directly after a consultation',
+      'Get reminders so you don\'t miss a booked slot',
+      'Reschedule or cancel anytime from your account',
+    ],
+  },
+  {
+    id: 'email-reports',
+    panelId: 'feature-details-email-reports',
+    icon: Mail,
+    titleKey: 'home.featureEmail',
+    tagKey: 'home.shareWithDoctors',
+    descKey: 'home.featureEmailDesc',
+    softBg: false,
+    details: [
+      'Your medical report can be sent straight to your inbox, formatted and ready to read',
+      'Share the same report with a doctor by email in one click',
+      'Keeps a copy outside the app, so you\'re not dependent on staying logged in to access it',
+    ],
+  },
+  {
+    id: 'secure-private',
+    panelId: 'feature-details-secure-private',
+    icon: Shield,
+    titleKey: 'home.featureSecure',
+    tagKey: 'home.hipaaCompliant',
+    descKey: 'home.featureSecureDesc',
+    softBg: false,
+    details: [
+      'Personal identifying details are automatically redacted before being sent for AI processing',
+      'Data is encrypted in transit, and access is scoped so only you and clinics you\'re connected to can see your records',
+      'Built with India\'s DPDP Act 2023 in mind, alongside international data-protection practices',
+      'Clinic staff can only access patients within their own clinic, not other clinics\' data',
+    ],
+  },
+];
+
+function FeatureCardItem({
+  item,
+  isExpanded,
+  isReceded,
+  prefersReducedMotion,
+  onToggle,
+  t,
+}: {
+  item: FeatureItem;
+  isExpanded: boolean;
+  isReceded: boolean;
+  prefersReducedMotion: boolean;
+  onToggle: () => void;
+  t: (key: string) => string;
+}) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState<number>(0);
+  const Icon = item.icon;
+
+  // Pre-measure scrollHeight on mount so initial expand animates smoothly
+  useEffect(() => {
+    if (contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight);
+    }
+  }, []);
+
+  // ResizeObserver active only while card is expanded; disconnects cleanly on collapse or unmount
+  useEffect(() => {
+    if (!isExpanded || !contentRef.current) return;
+
+    setContentHeight(contentRef.current.scrollHeight);
+
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const height = entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
+        if (height > 0) {
+          setContentHeight(Math.ceil(height));
+        }
+      }
+    });
+
+    ro.observe(contentRef.current);
+
+    return () => {
+      ro.disconnect();
+    };
+  }, [isExpanded]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onToggle();
+    } else if (e.key === 'Escape' && isExpanded) {
+      e.preventDefault();
+      onToggle();
+    }
+  };
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-expanded={isExpanded}
+      aria-controls={item.panelId}
+      aria-label={`${t(item.titleKey)}: ${isExpanded ? 'Collapse details' : 'Expand details'}`}
+      onClick={onToggle}
+      onKeyDown={handleKeyDown}
+      className={`feature-card ${isExpanded ? 'is-expanded' : ''} ${isReceded ? 'is-receded' : ''}`}
+      style={{
+        ...styles.featureCard,
+        ...(item.softBg ? { background: 'var(--accent-clinical-soft)' } : {}),
+      }}
+    >
+      <div style={styles.featureCardHeader}>
+        <div className="feature-card-icon" style={styles.featureIcon}>
+          <Icon size={24} />
+        </div>
+        <div className="feature-card-chevron" aria-hidden="true">
+          <ChevronDown size={20} />
+        </div>
+      </div>
+      <h3 style={styles.featureTitle}>{t(item.titleKey)}</h3>
+      <div style={styles.featureTag}>{t(item.tagKey)}</div>
+      <p style={styles.featureDesc}>{t(item.descKey)}</p>
+
+      <div
+        id={item.panelId}
+        role="region"
+        aria-label={`${t(item.titleKey)} details`}
+        aria-hidden={!isExpanded}
+        className={`feature-card-accordion ${isExpanded ? 'is-open' : 'is-collapsed'}`}
+        style={{
+          maxHeight: prefersReducedMotion
+            ? (isExpanded ? 'none' : '0px')
+            : (isExpanded ? (contentHeight > 0 ? `${contentHeight}px` : '320px') : '0px'),
+        }}
+      >
+        <div ref={contentRef} className="feature-card-details-inner">
+          <ul className="feature-details-list">
+            {item.details.map((bullet, idx) => (
+              <li key={idx} className="feature-detail-item">
+                <span className="feature-detail-bullet" aria-hidden="true">•</span>
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const { isMobile, isTablet } = useBreakpoint();
   const navigate = useNavigate();
@@ -22,6 +238,23 @@ export default function HomePage() {
   const { stats, handleSymptomCheckerConsultation } = useConsultation();
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
   const [showEnhancedSymptomChecker, setShowEnhancedSymptomChecker] = useState(false);
+  const [expandedFeature, setExpandedFeature] = useState<string | null>(null);
+
+  // Global Escape listener — attached only while a feature card is open, removed immediately on collapse/unmount
+  useEffect(() => {
+    if (expandedFeature === null) return;
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setExpandedFeature(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [expandedFeature]);
 
   // --- Hero video state ---
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -251,7 +484,7 @@ export default function HomePage() {
               <span>{t('home.voiceConsultation') === 'home.voiceConsultation' ? 'Voice Consultation' : t('home.voiceConsultation')}</span>
             </div>
             <div style={styles.floatingCard2}>
-              <Stethoscope size={24} color="#10b981" />
+              <Stethoscope size={24} color="#0284c7" />
               <span>{t('home.specialists') === 'home.specialists' ? 'Specialists' : t('home.specialists')}</span>
             </div>
             <div style={styles.floatingCard3}>
@@ -290,27 +523,51 @@ export default function HomePage() {
           }}
         >
           <div style={{...styles.statsContainer, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)'}}>
-            <div style={styles.statCard}>
-              <div style={styles.statIconBg}><MessageCircle size={24} /></div>
+            <div
+              className="stat-cell"
+              style={{
+                ...styles.statCard,
+                borderRight: isMobile ? 'none' : isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
+                borderBottom: isMobile ? '1px solid var(--border-color)' : isTablet ? '1px solid var(--border-color)' : 'none',
+              }}
+            >
+              <div style={styles.statIcon}><MessageCircle size={18} /></div>
               <div style={styles.statNumber}>{stats.totalConsultations}</div>
               <div style={styles.statLabel}>{t('home.totalConsultations')}</div>
               <div style={styles.statTrend}>↑ 12% {t('home.thisMonth')}</div>
             </div>
-            <div style={styles.statCard}>
-              <div style={styles.statIconBg}><CheckCircle size={24} /></div>
-              <div style={styles.statNumber}>{stats.completedConsultations}</div>
+            <div
+              className="stat-cell"
+              style={{
+                ...styles.statCard,
+                borderRight: isMobile ? 'none' : isTablet ? 'none' : '1px solid var(--border-color)',
+                borderBottom: isMobile ? '1px solid var(--border-color)' : isTablet ? '1px solid var(--border-color)' : 'none',
+              }}
+            >
+              <div style={styles.statIcon}><CheckCircle size={18} /></div>
+              <div style={styles.statNumberSecondary}>{stats.completedConsultations}</div>
               <div style={styles.statLabel}>{t('home.completed')}</div>
               <div style={styles.statTrend}>↑ 8% {t('home.thisMonth')}</div>
             </div>
-            <div style={styles.statCard}>
-              <div style={styles.statIconBg}><Clock size={24} /></div>
-              <div style={styles.statNumber}>{stats.averageDuration}</div>
+            <div
+              className="stat-cell"
+              style={{
+                ...styles.statCard,
+                borderRight: isMobile ? 'none' : isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
+                borderBottom: isMobile ? '1px solid var(--border-color)' : 'none',
+              }}
+            >
+              <div style={styles.statIcon}><Clock size={18} /></div>
+              <div style={styles.statNumberSecondary}>{stats.averageDuration}</div>
               <div style={styles.statLabel}>{t('home.avgMinutes')}</div>
               <div style={styles.statTrend}>↓ 5% {t('home.faster')}</div>
             </div>
-            <div style={styles.statCard}>
-              <div style={styles.statIconBg}><Star size={24} /></div>
-              <div style={styles.statNumber}>4.8</div>
+            <div
+              className="stat-cell"
+              style={styles.statCard}
+            >
+              <div style={styles.statIcon}><Star size={18} /></div>
+              <div style={styles.statNumberSecondary}>4.8</div>
               <div style={styles.statLabel}>{t('home.userRating')}</div>
               <div style={styles.statTrend}>★★★★★</div>
             </div>
@@ -328,46 +585,27 @@ export default function HomePage() {
           }}
         >
           <div style={styles.sectionHeader}>
-            <h2>{t('home.whyChoose')} <span style={styles.sectionHeaderAccent}>{t('home.mediVoiceAI')}</span></h2>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '36px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>
+              {t('home.whyChoose')} <span style={styles.sectionHeaderAccent}>{t('home.mediVoiceAI')}</span>
+            </h2>
             <p>{t('home.featureDesc')}</p>
           </div>
           <div style={{...styles.featuresGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
-            <div style={styles.featureCard}>
-              <div style={styles.featureIcon}><Mic size={32} /></div>
-              <h3>{t('home.featureVoice')}</h3>
-              <p>{t('home.featureVoiceDesc')}</p>
-              <div style={styles.featureTag}>{t('home.realTime')}</div>
-            </div>
-            <div style={styles.featureCard}>
-              <div style={styles.featureIcon}><Stethoscope size={32} /></div>
-              <h3>{t('home.featureSpecialists')}</h3>
-              <p>{t('home.featureSpecialistsDesc')}</p>
-              <div style={styles.featureTag}>{t('home.multiSpecialty')}</div>
-            </div>
-            <div style={styles.featureCard}>
-              <div style={styles.featureIcon}><ClipboardList size={32} /></div>
-              <h3>{t('home.featureReports')}</h3>
-              <p>{t('home.featureReportsDesc')}</p>
-              <div style={styles.featureTag}>{t('home.instantDownload')}</div>
-            </div>
-            <div style={styles.featureCard}>
-              <div style={styles.featureIcon}><Calendar size={32} /></div>
-              <h3>{t('home.featureAppointments')}</h3>
-              <p>{t('home.featureAppointmentsDesc')}</p>
-              <div style={styles.featureTag}>{t('home.easyBooking')}</div>
-            </div>
-            <div style={styles.featureCard}>
-              <div style={styles.featureIcon}><Mail size={32} /></div>
-              <h3>{t('home.featureEmail')}</h3>
-              <p>{t('home.featureEmailDesc')}</p>
-              <div style={styles.featureTag}>{t('home.shareWithDoctors')}</div>
-            </div>
-            <div style={styles.featureCard}>
-              <div style={styles.featureIcon}><Shield size={32} /></div>
-              <h3>{t('home.featureSecure')}</h3>
-              <p>{t('home.featureSecureDesc')}</p>
-              <div style={styles.featureTag}>{t('home.hipaaCompliant')}</div>
-            </div>
+            {FEATURE_ITEMS.map((item) => {
+              const isExpanded = expandedFeature === item.id;
+              const isReceded = expandedFeature !== null && !isExpanded;
+              return (
+                <FeatureCardItem
+                  key={item.id}
+                  item={item}
+                  isExpanded={isExpanded}
+                  isReceded={isReceded}
+                  prefersReducedMotion={prefersReducedMotion}
+                  onToggle={() => setExpandedFeature(prev => prev === item.id ? null : item.id)}
+                  t={t}
+                />
+              );
+            })}
           </div>
         </div>
 
@@ -398,7 +636,6 @@ export default function HomePage() {
                 cursor: 'pointer',
               }}
             >
-              <div style={styles.stepNumber}>01</div>
               <div style={styles.stepIcon}>🎤</div>
               <h3 style={styles.stepTitle}>{t('home.step1Title')}</h3>
               <p style={styles.stepDescription}>{t('home.step1Desc')}</p>
@@ -420,7 +657,6 @@ export default function HomePage() {
                 cursor: 'pointer',
               }}
             >
-              <div style={styles.stepNumber}>02</div>
               <div style={styles.stepIcon}>🤖</div>
               <h3 style={styles.stepTitle}>{t('home.step2Title')}</h3>
               <p style={styles.stepDescription}>{t('home.step2Desc')}</p>
@@ -442,7 +678,6 @@ export default function HomePage() {
                 cursor: 'pointer',
               }}
             >
-              <div style={styles.stepNumber}>03</div>
               <div style={styles.stepIcon}>📋</div>
               <h3 style={styles.stepTitle}>{t('home.step3Title')}</h3>
               <p style={styles.stepDescription}>{t('home.step3Desc')}</p>
@@ -712,19 +947,28 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '50%',
   },
   statsSection: { padding: '40px 24px', background: 'transparent' },
-  statsContainer: { maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' },
-  statCard: { textAlign: 'center' as const, padding: '28px 20px', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)', transition: 'all 0.3s ease' },
-  statIconBg: { width: '56px', height: '56px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#3b82f6' },
-  statNumber: { fontSize: '36px', fontWeight: 700, color: 'var(--text-primary)' },
-  statLabel: { fontSize: '14px', color: 'var(--text-secondary)', marginTop: '8px' },
-  statTrend: { fontSize: '12px', color: '#10b981', marginTop: '8px' },
+  statsContainer: { maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)', overflow: 'hidden' },
+  statCard: { textAlign: 'center' as const, padding: '28px 20px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s ease' },
+  statIcon: { color: '#2563eb', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  statNumber: { fontSize: '36px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 },
+  statNumberSecondary: { fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 },
+  statLabel: { fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px' },
+  statTrend: { fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' },
   featuresSection: { padding: '60px 24px', maxWidth: '1200px', margin: '0 auto' },
   sectionHeader: { textAlign: 'center' as const, marginBottom: '48px' },
-  sectionHeaderAccent: { color: '#3b82f6' },
-  featuresGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' },
-  featureCard: { padding: '32px', background: 'var(--bg-card)', borderRadius: '24px', border: '1px solid var(--border-color)', position: 'relative' as const, boxShadow: 'var(--card-shadow)', transition: 'all 0.3s ease' },
-  featureIcon: { width: '64px', height: '64px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', color: 'white' },
-  featureTag: { position: 'absolute' as const, top: '20px', right: '20px', padding: '4px 12px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '9999px', fontSize: '12px', color: '#3b82f6' },
+  sectionHeaderAccent: {
+    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+  },
+  featuresGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', alignItems: 'start' },
+  featureCard: { padding: '32px', background: 'var(--bg-card)', borderRadius: '24px' },
+  featureCardHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
+  featureIcon: { width: '52px', height: '52px', borderRadius: '50%', border: '1.5px solid rgba(37, 99, 235, 0.25)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 0, flexShrink: 0, transition: 'all 0.25s ease' },
+  featureTitle: { fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' },
+  featureTag: { fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, marginBottom: '12px' },
+  featureDesc: { fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 },
   // --- CTA wrapper with bg image ---
   ctaWrapper: {
     position: 'relative' as const,

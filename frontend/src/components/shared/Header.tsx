@@ -7,6 +7,18 @@ import {
 } from 'lucide-react';
 import ProfileDropdown from '../profile/ProfileDropdown';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
+import { useUser } from '@clerk/clerk-react';
+import apiClient from '../../services/apiClient';
+
+interface HeaderMedication {
+  id: string;
+  name: string;
+  dosage?: string;
+  frequency?: string;
+  times?: string[];
+  daysOfWeek?: number[];
+  active?: boolean;
+}
 
 interface Props {
   setShowSymptomChecker: (show: boolean) => void;
@@ -48,16 +60,44 @@ export default function Header({
   const { isMobile, isTablet } = useBreakpoint();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isRemindersOpen, setIsRemindersOpen] = useState(false);
+  const [medications, setMedications] = useState<HeaderMedication[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const remindersRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
 
+  const { user } = useUser();
   const showMobileNav = isMobile || isTablet;
+
+  // Fetch medications on mount to power the reminder badge count and popover preview
+  useEffect(() => {
+    let isMounted = true;
+    const fetchMedications = async () => {
+      try {
+        const uId = user?.id || 'demo-user-default';
+        const response = await apiClient.get(`/reminder/medications/${uId}`);
+        if (isMounted && response.data?.success && Array.isArray(response.data?.data)) {
+          setMedications(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching reminders for header badge:', error);
+      }
+    };
+
+    fetchMedications();
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (remindersRef.current && !remindersRef.current.contains(event.target as Node)) {
+        setIsRemindersOpen(false);
       }
       if (
         mobileMenuRef.current &&
@@ -77,17 +117,21 @@ export default function Header({
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Close mobile menu on escape key
+  // Close menus on escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isMobileMenuOpen) {
-        setIsMobileMenuOpen(false);
-        hamburgerRef.current?.focus();
+      if (e.key === 'Escape') {
+        if (isDropdownOpen) setIsDropdownOpen(false);
+        if (isRemindersOpen) setIsRemindersOpen(false);
+        if (isMobileMenuOpen) {
+          setIsMobileMenuOpen(false);
+          hamburgerRef.current?.focus();
+        }
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, isDropdownOpen, isRemindersOpen]);
 
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
@@ -166,6 +210,7 @@ export default function Header({
             {essentialButtons.map((btn, idx) => (
               <button
                 key={idx}
+                className="nav-button"
                 onClick={btn.onClick}
                 style={{
                   ...styles.navButton,
@@ -177,24 +222,102 @@ export default function Header({
               </button>
             ))}
 
-            {}
-            <button onClick={onOpenReminders} style={styles.reminderButton}>
-              <Bell size={18} />
-              <span>Reminders</span>
-            </button>
+            {/* Circular Reminders Bell with Count Badge & Popover Preview */}
+            <div ref={remindersRef} style={styles.remindersContainer}>
+              <button
+                onClick={() => setIsRemindersOpen(prev => !prev)}
+                className="reminder-bell-button"
+                style={styles.reminderBellButton}
+                aria-label={
+                  medications.length > 0
+                    ? `Reminders (${medications.length} active)`
+                    : 'Reminders'
+                }
+                aria-expanded={isRemindersOpen}
+                type="button"
+              >
+                <Bell size={18} />
+                {medications.length > 0 && (
+                  <span style={styles.reminderBadge}>
+                    {medications.length}
+                  </span>
+                )}
+              </button>
 
-            <button onClick={onUpgrade} style={styles.upgradeButton}>
+              {isRemindersOpen && (
+                <div style={styles.remindersPopover}>
+                  <div style={styles.remindersPopoverHeader}>
+                    <span style={styles.remindersPopoverTitle}>Medication Reminders</span>
+                    {medications.length > 0 && (
+                      <span style={styles.remindersCountTag}>
+                        {medications.length} active
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={styles.remindersList}>
+                    {medications.length === 0 ? (
+                      <div style={styles.remindersEmpty}>
+                        No active reminders
+                      </div>
+                    ) : (
+                      medications.slice(0, 3).map((med, idx) => (
+                        <div key={med.id || idx} style={styles.reminderItem}>
+                          <div style={styles.reminderItemHeader}>
+                            <span style={styles.reminderMedName}>{med.name}</span>
+                            {med.dosage && (
+                              <span style={styles.reminderDosage}>{med.dosage}</span>
+                            )}
+                          </div>
+                          <div style={styles.reminderItemMeta}>
+                            {med.times && med.times.length > 0 && (
+                              <span>
+                                🕒 {med.times.join(', ')}
+                              </span>
+                            )}
+                            {med.frequency && (
+                              <span>
+                                • {med.frequency.replace('_', ' ')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div style={styles.remindersPopoverFooter}>
+                    <button
+                      onClick={() => {
+                        setIsRemindersOpen(false);
+                        if (onOpenReminders) {
+                          onOpenReminders();
+                        } else {
+                          navigate('/reminders');
+                        }
+                      }}
+                      style={styles.viewAllRemindersButton}
+                      type="button"
+                    >
+                      View all reminders →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button onClick={onUpgrade} className="upgrade-button" style={styles.upgradeButton}>
               <CreditCard size={18} />
               <span>Upgrade</span>
             </button>
 
-            <button onClick={onNewConsultation} style={styles.consultButton}>
+            <button onClick={onNewConsultation} className="consult-button" style={styles.consultButton}>
               <Plus size={18} />
               <span>New Consultation</span>
             </button>
 
             <div ref={dropdownRef} style={styles.dropdownContainer}>
-              <button onClick={toggleDropdown} style={styles.dropdownButton}>
+              <button onClick={toggleDropdown} className="dropdown-button" style={styles.dropdownButton}>
                 <Menu size={18} />
                 <span>More</span>
                 <ChevronDown size={14} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
@@ -205,6 +328,7 @@ export default function Header({
                   {dropdownItems.map((item, idx) => (
                     <button
                       key={idx}
+                      className="dropdown-item"
                       onClick={() => {
                         item.onClick();
                         setIsDropdownOpen(false);
@@ -276,7 +400,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap' as const,
+    flexWrap: 'nowrap' as const,
     gap: '6px',
   },
   logoContainer: {
@@ -284,6 +408,7 @@ const styles = {
     alignItems: 'center',
     gap: '10px',
     cursor: 'pointer',
+    flexShrink: 0,
   },
   
   logoIcon: {
@@ -308,14 +433,14 @@ const styles = {
     backgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     letterSpacing: '-0.02em',
+    whiteSpace: 'nowrap' as const,
   },
   navLinks: {
     display: 'flex',
     gap: '4px',
     alignItems: 'center',
-    flexWrap: 'wrap' as const,
+    flexWrap: 'nowrap' as const,
     justifyContent: 'flex-end',
-    maxWidth: '70%',
   },
   navButton: {
     display: 'flex',
@@ -335,19 +460,135 @@ const styles = {
     background: 'var(--badge-bg)',
     color: 'var(--button-primary)',
   },
-  reminderButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '6px 12px',
+  remindersContainer: {
+    position: 'relative' as const,
+  },
+  reminderBellButton: {
+    width: '38px',
+    height: '38px',
+    borderRadius: '50%',
     background: 'transparent',
-    border: '1px solid #8b5cf6',
-    borderRadius: '8px',
+    border: '1px solid var(--border-color)',
     cursor: 'pointer',
     color: '#8b5cf6',
-    fontSize: '0.75rem',
-    fontWeight: 500,
-    transition: 'all 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative' as const,
+    transition: 'background 0.2s ease, border-color 0.2s ease',
+    padding: 0,
+    flexShrink: 0,
+  },
+  reminderBadge: {
+    position: 'absolute' as const,
+    top: '-3px',
+    right: '-3px',
+    minWidth: '18px',
+    height: '18px',
+    padding: '0 4px',
+    borderRadius: '9999px',
+    background: '#ef4444',
+    color: 'white',
+    fontSize: '10px',
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+    lineHeight: 1,
+    pointerEvents: 'none' as const,
+  },
+  remindersPopover: {
+    position: 'absolute' as const,
+    top: 'calc(100% + 8px)',
+    right: 0,
+    width: '280px',
+    background: 'var(--bg-card)',
+    borderRadius: '12px',
+    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.15)',
+    border: '1px solid var(--border-color)',
+    zIndex: 1000,
+    overflow: 'hidden',
+  },
+  remindersPopoverHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '10px 14px',
+    borderBottom: '1px solid var(--border-color)',
+    background: 'var(--bg-secondary)',
+  },
+  remindersPopoverTitle: {
+    fontSize: '13px',
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+  },
+  remindersCountTag: {
+    fontSize: '11px',
+    fontWeight: 600,
+    padding: '2px 8px',
+    borderRadius: '9999px',
+    background: 'rgba(139, 92, 246, 0.12)',
+    color: '#8b5cf6',
+  },
+  remindersList: {
+    maxHeight: '220px',
+    overflowY: 'auto' as const,
+    padding: '4px 0',
+  },
+  reminderItem: {
+    padding: '10px 14px',
+    borderBottom: '1px solid var(--border-color)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '4px',
+  },
+  reminderItemHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+  },
+  reminderMedName: {
+    fontSize: '13px',
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+  },
+  reminderDosage: {
+    fontSize: '12px',
+    color: 'var(--text-secondary)',
+  },
+  reminderItemMeta: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '11px',
+    color: 'var(--text-muted)',
+    flexWrap: 'wrap' as const,
+  },
+  remindersEmpty: {
+    padding: '24px 16px',
+    textAlign: 'center' as const,
+    fontSize: '13px',
+    color: 'var(--text-muted)',
+  },
+  remindersPopoverFooter: {
+    padding: '8px 12px',
+    borderTop: '1px solid var(--border-color)',
+    background: 'var(--bg-secondary)',
+  },
+  viewAllRemindersButton: {
+    width: '100%',
+    padding: '8px 12px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontWeight: 600,
+    color: '#8b5cf6',
+    textAlign: 'center' as const,
+    transition: 'background 0.15s ease',
   },
   upgradeButton: {
     display: 'flex',
@@ -470,12 +711,12 @@ hoverStyles.textContent = `
   .nav-button:hover {
     background: var(--badge-bg);
     color: var(--text-primary);
+    transform: translateY(-1px);
   }
   
-  /* Reminder button hover */
-  .reminder-button:hover {
-    background: rgba(139, 92, 246, 0.1);
-    transform: translateY(-1px);
+  /* Reminder bell hover - distinct subtle background fill, NO translateY lift */
+  .reminder-bell-button:hover {
+    background: rgba(139, 92, 246, 0.1) !important;
   }
   
   /* Upgrade button hover */
@@ -499,6 +740,7 @@ hoverStyles.textContent = `
   .dropdown-button:hover {
     background: var(--badge-bg);
     border-color: var(--text-secondary);
+    transform: translateY(-1px);
   }
 `;
 document.head.appendChild(hoverStyles);

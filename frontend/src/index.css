@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600;700&family=Noto+Sans+Kannada:wght@400;500;600;700&family=Noto+Sans+Malayalam:wght@400;500;600;700&family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
 :root {
   --bg-primary: #f0f9ff;
   --bg-secondary: #ffffff;
@@ -45,6 +46,10 @@
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-full: 9999px;
+  --accent-clinical: #2563eb;
+  --accent-clinical-soft: rgba(37, 99, 235, 0.08);
+  --accent-urgent: #8B4A3C;          /* muted brick/rust — reserve for genuine emphasis only, not decoration */
+  --font-serif: 'Newsreader', Georgia, serif;
 }
 [data-theme="dark"] {
   --bg-primary: #0f172a;
@@ -88,6 +93,9 @@
   --gradient-end: #8b5cf6;
   --hero-bg: linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #1e1b4b 100%);
   --card-shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.5);
+  --accent-clinical: #60a5fa;
+  --accent-clinical-soft: rgba(96, 165, 250, 0.12);
+  --accent-urgent: #C97B68;
 }
 
 * {
@@ -474,7 +482,6 @@ body::after {
 
 *:focus-visible { outline: 2px solid var(--button-primary); outline-offset: 2px; border-radius: 4px; }
 ::selection { background: var(--button-primary); color: white; }
-.feature-card:hover,
 .report-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--card-shadow-hover);
@@ -532,6 +539,160 @@ html[lang="te"] .small-text { line-height: 1.6; }
   50% { opacity: 0.09; transform: scaleX(1.05); }
 }
 
+/* === Stats Strip & Feature Cards Hover Interactions === */
+.stat-cell {
+  background-color: transparent;
+  transition: background-color 0.25s ease;
+}
+
+.stat-cell:hover {
+  background-color: var(--accent-clinical-soft);
+}
+
+/* === Feature Cards: Accordion Expand & Interactive States === */
+.feature-card {
+  position: relative;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  outline: none;
+  transition: transform 350ms ease, opacity 350ms ease, box-shadow 250ms ease, border-color 250ms ease;
+}
+
+/* Hover on non-expanded cards when no card is expanded */
+@media (prefers-reduced-motion: no-preference) {
+  .feature-card:not(.is-expanded):not(.is-receded):hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--accent-clinical);
+  }
+}
+
+/* Receded cards when another card is expanded */
+.feature-card.is-receded {
+  opacity: 0.6;
+  transform: scale(0.98);
+}
+
+/* Hovering a receded card maintains interactivity */
+@media (prefers-reduced-motion: no-preference) {
+  .feature-card.is-receded:hover {
+    opacity: 0.9;
+    transform: scale(0.99) translateY(-2px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--accent-clinical);
+  }
+}
+
+/* Expanded card state */
+.feature-card.is-expanded {
+  opacity: 1;
+  transform: scale(1);
+  border-color: var(--accent-clinical);
+  box-shadow: var(--card-shadow-hover);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .feature-card.is-expanded:hover {
+    box-shadow: var(--card-shadow-hover);
+  }
+}
+
+/* Focus ring for keyboard accessibility */
+.feature-card:focus-visible {
+  outline: 2px solid var(--button-primary);
+  outline-offset: 2px;
+  border-radius: 24px;
+}
+
+/* Feature card chevron affordance */
+.feature-card-chevron {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background-color: transparent;
+  flex-shrink: 0;
+  transition: transform 350ms ease, color 250ms ease, background-color 250ms ease;
+}
+
+.feature-card:hover .feature-card-chevron {
+  color: var(--accent-clinical);
+  background-color: var(--accent-clinical-soft);
+}
+
+.feature-card.is-expanded .feature-card-chevron {
+  transform: rotate(180deg);
+  color: var(--accent-clinical);
+  background-color: var(--accent-clinical-soft);
+}
+
+.feature-card-icon {
+  background-color: transparent;
+  color: var(--accent-clinical);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.feature-card:hover .feature-card-icon,
+.feature-card.is-expanded .feature-card-icon {
+  background-color: var(--accent-clinical-soft);
+  color: var(--text-primary);
+}
+
+/* Accordion details drawer */
+.feature-card-accordion {
+  overflow: hidden;
+  transition: max-height 350ms cubic-bezier(0.4, 0, 0.2, 1), opacity 350ms ease, visibility 350ms ease;
+}
+
+.feature-card-accordion.is-collapsed {
+  max-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.feature-card-accordion.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.feature-card-details-inner {
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.feature-details-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feature-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.feature-detail-bullet {
+  color: var(--accent-clinical);
+  font-size: 16px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
 /* === Reduced Motion Support === */
 
 @media (prefers-reduced-motion: reduce) {
@@ -548,6 +709,38 @@ html[lang="te"] .small-text { line-height: 1.6; }
   .report-card:hover,
   .stat-card-modern:hover,
   .feature-card-modern:hover {
-    transform: none;
+    transform: none !important;
+  }
+
+  .feature-card,
+  .feature-card.is-receded,
+  .feature-card.is-expanded,
+  .feature-card-chevron,
+  .feature-card-accordion {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .feature-card.is-receded {
+    opacity: 0.6 !important;
+    transform: none !important;
+  }
+
+  .feature-card:hover,
+  .feature-card.is-receded:hover,
+  .feature-card.is-expanded:hover {
+    transform: none !important;
+  }
+
+  .feature-card-accordion.is-collapsed {
+    display: none !important;
+    max-height: 0 !important;
+  }
+
+  .feature-card-accordion.is-open {
+    display: block !important;
+    max-height: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 }
