@@ -27,7 +27,7 @@ export interface PhotoAnalysisFailure {
 
 export type PhotoAnalysisResponse = PhotoAnalysisSuccess | PhotoAnalysisFailure;
 
-export const PHOTO_ANALYSIS_MODEL = process.env.PHOTO_ANALYSIS_MODEL || 'qwen/qwen3.8-27b';
+export const PHOTO_ANALYSIS_MODEL = process.env.PHOTO_ANALYSIS_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
 
 /**
  * Analyzes a photograph of a visible symptom using Groq's multimodal vision model.
@@ -116,17 +116,8 @@ export async function getPhotoAnalysis(options: PhotoAnalysisOptions): Promise<P
         max_tokens: 800,
       });
     } catch (modelErr: any) {
-      if (modelErr?.status === 404 && modelToUse !== 'qwen/qwen3.8-27b') {
-        logger.warn(`Model ${modelToUse} not available on Groq (404). Falling back to active Groq vision model qwen/qwen3.8-27b`, { error: modelErr.message });
-        completion = await groq.chat.completions.create({
-          model: 'qwen/qwen3.8-27b',
-          messages: messages as any,
-          temperature: 0.5,
-          max_tokens: 800,
-        });
-      } else {
-        throw modelErr;
-      }
+      logger.error('Photo analysis model call failed', { model: modelToUse, error: modelErr.message, status: modelErr?.status });
+      throw modelErr;
     }
 
     const analysis = completion.choices[0]?.message?.content;
