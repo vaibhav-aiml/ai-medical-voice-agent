@@ -62,6 +62,17 @@ beforeAll(async () => {
       timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       received_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS consultation_photos (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      consultation_id UUID REFERENCES consultations(id) ON DELETE CASCADE,
+      image_data TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      caption TEXT,
+      analysis_result TEXT,
+      consented_at TIMESTAMP WITH TIME ZONE NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    );
   `);
 });
 

@@ -123,6 +123,7 @@
     },
     "voiceMode": "Voice Mode",
     "textMode": "Text Mode",
+    "photoMode": "Photo Mode",
     "startSpeaking": "Start Speaking",
     "stopRecording": "Stop Recording",
     "recording": "Recording... Speak clearly!",

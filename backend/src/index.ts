@@ -1,3 +1,5 @@
+/// <reference path="./types/express.d.ts" />
+// Environment and setup
 import './config/env';
 import crypto from 'crypto';
 
@@ -17,6 +19,7 @@ import { globalLimiter, aiLimiter } from './middleware/rateLimiter';
 import { requireAuth } from './middleware/auth';
 import { startKeepAwake, stopKeepAwake } from './services/keepAwakeService';
 import consultationRoutes from './routes/consultation.routes';
+import photoRoutes from './routes/photo.routes';
 import voiceRoutes from './routes/voice.routes';
 import reportRoutes from './routes/report.routes';
 import emailRoutes from './routes/email.routes';
@@ -119,7 +122,7 @@ app.use(express.text({ type: ['text/plain', 'application/hl7-v2'], limit: '10mb'
 app.use((req, res, next) => {
   const requestId = (req.headers['x-request-id'] as string) || crypto.randomUUID();
   res.setHeader('X-Request-ID', requestId);
-  req.requestId = requestId;
+  (req as any).requestId = requestId;
   logger.info(`Request received`, { requestId, method: req.method, path: req.path, ip: req.ip });
   next();
 });
@@ -155,6 +158,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use('/api/consultations', requireAuth, aiLimiter, consultationRoutes);
+app.use('/api/consultation', requireAuth, aiLimiter, photoRoutes);
 app.use('/api/voice', requireAuth, aiLimiter, voiceRoutes);
 app.use('/api/triage', requireAuth, aiLimiter, triageRoutes);
 app.use('/api/enhanced-symptom', requireAuth, aiLimiter, enhancedSymptomRoutes);

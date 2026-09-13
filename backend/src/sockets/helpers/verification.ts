@@ -4,11 +4,18 @@ import { db } from '../../config/database';
 import { consultations, users } from '../../db/schema/index';
 import { eq } from 'drizzle-orm';
 
+export interface OwnershipVerificationOptions {
+  autoCreateIfMissing?: boolean;
+}
+
 /**
- * Verifies that the authenticated socket user owns (or has access to)
- * the specified consultation.
+ * Core DB-lookup-and-ownership-compare logic shared across transport layers
+ * (Socket.io handlers and Express REST middleware).
+ *
+ * Resolves Clerk ID → internal DB user ID → consultation lookup → compare owner.
  *
  * Security invariants — all error paths return false (deny access):
+ *   - Missing clerkId → false
  *   - Missing consultationId → false
  *   - DB user lookup fails → false
  *   - DB consultation lookup fails → false
@@ -16,27 +23,29 @@ import { eq } from 'drizzle-orm';
  *
  * The only paths that return true:
  *   - Test bypass active AND using the test user
- *   - Consultation does not yet exist (auto-created for authenticated user)
+ *   - Consultation does not yet exist AND autoCreateIfMissing is true
  *   - Consultation exists and the authenticated user is the owner
  */
-export async function verifyConsultationOwnership(socket: Socket, consultationId: string): Promise<boolean> {
+export async function verifyConsultationOwnershipCore(
+  clerkId: string | undefined,
+  consultationId: string | undefined,
+  options: OwnershipVerificationOptions = {}
+): Promise<boolean> {
   try {
-    const clerkId: string | undefined = socket.data.userId;
-
     // Test harness bypass — only active inside Vitest with explicit flag
     if (process.env.VITEST === 'true' && process.env.TEST_BYPASS_AUTH === 'true' && clerkId === 'test-user-vitest') {
       return true;
     }
 
-    // No authenticated user on the socket → deny
+    // No authenticated user ID → deny
     if (!clerkId) {
-      logger.warn('No userId on socket during consultation verification', { socketId: socket.id });
+      logger.warn('No userId provided during consultation verification');
       return false;
     }
 
-    // Missing or empty consultationId → deny (not silently allow)
+    // Missing or empty consultationId → deny
     if (!consultationId) {
-      logger.warn('Empty consultationId passed to verification', { socketId: socket.id, clerkId });
+      logger.warn('Empty consultationId passed to verification', { clerkId });
       return false;
     }
 
@@ -49,7 +58,7 @@ export async function verifyConsultationOwnership(socket: Socket, consultationId
         .limit(1);
 
       if (userList.length === 0) {
-        logger.info('Creating DB user on-the-fly during socket verification', { clerkId });
+        logger.info('Creating DB user on-the-fly during verification', { clerkId });
         const inserted = await db.insert(users).values({
           clerkId: clerkId,
           email: `${clerkId}@example.com`,
@@ -64,7 +73,7 @@ export async function verifyConsultationOwnership(socket: Socket, consultationId
     } catch (userErr: unknown) {
       const message = userErr instanceof Error ? userErr.message : String(userErr);
       // DB failure during user lookup → deny access (fail-closed)
-      logger.error('DB user lookup failed in socket verification — denying access', { error: message, clerkId });
+      logger.error('DB user lookup failed in verification — denying access', { error: message, clerkId });
       return false;
     }
 
@@ -76,15 +85,20 @@ export async function verifyConsultationOwnership(socket: Socket, consultationId
         .limit(1);
 
       if (consultationList.length === 0) {
-        logger.info('Auto-registering consultation session in DB during socket verification', { consultationId, clerkId });
-        await db.insert(consultations).values({
-          id: consultationId,
-          userId: internalUserId,
-          specialistType: 'general',
-          status: 'active',
-          startedAt: new Date(),
-        }).onConflictDoNothing();
-        return true;
+        if (options.autoCreateIfMissing) {
+          logger.info('Auto-registering consultation session in DB during verification', { consultationId, clerkId });
+          await db.insert(consultations).values({
+            id: consultationId,
+            userId: internalUserId,
+            specialistType: 'general',
+            status: 'active',
+            startedAt: new Date(),
+          }).onConflictDoNothing();
+          return true;
+        } else {
+          logger.warn('Consultation not found during verification (auto-create disabled)', { consultationId, clerkId });
+          return false;
+        }
       }
 
       const ownerId = consultationList[0].userId;
@@ -102,13 +116,21 @@ export async function verifyConsultationOwnership(socket: Socket, consultationId
     } catch (consultErr: unknown) {
       const message = consultErr instanceof Error ? consultErr.message : String(consultErr);
       // DB failure during consultation lookup → deny access (fail-closed)
-      logger.error('DB consultation lookup failed in socket verification — denying access', { error: message, consultationId });
+      logger.error('DB consultation lookup failed in verification — denying access', { error: message, consultationId });
       return false;
     }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     // Unexpected error → deny access (fail-closed)
-    logger.error('Unexpected failure in verifyConsultationOwnership — denying access', { error: message });
+    logger.error('Unexpected failure in verifyConsultationOwnershipCore — denying access', { error: message });
     return false;
   }
+}
+
+/**
+ * Socket.io transport adapter for consultation ownership verification.
+ */
+export async function verifyConsultationOwnership(socket: Socket, consultationId: string): Promise<boolean> {
+  const clerkId: string | undefined = socket.data?.userId;
+  return verifyConsultationOwnershipCore(clerkId, consultationId, { autoCreateIfMissing: true });
 }

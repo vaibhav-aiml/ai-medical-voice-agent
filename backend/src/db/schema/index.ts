@@ -6,3 +6,4 @@ export * from './hipaa';
 export * from './audit';
 export * from './fhir';
 export * from './reminders';
+export * from './consultationPhotos';

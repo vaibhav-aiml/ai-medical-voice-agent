@@ -19,7 +19,10 @@ const transporter = nodemailer.createTransport({
 
 transporter.verify((error, success) => {
   if (error) {
-    logger.error('SMTP Verification Failed', { error: error.message });
+    logger.warn('SMTP Verification Notice: Email credentials in .env are invalid or expired. Email delivery is paused until a valid Gmail App Password is provided.', {
+      hint: 'Generate a 16-character App Password at https://myaccount.google.com/apppasswords',
+      error: error.message,
+    });
   } else {
     logger.info('SMTP Ready! Emails will be sent from', { user: EMAIL_USER });
   }

@@ -6,6 +6,7 @@ import { useVoiceSocket } from '../../hooks/useVoiceSocket';
 import TriageDisplay from '../consultation/TriageDisplay';
 import { useLanguage } from '../../context/LanguageContext';
 import { cleanTextForSpeech, splitIntoSentences } from '../../utils/cleanTextForSpeech';
+import { isMoreUrgent } from '../../utils/triageUtils';
 
 interface Props {
   consultationId: string;
@@ -90,7 +91,17 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [manualText, setManualText] = useState('');
-  const [useTextInput, setUseTextInput] = useState(false);
+  const [inputMode, setInputMode] = useState<'voice' | 'text' | 'photo'>('voice');
+  const useTextInput = inputMode === 'text';
+  const setUseTextInput = (useText: boolean) => setInputMode(useText ? 'text' : 'voice');
+
+  // Photo Mode state
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [photoCaption, setPhotoCaption] = useState<string>('');
+  const [consentAcknowledged, setConsentAcknowledged] = useState<boolean>(false);
+  const [isPhotoAnalyzing, setIsPhotoAnalyzing] = useState<boolean>(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [recognition, setRecognition] = useState<any>(null);
   const [showTriageAlert, setShowTriageAlert] = useState(false);
   const [triageResult, setTriageResult] = useState<TriageResult | null>(null);
@@ -606,6 +617,132 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     "My child has a cough and runny nose. They also have a fever of 101°F."
   ];
 
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      setPhotoError('Image file is too large. Maximum size is 8MB.');
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setPhotoError('Unsupported image format. Please select a JPEG, PNG, or WebP image.');
+      return;
+    }
+
+    setPhotoError(null);
+    setSelectedPhotoFile(file);
+    if (photoPreviewUrl) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleClearPhoto = () => {
+    setSelectedPhotoFile(null);
+    if (photoPreviewUrl) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+    setPhotoPreviewUrl(null);
+    setPhotoError(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl]);
+
+  const submitPhoto = async () => {
+    if (!selectedPhotoFile || !consentAcknowledged) return;
+
+    setIsPhotoAnalyzing(true);
+    setPhotoError(null);
+
+    // 1. Primary triage path: if patient provided caption, analyze raw text immediately
+    const trimmedCaption = photoCaption.trim();
+    if (trimmedCaption) {
+      console.log('🩺 [Photo Mode] Triggering primary frontend triage with patient caption:', trimmedCaption);
+      analyzeSymptomsForTriage(trimmedCaption);
+    }
+
+    // 2. Add user message to chat UI
+    const displayMsg = trimmedCaption
+      ? `📷 [Photo Uploaded] ${trimmedCaption}`
+      : '📷 [Photo Uploaded for visual symptom analysis]';
+    onTranscriptUpdate(displayMsg);
+    setConversationHistory(prev => [...prev, { role: 'user', content: displayMsg }]);
+
+    // 3. Prepare multipart payload
+    const formData = new FormData();
+    formData.append('photo', selectedPhotoFile);
+    formData.append('consentAcknowledged', 'true');
+    if (trimmedCaption) {
+      formData.append('caption', trimmedCaption);
+    }
+    formData.append('specialistType', specialistTypeRef.current || 'general');
+    formData.append('language', languageRef.current || 'en');
+
+    try {
+      const response = await apiClient.post(
+        `/consultation/${consultationIdRef.current}/photo`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      const data = response.data;
+      if (data.success && data.analysis) {
+        // Append AI response to chat
+        onAIResponse(data.analysis, false);
+        setConversationHistory(prev => [...prev, { role: 'assistant', content: data.analysis }]);
+
+        // 4. Secondary triage backstop:
+        // If secondary backend triage is strictly more urgent than our current triage result,
+        // upgrade the triage state using the single-source-of-truth isMoreUrgent() comparison
+        if (data.triageResult) {
+          const backendUrgency = data.triageResult.urgencyLevel;
+          const currentUrgency = triageResult?.urgencyLevel;
+
+          if (!currentUrgency || isMoreUrgent(backendUrgency, currentUrgency)) {
+            console.log('🚨 [Photo Mode] Secondary backend triage upgraded urgency level to:', backendUrgency);
+            setTriageResult(data.triageResult);
+            if (onTriageResult) {
+              onTriageResult(data.triageResult);
+            }
+            if (backendUrgency === 'emergency_immediate') {
+              setShowTriageAlert(true);
+            }
+          }
+        }
+
+        // Reset photo upload form on success
+        setSelectedPhotoFile(null);
+        if (photoPreviewUrl) {
+          URL.revokeObjectURL(photoPreviewUrl);
+        }
+        setPhotoPreviewUrl(null);
+        setPhotoCaption('');
+        setConsentAcknowledged(false);
+      } else {
+        setPhotoError(data.error || 'Photo analysis did not produce a response. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Photo analysis request error:', err);
+      const serverError = err.response?.data?.error || err.message;
+      setPhotoError(serverError || 'Failed to analyze photo. Please try again or switch to text/voice mode.');
+    } finally {
+      setIsPhotoAnalyzing(false);
+    }
+  };
+
   return (
     <>
       <div style={styles.container}>
@@ -710,20 +847,26 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         
         <div style={styles.modeSelector}>
           <button 
-            onClick={() => setUseTextInput(false)} 
-            style={{...styles.modeButton, ...(!useTextInput ? styles.activeMode : {})}}
+            onClick={() => setInputMode('voice')} 
+            style={{...styles.modeButton, ...(inputMode === 'voice' ? styles.activeMode : {})}}
           >
             🎤 {t('consultation.voiceMode')}
           </button>
           <button 
-            onClick={() => setUseTextInput(true)} 
-            style={{...styles.modeButton, ...(useTextInput ? styles.activeMode : {})}}
+            onClick={() => setInputMode('text')} 
+            style={{...styles.modeButton, ...(inputMode === 'text' ? styles.activeMode : {})}}
           >
             ✏️ {t('consultation.textMode')}
           </button>
+          <button 
+            onClick={() => setInputMode('photo')} 
+            style={{...styles.modeButton, ...(inputMode === 'photo' ? styles.activeMode : {})}}
+          >
+            📷 {t('consultation.photoMode') || 'Photo Analysis'}
+          </button>
         </div>
         
-        {!useTextInput ? (
+        {inputMode === 'voice' && (
           <div style={styles.voiceSection}>
             <div style={styles.voiceInstructions}>
               <p>🎤 {t('symptoms.speak')}</p>
@@ -784,7 +927,9 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
               </div>
             )}
           </div>
-        ) : (
+        )}
+
+        {inputMode === 'text' && (
           <div style={styles.textInputSection}>
             <h4>{t('consultation.describeSymptoms')}</h4>
             <textarea
@@ -812,6 +957,122 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
                 {isProcessing ? t('ai.thinking') : t('consultation.sendToAI')}
               </button>
             </div>
+          </div>
+        )}
+
+        {inputMode === 'photo' && (
+          <div style={styles.photoSection}>
+            {/* Non-dismissable Medical Disclaimer */}
+            <div style={styles.photoDisclaimer}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span style={{ fontSize: '18px' }}>⚠️</span>
+                <strong style={{ color: '#b45309' }}>Photo Analysis Advisory</strong>
+              </div>
+              <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: '#92400e' }}>
+                Photo analysis describes visible features and possible related conditions — it is <strong>not a diagnosis</strong>. If you notice rapid changes, bleeding, severe pain, or other concerning signs, see a doctor in person immediately.
+              </p>
+            </div>
+
+            {/* Photo Selection / Camera */}
+            <div style={styles.photoInputContainer}>
+              {!photoPreviewUrl ? (
+                <label style={styles.uploadArea}>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    onChange={handlePhotoSelect}
+                    disabled={isPhotoAnalyzing}
+                  />
+                  <span style={{ fontSize: '32px' }}>📷</span>
+                  <span style={{ fontWeight: 'bold', color: '#4f46e5' }}>
+                    Take a photo or choose from device
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                    Supports JPEG, PNG, WebP (up to 8MB)
+                  </span>
+                </label>
+              ) : (
+                <div style={styles.previewContainer}>
+                  <img
+                    src={photoPreviewUrl}
+                    alt="Symptom preview"
+                    style={styles.previewImage}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleClearPhoto}
+                    style={styles.retakeButton}
+                    disabled={isPhotoAnalyzing}
+                  >
+                    🔄 Retake / Choose Different Photo
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Optional Caption Field */}
+            <div style={{ marginTop: '10px', textAlign: 'left' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px', color: '#374151' }}>
+                Optional symptom notes (Duration, pain level, changes):
+              </label>
+              <textarea
+                style={styles.captionArea}
+                placeholder="Add any details — how long you've had this, pain level, anything else (optional)"
+                value={photoCaption}
+                onChange={(e) => setPhotoCaption(e.target.value)}
+                rows={2}
+                disabled={isPhotoAnalyzing}
+              />
+            </div>
+
+            {/* Mandatory Consent Checkbox */}
+            <div style={styles.consentRow}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#374151' }}>
+                <input
+                  type="checkbox"
+                  checked={consentAcknowledged}
+                  onChange={(e) => setConsentAcknowledged(e.target.checked)}
+                  disabled={isPhotoAnalyzing}
+                  style={{ marginTop: '3px' }}
+                />
+                <span>
+                  I understand this is <strong>not a diagnosis</strong> and consent to this photo being stored and analyzed as part of my medical record.
+                </span>
+              </label>
+            </div>
+
+            {/* Error banner if any */}
+            {photoError && (
+              <div style={styles.photoErrorBanner}>
+                <span>⚠️ {photoError}</span>
+              </div>
+            )}
+
+            {/* Loading or Submit Action */}
+            {isPhotoAnalyzing ? (
+              <div style={styles.photoAnalyzingIndicator}>
+                <div className="typing-dots">
+                  <span></span><span></span><span></span>
+                </div>
+                <span>📸 Analyzing your photo… This may take a moment.</span>
+              </div>
+            ) : (
+              <div style={{ marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={submitPhoto}
+                  disabled={!selectedPhotoFile || !consentAcknowledged || isPhotoAnalyzing}
+                  style={{
+                    ...styles.photoSubmitButton,
+                    ...((!selectedPhotoFile || !consentAcknowledged || isPhotoAnalyzing) ? styles.disabledButton : {})
+                  }}
+                >
+                  Analyze Photo
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1015,6 +1276,119 @@ const styles = {
     borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: 'bold',
+  },
+  photoSection: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '16px',
+    textAlign: 'center' as const,
+  },
+  photoDisclaimer: {
+    padding: '12px 16px',
+    background: '#fffbeb',
+    border: '1px solid #fde68a',
+    borderRadius: '10px',
+    textAlign: 'left' as const,
+  },
+  photoInputContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadArea: {
+    width: '100%',
+    padding: '30px 20px',
+    border: '2px dashed #6366f1',
+    borderRadius: '12px',
+    background: '#f5f3ff',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '8px',
+    boxSizing: 'border-box' as const,
+  },
+  previewContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '12px',
+    width: '100%',
+  },
+  previewImage: {
+    maxWidth: '100%',
+    maxHeight: '260px',
+    borderRadius: '10px',
+    border: '1px solid #e5e7eb',
+    objectFit: 'contain' as const,
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  },
+  retakeButton: {
+    padding: '8px 16px',
+    fontSize: '13px',
+    background: '#f3f4f6',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    color: '#374151',
+    fontWeight: '500',
+  },
+  captionArea: {
+    width: '100%',
+    padding: '10px 12px',
+    fontSize: '14px',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    fontFamily: 'inherit',
+    resize: 'vertical' as const,
+    boxSizing: 'border-box' as const,
+  },
+  consentRow: {
+    padding: '12px',
+    background: '#f9fafb',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    textAlign: 'left' as const,
+  },
+  photoErrorBanner: {
+    padding: '10px 14px',
+    background: '#fee2e2',
+    border: '1px solid #fca5a5',
+    borderRadius: '8px',
+    color: '#b91c1c',
+    fontSize: '13px',
+    textAlign: 'left' as const,
+  },
+  photoAnalyzingIndicator: {
+    padding: '16px',
+    background: '#e0e7ff',
+    borderRadius: '10px',
+    color: '#4338ca',
+    fontWeight: 'bold',
+    fontSize: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px',
+  },
+  photoSubmitButton: {
+    padding: '14px 28px',
+    background: '#4f46e5',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '15px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    width: '100%',
+    maxWidth: '320px',
+    boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)',
+  },
+  disabledButton: {
+    background: '#9ca3af',
+    cursor: 'not-allowed',
+    boxShadow: 'none',
   },
 };
 const styleSheet = document.createElement("style");

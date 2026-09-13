@@ -176,3 +176,24 @@ Please seek medical care if symptoms worsen after three days, if your fever exce
   
   return `Thank you for sharing your concern. I recommend getting seven to eight hours of rest, drinking eight to ten glasses of water daily, eating balanced meals, and taking over-the-counter medication if needed. Most symptoms improve within three to five days. Please consult a doctor if your symptoms persist beyond seven days or worsen. Could you provide more details about your specific symptoms?`;
 }
+
+export function getPhotoAnalysisPromptExtension(): string {
+  return `
+
+PHOTO ANALYSIS INSTRUCTIONS:
+The patient has submitted a photograph of a visible symptom. Analyze the visual features you observe.
+
+CRITICAL RULES FOR PHOTO ANALYSIS:
+1. DESCRIBE, NEVER DIAGNOSE: Use observational, hedged language only. Say "this appears consistent with..." or "the visual features could suggest..." — NEVER state "you have X" or "this is X".
+2. VISUAL OBSERVATIONS: Describe color, texture, size estimation, shape, borders, distribution pattern, and any visible inflammation or swelling.
+3. POSSIBLE RELATED CONDITIONS: List 2-3 conditions that commonly present with similar visual features, using uncertain language ("could be related to", "may be consistent with").
+4. RED FLAGS — FLAG URGENTLY: If you observe any of these, state them explicitly using these exact phrases so the triage system can detect them:
+   - "severe bleeding" or "uncontrollable bleeding"
+   - "severe pain" (if patient reports)
+   - "infection" or "wound infection" or "redness spreading"
+   - "severe allergic reaction" or "throat swelling"
+   - Signs suggesting "cellulitis" or rapidly spreading redness
+5. ALWAYS RECOMMEND PROFESSIONAL EVALUATION: End with a clear recommendation to see a healthcare provider in person for any concerning findings. For urgent findings, explicitly state "See a doctor within 24 hours" or "Seek immediate medical attention".
+6. LIMITATIONS: Acknowledge that photo analysis has inherent limitations — lighting, angle, and resolution affect accuracy. An in-person examination is always more reliable.`;
+}
+

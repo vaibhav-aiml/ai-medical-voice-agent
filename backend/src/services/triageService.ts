@@ -1,5 +1,16 @@
 export type UrgencyLevel = 'routine' | 'consult_48h' | 'consult_24h' | 'emergency_immediate';
 
+export const URGENCY_RANK: Record<UrgencyLevel, number> = {
+  routine: 0,
+  consult_48h: 1,
+  consult_24h: 2,
+  emergency_immediate: 3,
+};
+
+export function isMoreUrgent(a: UrgencyLevel, b: UrgencyLevel): boolean {
+  return (URGENCY_RANK[a] ?? -1) > (URGENCY_RANK[b] ?? -1);
+}
+
 export interface TriageResult {
   urgencyLevel: UrgencyLevel;
   score: number; 
