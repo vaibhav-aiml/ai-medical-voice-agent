@@ -7,7 +7,7 @@
 <h1>AI Medical Voice Consultation Platform</h1>
 
 <p><strong>Talk to an AI specialist doctor. Get real clinical insights. Download your report.</strong><br/>
-Built for the Indian healthcare market — 9 languages, 5 specialist personas, <a href="README-HIPAA.md">HIPAA-aware</a> + <a href="README-DPDP.md">DPDP-aware</a>, zero-downtime reliability architecture.</p>
+Built for the Indian healthcare market — 9 languages, 5 specialist personas, 3 consultation modes (Voice, Text, Photo), <a href="README-HIPAA.md">HIPAA-aware</a> + <a href="README-DPDP.md">DPDP-aware</a>, zero-downtime reliability architecture.</p>
 
 <br/>
 
@@ -26,8 +26,9 @@ Built for the Indian healthcare market — 9 languages, 5 specialist personas, <
 
 <br/>
 
-<img src="https://img.shields.io/badge/AI%20Provider-Groq%20%7C%20llama--3.3--70b-FF6B35?style=flat-square"/>
+<img src="https://img.shields.io/badge/AI%20Provider-Groq%20%7C%20llama--3.3--70b%20%2B%20llama--4--scout-FF6B35?style=flat-square"/>
 <img src="https://img.shields.io/badge/STT-AssemblyAI-6B46C1?style=flat-square"/>
+<img src="https://img.shields.io/badge/Vision-Sharp%20%2B%20Groq%20Multimodal-blue?style=flat-square"/>
 <img src="https://img.shields.io/badge/Auth-Clerk-6C47FF?style=flat-square"/>
 <img src="https://img.shields.io/badge/Deploy-Render%20%2B%20Netlify-brightgreen?style=flat-square"/>
 
@@ -39,7 +40,10 @@ Built for the Indian healthcare market — 9 languages, 5 specialist personas, <
 
 ## 📌 What Is This?
 
-**MediVoice AI** is a production-grade, full-stack healthcare SaaS platform where patients speak or type their symptoms, and an AI specialist doctor responds in real time — streaming token by token via WebSocket, just like talking to a real doctor.
+**MediVoice AI** is a production-grade, full-stack healthcare SaaS platform supporting 3 consultation input modes:
+1. **🎙️ Voice Mode**: Real-time STT streaming token-by-token clinical insights.
+2. **💬 Text Mode**: Direct interactive medical messaging.
+3. **📷 Photo Mode**: Multimodal visual symptom analysis for rashes, wounds, swelling, and lesions with hedged non-diagnostic observation.
 
 Every consultation produces a structured **SOAP medical report** (Subjective · Objective · Assessment · Plan) that patients can download as PDF, email to themselves, or share via WhatsApp — in any of **9 Indian languages**.
 
@@ -52,19 +56,18 @@ The platform is architected for enterprise use: multi-tenant clinic management, 
 ## 🎬 Core User Journey
 
 ```
-Patient speaks or types symptoms
-        │
-        ▼
-AssemblyAI transcribes voice → text in real time
-        │
-        ▼
-Groq llama-3.3-70b streams clinical response via WebSocket
-        │
-        ├──► Triage Engine scores urgency  (🔴🟠🟡🟢)
-        │
-        ├──► Rule-based medical knowledge lookup
-        │
-        └──► SOAP Report → PDF / Email / WhatsApp
+Patient Consults via Voice, Text, or Photo Mode
+  │
+  ├──► [Voice] AssemblyAI transcribes speech → Groq streaming clinical advice
+  ├──► [Text]  Direct consultation chat with 10-message conversational memory
+  └──► [Photo] Sharp processes photo (2048px, EXIF stripped) → Groq Vision analysis
+         │
+         ▼
+  Triage Precedence Engine scores urgency (🔴 Emergency · 🟠 Urgent · 🟡 Soon · 🟢 Routine)
+         │
+         ├──► Rule-based medical knowledge lookup (RAG)
+         │
+         └──► SOAP Report → Instant Preview / PDF Download / Email / WhatsApp
 ```
 
 ---
@@ -126,6 +129,16 @@ Score 0–39   → 🟢 Routine    → Monitor at home
 <tr>
 <td width="50%">
 
+### 📷 Photo Mode (Visual Symptom Analysis)
+- **Multimodal AI Vision**: Groq `meta-llama/llama-4-scout-17b-16e-instruct`
+- **Sharp Image Pipeline**: Auto-orient, EXIF stripping, 2048px max dimension, JPEG 85
+- **Non-Diagnostic Guardrails**: Hedged observations (*"appears consistent with"*, *"could suggest"*), strictly describing rather than diagnosing
+- **Dual-Layer Triage**: Client-side triage on patient notes + secondary backend safety net
+- **Consent & Medical Records**: Server-timestamped consent saved in Neon PostgreSQL (`consultation_photos`)
+
+</td>
+<td width="50%">
+
 ### 🏥 Clinic Management (Multi-Tenant)
 - Per-clinic doctor + patient management
 - Appointment scheduling with calendar UI
@@ -133,13 +146,24 @@ Score 0–39   → 🟢 Routine    → Monitor at home
 - Clinic-scoped analytics dashboard
 
 </td>
+</tr>
+<tr>
 <td width="50%">
 
 ### 🌐 9 Indian Languages
 `English` · `हिंदी` · `தமிழ்` · `తెలుగు`
-`<ctrl42>ಕನ್ನಡ` · `മലയാളം` · `বাংলা` · `मराठी` · `ગુજરાતી`
+`ಕನ್ನಡ` · `മലയാളം` · `বাংলা` · `मराठी` · `ગુજરાતી`
 
 Full UI translation — every label, button, message.
+
+</td>
+<td width="50%">
+
+### 🔒 Privacy & Ownership Protection
+- Unified `verifyConsultationOwnershipCore()` authorization
+- Shared between WebSocket events & REST upload endpoints
+- PHI scrubbing on patient captions before AI submission
+- Fail-closed security with 401/403 audit logging
 
 </td>
 </tr>
@@ -207,7 +231,8 @@ flowchart TD
 
 | Category | Control | Implementation |
 |---|---|---|
-| **Security** | Rate Limiting | Global: 100 req/15 min · AI routes: 20 req/15 min · Auth: 10 req/15 min |
+| **Security** | Rate Limiting | Global: 10,000 req/15m (dev) / 1,000 req/15m (prod) · AI routes: 1,000 dev / 60 prod · Health checks exempt |
+| **Security** | Consultation Ownership | Unified `verifyConsultationOwnershipCore()` across WebSocket & REST (`verifyConsultationOwnershipREST.ts`) |
 | **Security** | Input Validation | Zod schemas on every POST/PUT route request body |
 | **Security** | Helmet & CSP | Strict Content-Security-Policy with `wss://` and Clerk domain allowlist |
 | **Security** | Auth Middleware | Clerk JWT verification on all protected REST & WebSocket connections |
@@ -215,7 +240,8 @@ flowchart TD
 | **Reliability** | Env Validation | Zod schema validates `backend/.env` on server boot — fails fast on missing required keys |
 | **Reliability** | Error Handling | Centralized Express error handler + `catchAsync()` wrapper |
 | **Reliability** | Process Safety | Global `unhandledRejection` and `uncaughtException` process listeners |
-| **Performance** | DB Indexing | `consultations.userId`, `consultations.status`, `voiceSessions.consultationId` |
+| **Performance** | Image Pipeline | `sharp` 2048px bounding box, auto-orientation via EXIF, EXIF metadata stripping |
+| **Performance** | DB Indexing | `consultations.userId`, `consultations.status`, `consultation_photos.consultationId` |
 | **Performance** | Redis Cache | Analytics dashboard cached 5 minutes via `ioredis` singleton |
 | **Performance** | Response Compression | `compression` middleware enabled on all HTTP responses |
 
@@ -243,8 +269,10 @@ flowchart TD
 | Node.js + Express | 5.x | REST API server |
 | TypeScript | 6.x | Type safety |
 | Socket.IO | 4.x | WebSocket voice streaming |
-| Groq SDK | 1.x | Primary AI (`llama-3.3-70b-versatile`) |
+| Groq SDK | 1.x | Primary AI (`llama-3.3-70b-versatile` & `meta-llama/llama-4-scout-17b-16e-instruct`) |
 | OpenAI SDK | 6.x | AI fallback (`gpt-3.5-turbo`) |
+| Sharp | 0.35.x | Medical image downscaling, orientation & EXIF stripping |
+| Multer | 2.x | In-memory multipart photo upload handling |
 | AssemblyAI | 4.x | Speech-to-text transcription |
 | Drizzle ORM | 0.45 | Type-safe PostgreSQL queries |
 | Zod | 4.x | Schema validation (env + routes) |
@@ -367,6 +395,7 @@ CLERK_SECRET_KEY=sk_test_...
 
 # ── AI Providers ────────────────────────────────────────────
 GROQ_API_KEY=gsk_...              # Primary — FREE at console.groq.com
+PHOTO_ANALYSIS_MODEL=meta-llama/llama-4-scout-17b-16e-instruct # Optional vision model
 OPENAI_API_KEY=sk-...             # Fallback (optional)
 
 # ── Speech-to-Text ──────────────────────────────────────────
@@ -418,20 +447,25 @@ ai-medical-voice-agent/
 │   │   │   └── redis.ts                # ioredis singleton
 │   │   │
 │   │   ├── db/schema/
-│   │   │   └── index.ts                # Drizzle table definitions + indexes
+│   │   │   ├── index.ts                # Drizzle table definitions + exports
+│   │   │   └── consultationPhotos.ts   # Medical photo records & consent schema
 │   │   │
 │   │   ├── middleware/
 │   │   │   ├── auth.ts                 # Clerk JWT verification
+│   │   │   ├── verifyConsultationOwnershipREST.ts # REST consultation ownership adapter
 │   │   │   ├── clinicMiddleware.ts     # Multi-tenant clinic scoping
 │   │   │   ├── errorHandler.ts         # Centralized Express error handler
 │   │   │   ├── rateLimiter.ts          # Global + per-route rate limits
 │   │   │   └── validate.ts             # Zod validation middleware factory
 │   │   │
-│   │   ├── routes/                     # Domain route handlers
+│   │   ├── routes/
+│   │   │   ├── photo.routes.ts         # Photo upload, sharp downscale, Groq vision
+│   │   │   └── ...                     # Domain route handlers
 │   │   │
-│   │   ├── services/                   # Functional services
+│   │   ├── services/
 │   │   │   ├── voice.service.ts        # Groq → OpenAI fallback chain
-│   │   │   ├── triageService.ts        # Urgency scoring engine
+│   │   │   ├── photoAnalysisService.ts # Multimodal symptom vision analysis & backstop
+│   │   │   ├── triageService.ts        # Urgency scoring engine & precedence ranking
 │   │   │   ├── ragKnowledgeBase.ts     # Medical knowledge retrieval
 │   │   │   ├── enhancedSymptomChecker.ts
 │   │   │   ├── analyticsService.ts
@@ -509,6 +543,10 @@ ai-medical-voice-agent/
 | `GET` | `/api/consultations/user/:userId` | ✅ | Fetch user consultations (deduplicated) |
 | `GET` | `/api/consultations/:id` | ✅ | Get single consultation session details |
 | `DELETE` | `/api/consultations/:id` | ✅ | Delete consultation record |
+| `POST` | `/api/consultation/:consultationId/photo` | ✅ | Upload & analyze symptom photo (Sharp 2048px, EXIF strip, Groq Vision, Triage, Consent) |
+| `POST` | `/api/enhanced-report/preview` | ✅ | Generate instant HTML preview of structured SOAP medical report |
+| `POST` | `/api/enhanced-report/generate-soap` | ✅ | Generate & download PDF SOAP report |
+| `POST` | `/api/enhanced-report/generate-and-email` | ✅ | Generate SOAP PDF report and deliver via email |
 | `POST` | `/api/voice` | ✅ | Process voice audio buffer |
 | `GET` | `/api/voice/session/:id` | ✅ | Fetch voice session transcript |
 | `POST` | `/api/triage/analyze` | ✅ | Analyze symptoms → urgency score |
