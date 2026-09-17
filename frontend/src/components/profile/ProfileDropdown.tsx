@@ -407,7 +407,7 @@ const styles = {
     width: '28px',
     height: '28px',
     borderRadius: '50%',
-    background: '#3b82f6',
+    background: 'var(--accent-clinical)',
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
@@ -506,7 +506,7 @@ const styles = {
     borderTop: '1px solid var(--border-color)',
     cursor: 'pointer',
     fontSize: '13px',
-    color: '#3b82f6',
+    color: 'var(--accent-clinical)',
     textAlign: 'center' as const,
   },
   languageSection: {

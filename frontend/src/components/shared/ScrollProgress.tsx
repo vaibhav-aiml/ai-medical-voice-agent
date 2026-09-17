@@ -83,7 +83,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   fill: {
     height: '100%',
-    background: 'linear-gradient(90deg, #2563eb, #7c3aed)',
+    background: 'var(--accent-clinical)',
     borderRadius: '0 1px 1px 0',
     transition: 'width 0.1s linear',
   },

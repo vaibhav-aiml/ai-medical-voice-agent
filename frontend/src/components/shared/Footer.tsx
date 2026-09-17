@@ -157,7 +157,7 @@ export default function Footer({
           <div style={styles.newsletterContent}>
             <h3>Subscribe to Our Newsletter</h3>
             <p>Get the latest health tips and updates directly in your inbox.</p>
-            <div style={{ ...styles.newsletterForm, flexWrap: 'wrap' as const }}>
+            <div style={{ ...styles.newsletterForm, flexWrap: 'wrap' as const, ...(isMobile ? { flexDirection: 'column' as const } : {}) }}>
               <input
                 type="email"
                 placeholder="Enter your email"

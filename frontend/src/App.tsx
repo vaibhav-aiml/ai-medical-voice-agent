@@ -121,11 +121,11 @@ function AppContent() {
       )}
 
       {showPageNav && (
-        <div style={styles.pageNav}>
+        <div className="app-page-nav" style={styles.pageNav}>
           <button onClick={() => navigate('/')} style={styles.pageNavButton}>
             ← {t('common.back')} {t('nav.home')}
           </button>
-          <span style={styles.pageNavTitle}>
+          <span className="app-page-nav-title" style={styles.pageNavTitle}>
             {location.pathname === '/dashboard' && t('nav.dashboard')}
             {location.pathname === '/consultation' && t('consultation.title')}
             {location.pathname === '/reports' && t('reports.title')}
@@ -154,8 +154,8 @@ function AppContent() {
 
       {}
       {showSymptomChecker && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div className="app-modal-overlay" style={styles.modalOverlay}>
+          <div className="app-modal-content" style={styles.modalContent}>
             <button onClick={() => setShowSymptomChecker(false)} style={styles.modalClose}><X size={18} /></button>
             <Suspense fallback={<div>Loading...</div>}>
               <SymptomChecker onClose={() => setShowSymptomChecker(false)} />
@@ -292,8 +292,8 @@ function AppContent() {
       )}
 
       {showAppointmentsList && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div className="app-modal-overlay" style={styles.modalOverlay}>
+          <div className="app-modal-content" style={styles.modalContent}>
             <button onClick={() => setShowAppointmentsList(false)} style={styles.modalClose}><X size={18} /></button>
             <Suspense fallback={<div>Loading...</div>}>
               <MyAppointments />

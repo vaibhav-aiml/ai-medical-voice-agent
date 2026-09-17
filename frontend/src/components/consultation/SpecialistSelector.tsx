@@ -1,4 +1,5 @@
 import { Specialist } from '../../types/consultation.types';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 const specialists: Specialist[] = [
   { id: '1', name: 'Dr. Smith', type: 'general', icon: '👨‍⚕️', description: 'General Physician - For common illnesses, fever, cold, general checkup' },
@@ -14,23 +15,25 @@ interface Props {
 }
 
 export default function SpecialistSelector({ selectedSpecialist, onSelect }: Props) {
+  const { isMobile } = useBreakpoint();
   return (
     <div>
-      <h3 style={styles.title}>Select AI Medical Specialist</h3>
-      <div style={styles.grid}>
+      <h3 style={{...styles.title, ...(isMobile ? { fontSize: '18px', marginBottom: '12px' } : {})}}>Select AI Medical Specialist</h3>
+      <div style={{...styles.grid, ...(isMobile ? { gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' } : {})}}>
         {specialists.map((specialist) => (
           <div
             key={specialist.id}
             onClick={() => onSelect(specialist.type)}
             style={{
               ...styles.card,
+              ...(isMobile ? { padding: '14px 10px' } : {}),
               ...(selectedSpecialist === specialist.type ? styles.selectedCard : {}),
             }}
           >
-            <div style={styles.icon}>{specialist.icon}</div>
-            <h4 style={styles.name}>{specialist.name}</h4>
-            <p style={styles.type}>{specialist.type}</p>
-            <p style={styles.description}>{specialist.description}</p>
+            <div style={{...styles.icon, ...(isMobile ? { fontSize: '32px', marginBottom: '6px' } : {})}}>{specialist.icon}</div>
+            <h4 style={{...styles.name, ...(isMobile ? { fontSize: '14px', marginBottom: '2px' } : {})}}>{specialist.name}</h4>
+            <p style={{...styles.type, ...(isMobile ? { fontSize: '12px', marginBottom: '4px' } : {})}}>{specialist.type}</p>
+            {!isMobile && <p style={styles.description}>{specialist.description}</p>}
           </div>
         ))}
       </div>

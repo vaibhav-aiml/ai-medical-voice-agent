@@ -4,10 +4,12 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useConsultation } from '../context/ConsultationContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import { ConsultationSession } from '../types/consultation.types';
 
 export default function ReportsPage() {
   const { t } = useLanguage();
+  const { isMobile } = useBreakpoint();
   const {
     consultations,
     handleViewReport, handleBookAppointment,
@@ -26,9 +28,9 @@ export default function ReportsPage() {
   };
 
   return (
-    <div style={styles.pageContainer}>
-      <div style={styles.pageHeader}><h2 style={styles.pageTitle}>{t('reports.title')}</h2><p style={styles.pageSubtitle}>{t('reports.subtitle')}</p></div>
-      <div style={styles.reportsList}>
+    <div className="page-shell" style={{ maxWidth: '1280px', margin: '0 auto' }}>
+      <div style={styles.pageHeader}><h2 style={{...styles.pageTitle, ...(isMobile ? { fontSize: '22px' } : {})}}>{t('reports.title')}</h2><p style={styles.pageSubtitle}>{t('reports.subtitle')}</p></div>
+      <div style={{...styles.reportsList, ...(isMobile ? { gridTemplateColumns: '1fr' } : {})}}>
         {consultations.filter(c => c.status === 'completed').map((consultation: ConsultationSession) => (
           <div key={consultation.id} style={styles.reportCard}>
             <div style={styles.reportHeader}>
@@ -46,20 +48,20 @@ export default function ReportsPage() {
               <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
               <p><strong>{t('reports.duration')}:</strong> {consultation.duration} {t('reports.minutes')}</p>
             </div>
-            <div style={styles.reportActions}>
-              <button onClick={() => handleViewReport(consultation.id)} style={styles.downloadButton}>
+            <div style={{...styles.reportActions, ...(isMobile ? { flexDirection: 'row' as const, overflowX: 'auto' as const, gap: '8px', scrollSnapType: 'x mandatory' as const } : {})}}>
+              <button onClick={() => handleViewReport(consultation.id)} style={{...styles.downloadButton, ...(isMobile ? { flex: '0 0 auto', minWidth: '120px', scrollSnapAlign: 'start' as const } : {})}}>
                 <Download size={16} />
                 <span>{t('reports.viewReport')}</span>
               </button>
-              <button onClick={() => handleBookAppointment(consultation)} style={styles.bookButton}>
+              <button onClick={() => handleBookAppointment(consultation)} style={{...styles.bookButton, ...(isMobile ? { flex: '0 0 auto', minWidth: '120px', scrollSnapAlign: 'start' as const } : {})}}>
                 <Calendar size={16} />
                 <span>{t('reports.bookFollowup')}</span>
               </button>
-              <button onClick={() => handleRateConsultation(consultation)} style={styles.ratingButton}>
+              <button onClick={() => handleRateConsultation(consultation)} style={{...styles.ratingButton, ...(isMobile ? { flex: '0 0 auto', minWidth: '100px', scrollSnapAlign: 'start' as const } : {})}}>
                 <Star size={16} />
                 <span>{t('reports.rateConsultation')}</span>
               </button>
-              <button onClick={() => handleViewEnhancedReport(consultation)} style={styles.enhancedReportButton}>
+              <button onClick={() => handleViewEnhancedReport(consultation)} style={{...styles.enhancedReportButton, ...(isMobile ? { flex: '0 0 auto', minWidth: '120px', scrollSnapAlign: 'start' as const } : {})}}>
                 <FileText size={16} />
                 <span>View SOAP Report</span>
               </button>
@@ -76,7 +78,7 @@ const styles: Record<string, React.CSSProperties> = {
   pageHeader: { marginBottom: '32px' },
   pageTitle: { fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' },
   pageSubtitle: { fontSize: '14px', color: 'var(--text-secondary)' },
-  reportsList: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '24px' },
+  reportsList: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 360px), 1fr))', gap: '24px' },
   reportCard: { background: 'var(--bg-card)', borderRadius: '16px', padding: '20px', border: '1px solid var(--border-color)' },
   reportHeader: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' },
   reportIconArea: { width: '40px', height: '40px', background: 'var(--badge-bg)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--button-primary)' },

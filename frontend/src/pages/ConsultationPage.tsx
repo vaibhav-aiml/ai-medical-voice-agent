@@ -3,6 +3,7 @@ import { X, Activity, Brain, Heart, Bone, Baby, Stethoscope } from 'lucide-react
 import { useNavigate } from 'react-router';
 import { useLanguage } from '../context/LanguageContext';
 import { useConsultation } from '../context/ConsultationContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import SkeletonLoader from '../components/shared/SkeletonLoader';
 
 const SpecialistSelector = lazy(() => import('../components/consultation/SpecialistSelector'));
@@ -12,6 +13,7 @@ const ChatMessages = lazy(() => import('../components/consultation/ChatMessages'
 export default function ConsultationPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { isMobile } = useBreakpoint();
   const {
     consultationId, selectedSpecialist, setSelectedSpecialist,
     consultationStarted, messages, manualSymptoms,
@@ -33,9 +35,10 @@ export default function ConsultationPage() {
   };
 
   return (
-    <div style={styles.consultationContainer}>
-      <div style={styles.consultationHeader}>
-        <div><h2 style={styles.consultationTitle}>{t('consultation.title')}</h2><p style={styles.consultationSubtitle}>{t('consultation.subtitle')}</p></div>
+    <div className="page-shell">
+    <div className="page-card" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{...styles.consultationHeader, ...(isMobile ? { flexDirection: 'column' as const, gap: '12px', alignItems: 'flex-start' } : {})}}>
+        <div><h2 style={{...styles.consultationTitle, ...(isMobile ? { fontSize: '18px' } : {})}}>{t('consultation.title')}</h2><p style={styles.consultationSubtitle}>{t('consultation.subtitle')}</p></div>
         <button onClick={() => navigate('/')} style={styles.closeButton}><X size={20} /></button>
       </div>
       {!consultationStarted ? (
@@ -80,6 +83,7 @@ export default function ConsultationPage() {
         </div>
       )}
     </div>
+    </div>
   );
 }
 
@@ -87,10 +91,6 @@ const styles: Record<string, React.CSSProperties> = {
   consultationContainer: {
     maxWidth: '1200px',
     margin: '40px auto',
-    padding: '32px',
-    background: 'var(--bg-card)',
-    borderRadius: '24px',
-    border: '1px solid var(--border-color)',
   },
   consultationTitle: {
     fontSize: '22px',

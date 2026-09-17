@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import MobileCarousel from '../components/shared/MobileCarousel';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import {
   Mic, Stethoscope, ClipboardList, ArrowRight,
-  Sparkles, MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Calendar,
+  MessageCircle, Clock, CheckCircle, Star, Mail, Shield, Calendar,
   Volume2, VolumeX, ChevronDown, LucideIcon
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
@@ -287,7 +288,7 @@ export default function HomePage() {
   }, []);
 
   // Determine whether video should render at all
-  const showVideo = !prefersReducedMotion && !isMobile && !videoFailed;
+  const showVideo = !prefersReducedMotion && !videoFailed;
 
   // Sync the muted DOM property via ref (not just JSX attribute)
   useEffect(() => {
@@ -376,6 +377,18 @@ export default function HomePage() {
     return () => observer.disconnect();
   }, [prefersReducedMotion]);
 
+  const floatingCardMobileOverride: React.CSSProperties = isMobile ? {
+    position: 'static',
+    top: 'auto',
+    left: 'auto',
+    right: 'auto',
+    bottom: 'auto',
+    animation: 'none',
+    width: '100%',
+    boxSizing: 'border-box',
+    marginBottom: '12px',
+  } : {};
+
   return (
     <>
       <div style={styles.homeContainer}>
@@ -449,21 +462,12 @@ export default function HomePage() {
               {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
           )}
-          {/* Waveform accent behind heading */}
-          {!prefersReducedMotion && (
-            <svg style={styles.heroWaveformAccent} viewBox="0 0 200 40" preserveAspectRatio="none">
-              <path d="M0,20 Q10,5 20,20 T40,20 T60,20 T80,20 T100,20 T120,20 T140,20 T160,20 T180,20 T200,20" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          )}
+
         <div style={{...styles.heroSection, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
           <div style={styles.heroContent}>
-            <div style={styles.heroBadge}>
-              <Sparkles size={16} />
-              <span>{t('home.aiPowered')}</span>
-            </div>
             <h1 style={styles.heroTitle}>
               {t('home.yourHealth')}<br />
-              <span style={styles.heroTitleAccent}>{t('home.ourPriority')}</span>
+              <span style={{ color: 'var(--accent-clinical)' }}>{t('home.ourPriority')}</span>
             </h1>
             <p style={styles.heroSubtitle}>
               {t('home.subtitle')}
@@ -478,40 +482,25 @@ export default function HomePage() {
               </button>
             </div>
           </div>
-          <div style={styles.heroImage}>
-            <div style={styles.floatingCard1}>
-              <Mic size={24} color="#3b82f6" />
+          <div style={{
+            ...styles.heroImage,
+            ...(isMobile ? { height: 'auto', width: '100%', flexDirection: 'column' as const } : {})
+          }}>
+            <div style={{ ...styles.floatingCard1, ...floatingCardMobileOverride }}>
+              <Mic size={24} color="var(--accent-clinical)" />
               <span>{t('home.voiceConsultation') === 'home.voiceConsultation' ? 'Voice Consultation' : t('home.voiceConsultation')}</span>
             </div>
-            <div style={styles.floatingCard2}>
-              <Stethoscope size={24} color="#0284c7" />
+            <div style={{ ...styles.floatingCard2, ...floatingCardMobileOverride }}>
+              <Stethoscope size={24} color="var(--accent-clinical)" />
               <span>{t('home.specialists') === 'home.specialists' ? 'Specialists' : t('home.specialists')}</span>
             </div>
-            <div style={styles.floatingCard3}>
-              <ClipboardList size={24} color="#f59e0b" />
+            <div style={{ ...styles.floatingCard3, ...floatingCardMobileOverride, ...(isMobile ? { marginBottom: 0 } : {}) }}>
+              <ClipboardList size={24} color="var(--accent-clinical)" />
               <span>{t('home.medicalReports') === 'home.medicalReports' ? 'Medical Reports' : t('home.medicalReports')}</span>
             </div>
-            <div style={styles.heroCircle}></div>
-            {/* Floating medical icons (3, very low opacity) */}
-            {!prefersReducedMotion && (
-              <>
-                <svg style={{ ...styles.floatingIcon, top: '10%', left: '5%', animationDuration: '10s' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M12 2v20M2 12h20" />
-                </svg>
-                <svg style={{ ...styles.floatingIcon, bottom: '15%', right: '5%', animationDuration: '12s', animationDelay: '2s' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-                <svg style={{ ...styles.floatingIcon, top: '60%', left: '60%', animationDuration: '8s', animationDelay: '1s' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <rect x="2" y="6" width="4" height="12" rx="1" />
-                  <rect x="10" y="2" width="4" height="20" rx="1" />
-                  <rect x="18" y="8" width="4" height="8" rx="1" />
-                </svg>
-              </>
-            )}
           </div>
         </div>
         </div>
-
         {/* Stats Section with scroll fade-up */}
         <div
           ref={statsRef}
@@ -522,54 +511,56 @@ export default function HomePage() {
             transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <div style={{...styles.statsContainer, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)'}}>
+          <div style={{...styles.statsContainer, gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)'}}>
             <div
               className="stat-cell"
               style={{
                 ...styles.statCard,
-                borderRight: isMobile ? 'none' : isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
+                ...(isMobile ? { padding: '20px 12px' } : {}),
+                borderRight: '1px solid var(--border-color)',
                 borderBottom: isMobile ? '1px solid var(--border-color)' : isTablet ? '1px solid var(--border-color)' : 'none',
               }}
             >
-              <div style={styles.statIcon}><MessageCircle size={18} /></div>
-              <div style={styles.statNumber}>{stats.totalConsultations}</div>
-              <div style={styles.statLabel}>{t('home.totalConsultations')}</div>
-              <div style={styles.statTrend}>↑ 12% {t('home.thisMonth')}</div>
+              <div style={styles.statIcon}><MessageCircle size={isMobile ? 16 : 18} /></div>
+              <div style={{...styles.statNumber, ...(isMobile ? { fontSize: '28px' } : {})}}>{stats.totalConsultations}</div>
+              <div style={{...styles.statLabel, ...(isMobile ? { fontSize: '11px' } : {})}}>{t('home.totalConsultations')}</div>
             </div>
             <div
               className="stat-cell"
               style={{
                 ...styles.statCard,
+                ...(isMobile ? { padding: '20px 12px' } : {}),
                 borderRight: isMobile ? 'none' : isTablet ? 'none' : '1px solid var(--border-color)',
                 borderBottom: isMobile ? '1px solid var(--border-color)' : isTablet ? '1px solid var(--border-color)' : 'none',
               }}
             >
-              <div style={styles.statIcon}><CheckCircle size={18} /></div>
-              <div style={styles.statNumberSecondary}>{stats.completedConsultations}</div>
-              <div style={styles.statLabel}>{t('home.completed')}</div>
-              <div style={styles.statTrend}>↑ 8% {t('home.thisMonth')}</div>
+              <div style={styles.statIcon}><CheckCircle size={isMobile ? 16 : 18} /></div>
+              <div style={{...styles.statNumberSecondary, ...(isMobile ? { fontSize: '20px' } : {})}}>{stats.completedConsultations}</div>
+              <div style={{...styles.statLabel, ...(isMobile ? { fontSize: '11px' } : {})}}>{t('home.completed')}</div>
             </div>
             <div
               className="stat-cell"
               style={{
                 ...styles.statCard,
-                borderRight: isMobile ? 'none' : isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
-                borderBottom: isMobile ? '1px solid var(--border-color)' : 'none',
+                ...(isMobile ? { padding: '20px 12px' } : {}),
+                borderRight: '1px solid var(--border-color)',
+                borderBottom: isMobile ? 'none' : 'none',
               }}
             >
-              <div style={styles.statIcon}><Clock size={18} /></div>
-              <div style={styles.statNumberSecondary}>{stats.averageDuration}</div>
-              <div style={styles.statLabel}>{t('home.avgMinutes')}</div>
-              <div style={styles.statTrend}>↓ 5% {t('home.faster')}</div>
+              <div style={styles.statIcon}><Clock size={isMobile ? 16 : 18} /></div>
+              <div style={{...styles.statNumberSecondary, ...(isMobile ? { fontSize: '20px' } : {})}}>{stats.averageDuration}</div>
+              <div style={{...styles.statLabel, ...(isMobile ? { fontSize: '11px' } : {})}}>{t('home.avgMinutes')}</div>
             </div>
             <div
               className="stat-cell"
-              style={styles.statCard}
+              style={{
+                ...styles.statCard,
+                ...(isMobile ? { padding: '20px 12px' } : {}),
+              }}
             >
-              <div style={styles.statIcon}><Star size={18} /></div>
-              <div style={styles.statNumberSecondary}>4.8</div>
-              <div style={styles.statLabel}>{t('home.userRating')}</div>
-              <div style={styles.statTrend}>★★★★★</div>
+              <div style={styles.statIcon}><Star size={isMobile ? 16 : 18} /></div>
+              <div style={{...styles.statNumberSecondary, ...(isMobile ? { fontSize: '20px' } : {})}}>4.8</div>
+              <div style={{...styles.statLabel, ...(isMobile ? { fontSize: '11px' } : {})}}>{t('home.userRating')}</div>
             </div>
           </div>
         </div>
@@ -590,23 +581,42 @@ export default function HomePage() {
             </h2>
             <p>{t('home.featureDesc')}</p>
           </div>
-          <div style={{...styles.featuresGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
-            {FEATURE_ITEMS.map((item) => {
-              const isExpanded = expandedFeature === item.id;
-              const isReceded = expandedFeature !== null && !isExpanded;
-              return (
-                <FeatureCardItem
-                  key={item.id}
-                  item={item}
-                  isExpanded={isExpanded}
-                  isReceded={isReceded}
-                  prefersReducedMotion={prefersReducedMotion}
-                  onToggle={() => setExpandedFeature(prev => prev === item.id ? null : item.id)}
-                  t={t}
-                />
-              );
-            })}
-          </div>
+          {isMobile ? (
+            <MobileCarousel peekWidth={88} gap={16}>
+              {FEATURE_ITEMS.map((item) => {
+                const isExpanded = expandedFeature === item.id;
+                return (
+                  <FeatureCardItem
+                    key={item.id}
+                    item={item}
+                    isExpanded={isExpanded}
+                    isReceded={false}
+                    prefersReducedMotion={prefersReducedMotion}
+                    onToggle={() => setExpandedFeature(prev => prev === item.id ? null : item.id)}
+                    t={t}
+                  />
+                );
+              })}
+            </MobileCarousel>
+          ) : (
+            <div style={{...styles.featuresGrid, gridTemplateColumns: isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
+              {FEATURE_ITEMS.map((item) => {
+                const isExpanded = expandedFeature === item.id;
+                const isReceded = expandedFeature !== null && !isExpanded;
+                return (
+                  <FeatureCardItem
+                    key={item.id}
+                    item={item}
+                    isExpanded={isExpanded}
+                    isReceded={isReceded}
+                    prefersReducedMotion={prefersReducedMotion}
+                    onToggle={() => setExpandedFeature(prev => prev === item.id ? null : item.id)}
+                    t={t}
+                  />
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* How It Works with animated gradient & scroll fade-up */}
@@ -627,70 +637,116 @@ export default function HomePage() {
             <h2>{t('home.howItWorks')} <span style={styles.sectionHeaderAccent}>{t('home.works')}</span></h2>
             <p>{t('home.clickToLearn')}</p>
           </div>
-          <div style={styles.stepsContainer}>
-            <div
-              onClick={() => setSelectedStep(selectedStep === 1 ? null : 1)}
-              style={{
-                ...styles.stepCard,
-                ...(selectedStep === 1 ? styles.stepCardExpanded : {}),
-                cursor: 'pointer',
-              }}
-            >
-              <div style={styles.stepIcon}>🎤</div>
-              <h3 style={styles.stepTitle}>{t('home.step1Title')}</h3>
-              <p style={styles.stepDescription}>{t('home.step1Desc')}</p>
-              {selectedStep === 1 && (
-                <div style={styles.stepDetails}>
-                  <div style={styles.stepDetailItem}>🎙️ {t('home.step1Detail1')}</div>
-                  <div style={styles.stepDetailItem}>🌐 {t('home.step1Detail2')}</div>
-                  <div style={styles.stepDetailItem}>⚡ {t('home.step1Detail3')}</div>
-                  <div style={styles.stepDetailItem}>⌨️ {t('home.step1Detail4')}</div>
-                </div>
-              )}
+          {isMobile ? (
+            <MobileCarousel peekWidth={85} gap={16}>
+              {[1, 2, 3].map((stepNum) => {
+                const icons = ['🎤', '🤖', '📋'];
+                const titleKeys = ['home.step1Title', 'home.step2Title', 'home.step3Title'];
+                const descKeys = ['home.step1Desc', 'home.step2Desc', 'home.step3Desc'];
+                const detailKeys = [
+                  ['home.step1Detail1', 'home.step1Detail2', 'home.step1Detail3', 'home.step1Detail4'],
+                  ['home.step2Detail1', 'home.step2Detail2', 'home.step2Detail3', 'home.step2Detail4'],
+                  ['home.step3Detail1', 'home.step3Detail2', 'home.step3Detail3', 'home.step3Detail4'],
+                ];
+                const detailIcons = [
+                  ['🎙️', '🌐', '⚡', '⌨️'],
+                  ['🧠', '👨‍⚕️', '💭', '📝'],
+                  ['📄', '📧', '📅', '📊'],
+                ];
+                return (
+                  <div
+                    key={stepNum}
+                    onClick={() => setSelectedStep(selectedStep === stepNum ? null : stepNum)}
+                    style={{
+                      ...styles.stepCard,
+                      ...(selectedStep === stepNum ? styles.stepCardExpanded : {}),
+                      flex: 'none',
+                      width: '100%',
+                    }}
+                  >
+                    <div style={{ fontSize: '11px', color: 'var(--accent-clinical)', fontWeight: 600, marginBottom: '8px', letterSpacing: '0.5px', textTransform: 'uppercase' as const }}>
+                      Step {stepNum} of 3
+                    </div>
+                    <div style={styles.stepIcon}>{icons[stepNum - 1]}</div>
+                    <h3 style={styles.stepTitle}>{t(titleKeys[stepNum - 1])}</h3>
+                    <p style={styles.stepDescription}>{t(descKeys[stepNum - 1])}</p>
+                    {selectedStep === stepNum && (
+                      <div style={styles.stepDetails}>
+                        {detailKeys[stepNum - 1].map((dk, idx) => (
+                          <div key={dk} style={styles.stepDetailItem}>{detailIcons[stepNum - 1][idx]} {t(dk)}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </MobileCarousel>
+          ) : (
+            <div style={styles.stepsContainer}>
+              <div
+                onClick={() => setSelectedStep(selectedStep === 1 ? null : 1)}
+                style={{
+                  ...styles.stepCard,
+                  ...(selectedStep === 1 ? styles.stepCardExpanded : {}),
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={styles.stepIcon}>🎤</div>
+                <h3 style={styles.stepTitle}>{t('home.step1Title')}</h3>
+                <p style={styles.stepDescription}>{t('home.step1Desc')}</p>
+                {selectedStep === 1 && (
+                  <div style={styles.stepDetails}>
+                    <div style={styles.stepDetailItem}>🎙️ {t('home.step1Detail1')}</div>
+                    <div style={styles.stepDetailItem}>🌐 {t('home.step1Detail2')}</div>
+                    <div style={styles.stepDetailItem}>⚡ {t('home.step1Detail3')}</div>
+                    <div style={styles.stepDetailItem}>⌨️ {t('home.step1Detail4')}</div>
+                  </div>
+                )}
+              </div>
+              <div style={styles.stepArrow}>→</div>
+              <div
+                onClick={() => setSelectedStep(selectedStep === 2 ? null : 2)}
+                style={{
+                  ...styles.stepCard,
+                  ...(selectedStep === 2 ? styles.stepCardExpanded : {}),
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={styles.stepIcon}>🤖</div>
+                <h3 style={styles.stepTitle}>{t('home.step2Title')}</h3>
+                <p style={styles.stepDescription}>{t('home.step2Desc')}</p>
+                {selectedStep === 2 && (
+                  <div style={styles.stepDetails}>
+                    <div style={styles.stepDetailItem}>🧠 {t('home.step2Detail1')}</div>
+                    <div style={styles.stepDetailItem}>👨‍⚕️ {t('home.step2Detail2')}</div>
+                    <div style={styles.stepDetailItem}>💭 {t('home.step2Detail3')}</div>
+                    <div style={styles.stepDetailItem}>📝 {t('home.step2Detail4')}</div>
+                  </div>
+                )}
+              </div>
+              <div style={styles.stepArrow}>→</div>
+              <div
+                onClick={() => setSelectedStep(selectedStep === 3 ? null : 3)}
+                style={{
+                  ...styles.stepCard,
+                  ...(selectedStep === 3 ? styles.stepCardExpanded : {}),
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={styles.stepIcon}>📋</div>
+                <h3 style={styles.stepTitle}>{t('home.step3Title')}</h3>
+                <p style={styles.stepDescription}>{t('home.step3Desc')}</p>
+                {selectedStep === 3 && (
+                  <div style={styles.stepDetails}>
+                    <div style={styles.stepDetailItem}>📄 {t('home.step3Detail1')}</div>
+                    <div style={styles.stepDetailItem}>📧 {t('home.step3Detail2')}</div>
+                    <div style={styles.stepDetailItem}>📅 {t('home.step3Detail3')}</div>
+                    <div style={styles.stepDetailItem}>📊 {t('home.step3Detail4')}</div>
+                  </div>
+                )}
+              </div>
             </div>
-            <div style={styles.stepArrow}>→</div>
-            <div
-              onClick={() => setSelectedStep(selectedStep === 2 ? null : 2)}
-              style={{
-                ...styles.stepCard,
-                ...(selectedStep === 2 ? styles.stepCardExpanded : {}),
-                cursor: 'pointer',
-              }}
-            >
-              <div style={styles.stepIcon}>🤖</div>
-              <h3 style={styles.stepTitle}>{t('home.step2Title')}</h3>
-              <p style={styles.stepDescription}>{t('home.step2Desc')}</p>
-              {selectedStep === 2 && (
-                <div style={styles.stepDetails}>
-                  <div style={styles.stepDetailItem}>🧠 {t('home.step2Detail1')}</div>
-                  <div style={styles.stepDetailItem}>👨‍⚕️ {t('home.step2Detail2')}</div>
-                  <div style={styles.stepDetailItem}>💭 {t('home.step2Detail3')}</div>
-                  <div style={styles.stepDetailItem}>📝 {t('home.step2Detail4')}</div>
-                </div>
-              )}
-            </div>
-            <div style={styles.stepArrow}>→</div>
-            <div
-              onClick={() => setSelectedStep(selectedStep === 3 ? null : 3)}
-              style={{
-                ...styles.stepCard,
-                ...(selectedStep === 3 ? styles.stepCardExpanded : {}),
-                cursor: 'pointer',
-              }}
-            >
-              <div style={styles.stepIcon}>📋</div>
-              <h3 style={styles.stepTitle}>{t('home.step3Title')}</h3>
-              <p style={styles.stepDescription}>{t('home.step3Desc')}</p>
-              {selectedStep === 3 && (
-                <div style={styles.stepDetails}>
-                  <div style={styles.stepDetailItem}>📄 {t('home.step3Detail1')}</div>
-                  <div style={styles.stepDetailItem}>📧 {t('home.step3Detail2')}</div>
-                  <div style={styles.stepDetailItem}>📅 {t('home.step3Detail3')}</div>
-                  <div style={styles.stepDetailItem}>📊 {t('home.step3Detail4')}</div>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Testimonials with scroll fade-up */}
@@ -707,41 +763,79 @@ export default function HomePage() {
             <h2>{t('home.whatUsersSay')} <span style={styles.sectionHeaderAccent}>{t('home.aboutUs')}</span></h2>
             <p>{t('home.trustedBy')}</p>
           </div>
-          <div style={{...styles.testimonialsGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
-            <div style={styles.testimonialCard}>
-              <div style={styles.testimonialStars}>★★★★★</div>
-              <p>{t('home.testimonial1')}</p>
-              <div style={styles.testimonialAuthor}>
-                <div style={styles.testimonialAvatar}>R</div>
-                <div>
-                  <strong>Rajesh Kumar</strong>
-                  <span>{t('home.verifiedUser')}</span>
+          {isMobile ? (
+            <MobileCarousel peekWidth={90} gap={16}>
+              <div style={styles.testimonialCard}>
+                <div style={styles.testimonialStars}>★★★★★</div>
+                <p>{t('home.testimonial1')}</p>
+                <div style={styles.testimonialAuthor}>
+                  <div style={{...styles.testimonialAvatar, ...(isMobile ? { width: '40px', height: '40px', fontSize: '16px' } : {})}}>R</div>
+                  <div>
+                    <strong>Rajesh Kumar</strong>
+                    <span>{t('home.verifiedUser')}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={styles.testimonialCard}>
+                <div style={styles.testimonialStars}>★★★★★</div>
+                <p>{t('home.testimonial2')}</p>
+                <div style={styles.testimonialAuthor}>
+                  <div style={{...styles.testimonialAvatar, ...(isMobile ? { width: '40px', height: '40px', fontSize: '16px' } : {})}}>P</div>
+                  <div>
+                    <strong>Priya Sharma</strong>
+                    <span>{t('home.verifiedUser')}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={styles.testimonialCard}>
+                <div style={styles.testimonialStars}>★★★★★</div>
+                <p>{t('home.testimonial3')}</p>
+                <div style={styles.testimonialAuthor}>
+                  <div style={{...styles.testimonialAvatar, ...(isMobile ? { width: '40px', height: '40px', fontSize: '16px' } : {})}}>A</div>
+                  <div>
+                    <strong>Amit Patel</strong>
+                    <span>{t('home.verifiedUser')}</span>
+                  </div>
+                </div>
+              </div>
+            </MobileCarousel>
+          ) : (
+            <div style={{...styles.testimonialsGrid, gridTemplateColumns: isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
+              <div style={styles.testimonialCard}>
+                <div style={styles.testimonialStars}>★★★★★</div>
+                <p>{t('home.testimonial1')}</p>
+                <div style={styles.testimonialAuthor}>
+                  <div style={styles.testimonialAvatar}>R</div>
+                  <div>
+                    <strong>Rajesh Kumar</strong>
+                    <span>{t('home.verifiedUser')}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={styles.testimonialCard}>
+                <div style={styles.testimonialStars}>★★★★★</div>
+                <p>{t('home.testimonial2')}</p>
+                <div style={styles.testimonialAuthor}>
+                  <div style={styles.testimonialAvatar}>P</div>
+                  <div>
+                    <strong>Priya Sharma</strong>
+                    <span>{t('home.verifiedUser')}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={styles.testimonialCard}>
+                <div style={styles.testimonialStars}>★★★★★</div>
+                <p>{t('home.testimonial3')}</p>
+                <div style={styles.testimonialAuthor}>
+                  <div style={styles.testimonialAvatar}>A</div>
+                  <div>
+                    <strong>Amit Patel</strong>
+                    <span>{t('home.verifiedUser')}</span>
+                  </div>
                 </div>
               </div>
             </div>
-            <div style={styles.testimonialCard}>
-              <div style={styles.testimonialStars}>★★★★★</div>
-              <p>{t('home.testimonial2')}</p>
-              <div style={styles.testimonialAuthor}>
-                <div style={styles.testimonialAvatar}>P</div>
-                <div>
-                  <strong>Priya Sharma</strong>
-                  <span>{t('home.verifiedUser')}</span>
-                </div>
-              </div>
-            </div>
-            <div style={styles.testimonialCard}>
-              <div style={styles.testimonialStars}>★★★★★</div>
-              <p>{t('home.testimonial3')}</p>
-              <div style={styles.testimonialAuthor}>
-                <div style={styles.testimonialAvatar}>A</div>
-                <div>
-                  <strong>Amit Patel</strong>
-                  <span>{t('home.verifiedUser')}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* CTA with background image + scroll fade-up */}
@@ -817,27 +911,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'linear-gradient(135deg, rgba(15,23,42,0.88) 0%, rgba(30,27,75,0.82) 50%, rgba(15,23,42,0.88) 100%)',
     zIndex: 1,
   },
-  heroWaveformAccent: {
-    position: 'absolute' as const,
-    top: '35%',
-    left: '5%',
-    width: '200px',
-    height: '40px',
-    opacity: 0.06,
-    color: '#3b82f6',
-    zIndex: 1,
-    animation: 'heroWaveformPulse 3s ease-in-out infinite',
-  },
-  floatingIcon: {
-    position: 'absolute' as const,
-    width: '28px',
-    height: '28px',
-    opacity: 0.05,
-    color: '#3b82f6',
-    animation: 'floatSlow ease-in-out infinite',
-    zIndex: 1,
-    pointerEvents: 'none' as const,
-  },
+
   heroSection: {
     position: 'relative' as const,
     display: 'grid',
@@ -853,30 +927,12 @@ const styles: Record<string, React.CSSProperties> = {
   heroContent: {
     maxWidth: '560px',
   },
-  heroBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '6px 16px 6px 12px',
-    background: 'rgba(37, 99, 235, 0.1)',
-    borderRadius: '9999px',
-    color: '#2563eb',
-    fontSize: '13px',
-    fontWeight: 500,
-    marginBottom: '20px',
-  },
   heroTitle: {
     fontSize: '48px',
     fontWeight: 800,
     color: 'var(--text-primary)',
     lineHeight: 1.15,
     marginBottom: '16px',
-  },
-  heroTitleAccent: {
-    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-    WebkitBackgroundClip: 'text',
-    backgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
   },
   heroSubtitle: {
     fontSize: '18px',
@@ -894,7 +950,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '8px',
     padding: '14px 32px',
-    background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     borderRadius: '9999px',
@@ -902,7 +958,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '16px',
     fontWeight: 600,
     transition: 'all 0.25s ease',
-    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+    boxShadow: '0 4px 12px var(--accent-clinical-soft)',
   },
   secondaryButton: {
     padding: '14px 32px',
@@ -940,32 +996,23 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'var(--bg-card)', borderRadius: '16px', boxShadow: 'var(--card-shadow)',
     animation: 'float 3.5s ease-in-out infinite', border: '1px solid var(--border-color)',
   },
-  heroCircle: {
-    position: 'absolute' as const, top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-    width: '300px', height: '300px',
-    background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0) 70%)',
-    borderRadius: '50%',
-  },
   statsSection: { padding: '40px 24px', background: 'transparent' },
   statsContainer: { maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)', overflow: 'hidden' },
   statCard: { textAlign: 'center' as const, padding: '28px 20px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s ease' },
-  statIcon: { color: '#2563eb', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  statIcon: { color: 'var(--accent-clinical)', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   statNumber: { fontSize: '36px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 },
   statNumberSecondary: { fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 },
   statLabel: { fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px' },
-  statTrend: { fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' },
+
   featuresSection: { padding: '60px 24px', maxWidth: '1200px', margin: '0 auto' },
   sectionHeader: { textAlign: 'center' as const, marginBottom: '48px' },
   sectionHeaderAccent: {
-    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-    WebkitBackgroundClip: 'text',
-    backgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
+    color: 'var(--accent-clinical)',
   },
   featuresGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', alignItems: 'start' },
   featureCard: { padding: '32px', background: 'var(--bg-card)', borderRadius: '24px' },
   featureCardHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
-  featureIcon: { width: '52px', height: '52px', borderRadius: '50%', border: '1.5px solid rgba(37, 99, 235, 0.25)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 0, flexShrink: 0, transition: 'all 0.25s ease' },
+  featureIcon: { width: '52px', height: '52px', borderRadius: '50%', border: '1.5px solid var(--accent-clinical-soft)', background: 'var(--accent-clinical-soft)', color: 'var(--accent-clinical)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 0, flexShrink: 0, transition: 'all 0.25s ease' },
   featureTitle: { fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' },
   featureTag: { fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, marginBottom: '12px' },
   featureDesc: { fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 },
@@ -992,18 +1039,18 @@ const styles: Record<string, React.CSSProperties> = {
   ctaButton: { display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 32px', background: 'white', color: '#2563eb', border: 'none', borderRadius: '9999px', cursor: 'pointer', fontSize: '16px', fontWeight: 600, marginTop: '24px', transition: 'all 0.25s ease' },
   howItWorksSection: { padding: '60px 24px', background: 'var(--bg-secondary)' },
   animatedGradientBg: {
-    background: 'linear-gradient(-45deg, rgba(37,99,235,0.04), rgba(79,70,229,0.04), rgba(124,58,237,0.04), rgba(37,99,235,0.04))',
+    background: 'linear-gradient(-45deg, var(--accent-clinical-soft), rgba(79,70,229,0.04), var(--accent-clinical-soft))',
     backgroundSize: '400% 400%',
     animation: 'gradientShift 20s ease infinite',
   },
   stepsContainer: { maxWidth: '1000px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' as const },
   stepCard: { flex: 1, textAlign: 'center' as const, padding: '32px 24px', background: 'var(--bg-card)', borderRadius: '24px', position: 'relative' as const, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', border: '1px solid var(--border-color)', cursor: 'pointer', boxShadow: 'var(--card-shadow)' },
-  stepCardExpanded: { transform: 'scale(1.02)', boxShadow: '0 0 0 3px #3b82f6, 0 20px 40px -10px rgba(0,0,0,0.25)', borderColor: '#3b82f6' },
-  stepNumber: { position: 'absolute' as const, top: '-12px', left: '20px', fontSize: '48px', fontWeight: 800, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', opacity: 0.3 },
+  stepCardExpanded: { transform: 'scale(1.02)', boxShadow: '0 0 0 3px var(--accent-clinical-soft), 0 20px 40px -10px rgba(0,0,0,0.25)', borderColor: 'var(--accent-clinical)' },
+  stepNumber: { position: 'absolute' as const, top: '-12px', left: '20px', fontSize: '48px', fontWeight: 800, color: 'var(--accent-clinical)', opacity: 0.2 },
   stepIcon: { fontSize: '48px', marginBottom: '16px' },
   stepTitle: { fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary)' },
   stepDescription: { fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.5 },
-  stepArrow: { fontSize: '32px', color: '#3b82f6', opacity: 0.7 },
+  stepArrow: { fontSize: '32px', color: 'var(--accent-clinical)', opacity: 0.7 },
   stepDetails: { marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-color)', animation: 'fadeInUp 0.3s ease-out', background: 'var(--badge-bg)', borderRadius: '12px', padding: '16px' },
   stepDetailItem: { padding: '8px 0', fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px dashed var(--border-light)' },
   testimonialsSection: { padding: '60px 24px', maxWidth: '1200px', margin: '0 auto' },
@@ -1011,5 +1058,5 @@ const styles: Record<string, React.CSSProperties> = {
   testimonialCard: { padding: '28px', background: 'var(--bg-card)', borderRadius: '24px', border: '1px solid var(--border-color)' },
   testimonialStars: { fontSize: '20px', color: '#f59e0b', marginBottom: '16px' },
   testimonialAuthor: { display: 'flex', alignItems: 'center', gap: '12px', marginTop: '20px' },
-  testimonialAvatar: { width: '48px', height: '48px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 600, color: 'white' },
+  testimonialAvatar: { width: '48px', height: '48px', background: 'var(--accent-clinical)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 600, color: 'white' },
 };

@@ -146,7 +146,7 @@ export default function VoiceEnrollmentModal({ onClose, userId }: Props) {
       <div style={styles.modal}>
         <div style={styles.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Mic size={22} color="#3b82f6" />
+            <Mic size={22} color="var(--accent-clinical)" />
             <h3 style={styles.title}>Voice Biometrics Enrollment</h3>
           </div>
           <button onClick={onClose} style={styles.closeButton}>
@@ -278,12 +278,12 @@ const styles = {
     background: 'var(--bg-secondary)',
     padding: '16px',
     borderRadius: '12px',
-    border: '1px dashed #3b82f6',
+    border: '1px dashed var(--accent-clinical)',
     textAlign: 'center' as const,
   },
   passphraseLabel: {
     fontSize: '12px',
-    color: '#3b82f6',
+    color: 'var(--accent-clinical)',
     fontWeight: 600,
   },
   passphraseText: {
@@ -307,7 +307,7 @@ const styles = {
     justifyContent: 'center',
   },
   recordButton: {
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     padding: '12px 24px',
@@ -316,7 +316,7 @@ const styles = {
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
+    boxShadow: '0 4px 12px var(--accent-clinical-soft)',
   },
   stopButton: {
     background: '#dc2626',

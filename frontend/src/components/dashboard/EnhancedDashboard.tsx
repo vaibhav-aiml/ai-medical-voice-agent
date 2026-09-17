@@ -231,9 +231,15 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
       </div>
 
       {}
-      <div style={styles.statsGrid}>
-        <div style={styles.statCard}>
-          <div style={styles.statIcon}><Calendar size={24} color="#3b82f6" /></div>
+      <div style={{ ...styles.statsGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)' }}>
+        <div
+          style={{
+            ...styles.statCard,
+            borderRight: isMobile ? 'none' : isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
+            borderBottom: isMobile ? '1px solid var(--border-color)' : isTablet ? '1px solid var(--border-color)' : 'none',
+          }}
+        >
+          <div style={styles.statIcon}><Calendar size={24} /></div>
           <div>
             <div style={styles.statValue}>{filteredConsultations.length}</div>
             <div style={styles.statLabel}>Consultations</div>
@@ -242,22 +248,40 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
             {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {Math.abs(trend.percentage)}%
           </div>
         </div>
-        <div style={styles.statCard}>
-          <div style={styles.statIcon}><Star size={24} color="#f59e0b" /></div>
+        <div
+          style={{
+            ...styles.statCard,
+            borderRight: isMobile ? 'none' : isTablet ? 'none' : '1px solid var(--border-color)',
+            borderBottom: isMobile ? '1px solid var(--border-color)' : isTablet ? '1px solid var(--border-color)' : 'none',
+          }}
+        >
+          <div style={styles.statIcon}><Star size={24} /></div>
           <div>
             <div style={styles.statValue}>{avgRating.toFixed(1)}</div>
             <div style={styles.statLabel}>Avg Rating</div>
           </div>
         </div>
-        <div style={styles.statCard}>
-          <div style={styles.statIcon}><Clock size={24} color="#10b981" /></div>
+        <div
+          style={{
+            ...styles.statCard,
+            borderRight: isMobile ? 'none' : isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
+            borderBottom: isMobile ? '1px solid var(--border-color)' : 'none',
+          }}
+        >
+          <div style={styles.statIcon}><Clock size={24} /></div>
           <div>
             <div style={styles.statValue}>{avgDuration}</div>
             <div style={styles.statLabel}>Avg Duration (min)</div>
           </div>
         </div>
-        <div style={styles.statCard}>
-          <div style={styles.statIcon}><Activity size={24} color="#8b5cf6" /></div>
+        <div
+          style={{
+            ...styles.statCard,
+            borderRight: 'none',
+            borderBottom: 'none',
+          }}
+        >
+          <div style={styles.statIcon}><Activity size={24} /></div>
           <div>
             <div style={styles.statValue}>{totalMinutes}</div>
             <div style={styles.statLabel}>Total Minutes</div>
@@ -298,7 +322,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
         <h3 style={styles.insightsTitle}>📈 Health Insights</h3>
         <div style={styles.insightsGrid}>
           <div style={styles.insightItem}>
-            <TrendingUp size={20} color="#10b981" />
+            <TrendingUp size={20} color="var(--accent-clinical)" />
             <div>
               <div style={styles.insightTitle}>Most Active Day</div>
               <div style={styles.insightValue}>
@@ -311,7 +335,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
             </div>
           </div>
           <div style={styles.insightItem}>
-            <Brain size={20} color="#8b5cf6" />
+            <Brain size={20} color="var(--accent-clinical)" />
             <div>
               <div style={styles.insightTitle}>Most Used Specialist</div>
               <div style={styles.insightValue}>
@@ -324,7 +348,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
             </div>
           </div>
           <div style={styles.insightItem}>
-            <Heart size={20} color="#ef4444" />
+            <Heart size={20} color="var(--accent-clinical)" />
             <div>
               <div style={styles.insightTitle}>Best Rated Specialist</div>
               <div style={styles.insightValue}>
@@ -351,7 +375,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
             </div>
           </div>
           <div style={styles.insightItem}>
-            <Award size={20} color="#f59e0b" />
+            <Award size={20} color="var(--accent-clinical)" />
             <div>
               <div style={styles.insightTitle}>Total Consultations</div>
               <div style={styles.insightValue}>{stats.totalConsultations}</div>
@@ -380,7 +404,7 @@ const styles = {
     width: '40px',
     height: '40px',
     border: '3px solid var(--border-color)',
-    borderTopColor: '#3b82f6',
+    borderTopColor: 'var(--accent-clinical)',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
@@ -401,34 +425,36 @@ const styles = {
     transition: 'all 0.2s',
   },
   rangeActive: {
-    background: '#3b82f6',
+    background: 'var(--accent-clinical)',
     color: 'white',
-    borderColor: '#3b82f6',
+    borderColor: 'var(--accent-clinical)',
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '16px',
     marginBottom: '24px',
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
+    border: '1px solid var(--border-color)',
+    boxShadow: 'var(--card-shadow)',
+    overflow: 'hidden',
   },
   statCard: {
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
     padding: '20px',
-    background: 'var(--bg-card)',
-    borderRadius: '16px',
-    border: '1px solid var(--border-color)',
     position: 'relative' as const,
   },
   statIcon: {
     width: '48px',
     height: '48px',
-    background: 'rgba(59, 130, 246, 0.1)',
-    borderRadius: '12px',
+    borderRadius: '50%',
+    border: '1.5px solid var(--accent-clinical-soft)',
+    color: 'var(--accent-clinical)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   statValue: {
     fontSize: '28px',

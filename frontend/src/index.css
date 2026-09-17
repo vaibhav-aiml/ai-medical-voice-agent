@@ -13,8 +13,8 @@
   --border-light: #f1f5f9;
   --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
   --card-shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.12);
-  --button-primary: #2563eb;
-  --button-primary-hover: #1d4ed8;
+  --button-primary: var(--accent-clinical);
+  --button-primary-hover: #24544a;
   --button-danger: #ef4444;
   --button-success: #10b981;
   --input-bg: #ffffff;
@@ -38,16 +38,16 @@
   --radial-opacity-2: 0.02;
   --scrollbar-track: #e2e8f0;
   --scrollbar-thumb: #94a3b8;
-  --scrollbar-thumb-hover: #2563eb;
-  --gradient-start: #2563eb;
+  --scrollbar-thumb-hover: var(--accent-clinical);
+  --gradient-start: var(--accent-clinical);
   --gradient-end: #7c3aed;
   --hero-bg: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #ede9fe 100%);
   --radius: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-full: 9999px;
-  --accent-clinical: #2563eb;
-  --accent-clinical-soft: rgba(37, 99, 235, 0.08);
+  --accent-clinical: #2E6B5E;
+  --accent-clinical-soft: rgba(46, 107, 94, 0.08);
   --accent-urgent: #8B4A3C;          /* muted brick/rust — reserve for genuine emphasis only, not decoration */
   --font-serif: 'Newsreader', Georgia, serif;
 }
@@ -63,8 +63,8 @@
   --border-light: #1e293b;
   --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
   --card-shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.5);
-  --button-primary: #3b82f6;
-  --button-primary-hover: #60a5fa;
+  --button-primary: var(--accent-clinical);
+  --button-primary-hover: #72baa2;
   --button-danger: #ef4444;
   --button-success: #10b981;
   --input-bg: #0f172a;
@@ -78,7 +78,7 @@
   --status-cancelled-bg: #7f1d1d;
   --status-cancelled-text: #f87171;
   --status-scheduled-bg: #1e3a5f;
-  --status-scheduled-text: #60a5fa;
+  --status-scheduled-text: var(--accent-clinical);
   --status-in-progress-bg: #78350f;
   --status-in-progress-text: #fbbf24;
   --skeleton-start: #1e293b;
@@ -88,13 +88,13 @@
   --radial-opacity-2: 0.03;
   --scrollbar-track: #334155;
   --scrollbar-thumb: #64748b;
-  --scrollbar-thumb-hover: #3b82f6;
-  --gradient-start: #3b82f6;
+  --scrollbar-thumb-hover: var(--accent-clinical);
+  --gradient-start: var(--accent-clinical);
   --gradient-end: #8b5cf6;
   --hero-bg: linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #1e1b4b 100%);
   --card-shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.5);
-  --accent-clinical: #60a5fa;
-  --accent-clinical-soft: rgba(96, 165, 250, 0.12);
+  --accent-clinical: #5FA88F;
+  --accent-clinical-soft: rgba(95, 168, 143, 0.12);
   --accent-urgent: #C97B68;
 }
 
@@ -255,7 +255,7 @@ body::after {
   flex-shrink: 0;
 }
 
-.stat-icon-blue { background: rgba(37, 99, 235, 0.12); color: #2563eb; }
+.stat-icon-blue { background: var(--accent-clinical-soft); color: var(--accent-clinical); }
 .stat-icon-green { background: rgba(16, 185, 129, 0.12); color: #10b981; }
 .stat-icon-purple { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
 .stat-icon-orange { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
@@ -523,21 +523,12 @@ html[lang="te"] .small-text { line-height: 1.6; }
 
 /* === Visual Enhancement Keyframes === */
 
-@keyframes floatSlow {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
 @keyframes gradientShift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-@keyframes heroWaveformPulse {
-  0%, 100% { opacity: 0.06; transform: scaleX(1); }
-  50% { opacity: 0.09; transform: scaleX(1.05); }
-}
 
 /* === Stats Strip & Feature Cards Hover Interactions === */
 .stat-cell {
@@ -742,5 +733,370 @@ html[lang="te"] .small-text { line-height: 1.6; }
     max-height: none !important;
     opacity: 1 !important;
     visibility: visible !important;
+  }
+}
+
+/* ==========================================================================
+   Responsive System Foundation (Phase 0)
+   ========================================================================== */
+
+/* Page Shell - Responsive outer container wrapper */
+.page-shell {
+  width: 100%;
+  max-width: 1200px;
+  margin: 32px auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .page-shell {
+    margin: 16px auto !important;
+    padding: 0 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-shell {
+    margin: 12px auto !important;
+    padding: 0 12px !important;
+  }
+}
+
+/* Page Card - Responsive card container */
+.page-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: var(--card-shadow);
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .page-card {
+    padding: 20px 16px !important;
+    border-radius: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-card {
+    padding: 16px 12px !important;
+    border-radius: 14px !important;
+  }
+}
+
+/* Responsive Typography */
+.responsive-heading {
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .responsive-heading {
+    font-size: 22px !important;
+    line-height: 1.3 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-heading {
+    font-size: 20px !important;
+    line-height: 1.35 !important;
+  }
+}
+
+.responsive-subheading {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .responsive-subheading {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-subheading {
+    font-size: 13px !important;
+  }
+}
+
+/* Responsive Auto Grid */
+.responsive-grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .responsive-grid-auto {
+    gap: 12px !important;
+  }
+}
+
+/* Content & Static Pages Responsive System */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 48px 16px !important;
+  }
+  .hero-section h1 {
+    font-size: 32px !important;
+    line-height: 1.2 !important;
+  }
+  .hero-section p {
+    font-size: 15px !important;
+  }
+  .cookie-card,
+  .value-card,
+  .policy-card {
+    padding: 20px 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 36px 12px !important;
+  }
+  .hero-section h1 {
+    font-size: 26px !important;
+    line-height: 1.25 !important;
+  }
+  .hero-section p {
+    font-size: 14px !important;
+  }
+  .cookie-card,
+  .value-card,
+  .policy-card {
+    padding: 16px 12px !important;
+    border-radius: 12px !important;
+  }
+}
+
+/* ==========================================================================
+   Mobile Carousel System (Phase 1 Foundation)
+   ========================================================================== */
+
+/* Carousel Container */
+.mobile-carousel-container {
+  width: 100%;
+  position: relative;
+}
+
+/* Carousel Track — horizontal scroll-snap */
+.mobile-carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 16px;
+  padding: 4px 16px 16px;
+}
+
+.mobile-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual Slide */
+.mobile-carousel-slide {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* Dot Pagination */
+.mobile-carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0 4px;
+}
+
+.mobile-carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-color);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.mobile-carousel-dot.active {
+  width: 24px;
+  border-radius: 9999px;
+  background: var(--accent-clinical);
+}
+
+/* ==========================================================================
+   Compact 2×2 Grid for Mobile
+   ========================================================================== */
+.mobile-grid-2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* ==========================================================================
+   Mobile Action Button Row (horizontal scroll)
+   ========================================================================== */
+.mobile-action-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.mobile-action-row::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-action-row > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Legal/Policy Pages — Tighter Mobile Spacing (Phase 5)
+   ========================================================================== */
+@media (max-width: 600px) {
+  .terms-content, .policy-content, .cookie-content, .hipaa-content {
+    gap: 16px !important;
+    margin-bottom: 40px !important;
+  }
+
+  .terms-card, .policy-card, .cookie-card, .hipaa-card {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .terms-card h2, .policy-card h2, .cookie-card h2, .hipaa-card h2 {
+    font-size: 20px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .terms-card p, .policy-card p, .cookie-card p, .hipaa-card p {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+  }
+
+  .terms-list, .policy-list, .cookie-list, .hipaa-list {
+    font-size: 14px !important;
+  }
+
+  .contact-cta-section {
+    padding: 40px 16px !important;
+  }
+
+  .contact-cta-section h2 {
+    font-size: 24px !important;
+  }
+
+  .contact-cta-section p {
+    font-size: 15px !important;
+  }
+
+  /* Contact Us — 2×2 info grid on mobile */
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .info-card {
+    padding: 16px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .info-card h3 {
+    font-size: 15px !important;
+  }
+
+  .info-card p {
+    font-size: 13px !important;
+  }
+
+  .info-icon {
+    width: 44px !important;
+    height: 44px !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* About Us — tighter team cards & values */
+  .team-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .team-card {
+    padding: 20px !important;
+  }
+
+  .team-icon {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 28px !important;
+  }
+
+  .values-grid {
+    /* Will be replaced by carousel on mobile, but fallback */
+    gap: 12px !important;
+  }
+
+  .value-card {
+    padding: 20px 16px !important;
+  }
+
+  /* Story/Mission/Team/Values section padding */
+  .story-section,
+  .mission-section,
+  .team-section,
+  .values-section {
+    padding: 40px 16px !important;
+  }
+
+  /* Voice Consultation — compact title */
+  .voice-consultation-title {
+    font-size: 28px !important;
+  }
+}
+
+/* ==========================================================================
+   App Shell — Bottom-Sheet Modals on Mobile (Phase 6)
+   ========================================================================== */
+@media (max-width: 600px) {
+  .app-modal-overlay {
+    align-items: flex-end !important;
+  }
+
+  .app-modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    margin: 0 !important;
+  }
+
+  .app-page-nav {
+    padding: 8px 12px !important;
+    gap: 12px !important;
+  }
+
+  .app-page-nav-title {
+    font-size: 15px !important;
   }
 }

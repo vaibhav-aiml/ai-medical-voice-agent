@@ -415,7 +415,7 @@ const styles = {
   ctaSection: {
     margin: '40px 24px 60px',
     padding: '60px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    background: 'linear-gradient(135deg, var(--accent-clinical), var(--text-primary))',
     borderRadius: '32px',
     textAlign: 'center' as const,
   },

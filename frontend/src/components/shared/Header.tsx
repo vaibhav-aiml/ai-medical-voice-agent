@@ -358,6 +358,7 @@ export default function Header({
             opacity: isMobileMenuOpen ? 1 : 0,
             padding: isMobileMenuOpen ? '8px 0' : '0',
             borderTop: isMobileMenuOpen ? '1px solid var(--border-color)' : 'none',
+            overflowY: isMobileMenuOpen ? 'auto' : 'hidden',
           }}
           role="navigation"
           aria-label="Mobile navigation"
@@ -365,6 +366,7 @@ export default function Header({
           {allMobileItems.map((item, idx) => (
             <button
               key={idx}
+              className="mobile-menu-item"
               onClick={() => handleMobileNavClick(item.onClick)}
               style={styles.mobileMenuItem}
               tabIndex={isMobileMenuOpen ? 0 : -1}
@@ -414,24 +416,21 @@ const styles = {
   logoIcon: {
     width: '36px',
     height: '36px',
-    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+    background: 'var(--accent-clinical)',
     borderRadius: '10px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     color: 'white',
     flexShrink: 0,
-    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+    boxShadow: '0 4px 12px var(--accent-clinical-soft)',
   },
   
   logo: {
     fontSize: '1.25rem',
     fontWeight: 700,
     margin: 0,
-    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-    WebkitBackgroundClip: 'text',
-    backgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
+    color: 'var(--accent-clinical)',
     letterSpacing: '-0.02em',
     whiteSpace: 'nowrap' as const,
   },
@@ -610,7 +609,7 @@ const styles = {
     alignItems: 'center',
     gap: '4px',
     padding: '6px 14px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -618,7 +617,7 @@ const styles = {
     fontSize: '0.75rem',
     fontWeight: 500,
     transition: 'all 0.2s ease',
-    boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)',
+    boxShadow: '0 0 8px var(--accent-clinical-soft)',
   },
   dropdownContainer: {
     position: 'relative' as const,
@@ -741,6 +740,11 @@ hoverStyles.textContent = `
     background: var(--badge-bg);
     border-color: var(--text-secondary);
     transform: translateY(-1px);
+  }
+
+  /* Mobile menu item hover */
+  .mobile-menu-item:hover {
+    background: var(--badge-bg) !important;
   }
 `;
 document.head.appendChild(hoverStyles);

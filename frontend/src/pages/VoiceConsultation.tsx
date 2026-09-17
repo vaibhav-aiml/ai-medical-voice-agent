@@ -1,22 +1,45 @@
 import { Mic, Headphones, Clock, CheckCircle, ArrowRight } from 'lucide-react';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import MobileCarousel from '../components/shared/MobileCarousel';
 
 export default function VoiceConsultation() {
   const { isMobile, isTablet } = useBreakpoint();
   return (
-    <div style={styles.container}>
-      <div style={styles.hero}>
+    <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <div style={{...styles.hero, ...(isMobile ? { marginBottom: '24px' } : {})}}>
         <div style={styles.heroIcon}>
-          <Mic size={48} color="#3b82f6" />
+          <Mic size={isMobile ? 36 : 48} color="var(--accent-clinical)" />
         </div>
-        <h1 style={styles.title}>Voice <span style={styles.accent}>Consultation</span></h1>
-        <p style={styles.subtitle}>Speak naturally. Get instant AI responses.</p>
+        <h1 style={{...styles.title, ...(isMobile ? { fontSize: '28px' } : {})}}>Voice <span style={styles.accent}>Consultation</span></h1>
+        <p style={{...styles.subtitle, ...(isMobile ? { fontSize: '15px' } : {})}}>Speak naturally. Get instant AI responses.</p>
       </div>
 
       <div style={styles.content}>
-        <section style={styles.section}>
+        <section style={{...styles.section, ...(isMobile ? { padding: '20px 16px' } : {})}}>
           <h2>How It Works</h2>
-          <div style={{...styles.steps, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
+          {isMobile ? (
+            <MobileCarousel peekWidth={85} gap={12}>
+              <div style={styles.step}>
+                <div style={{ fontSize: '11px', color: 'var(--accent-clinical)', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase' as const }}>Step 1 of 3</div>
+                <div style={styles.stepNumber}>1</div>
+                <h3>Click "Start Speaking"</h3>
+                <p>Allow microphone access and start speaking your symptoms naturally</p>
+              </div>
+              <div style={styles.step}>
+                <div style={{ fontSize: '11px', color: 'var(--accent-clinical)', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase' as const }}>Step 2 of 3</div>
+                <div style={styles.stepNumber}>2</div>
+                <h3>AI Listens & Transcribes</h3>
+                <p>Our AI converts your speech to text in real-time</p>
+              </div>
+              <div style={styles.step}>
+                <div style={{ fontSize: '11px', color: 'var(--accent-clinical)', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase' as const }}>Step 3 of 3</div>
+                <div style={styles.stepNumber}>3</div>
+                <h3>Get AI Response</h3>
+                <p>Receive personalized medical advice from our AI doctor</p>
+              </div>
+            </MobileCarousel>
+          ) : (
+            <div style={{...styles.steps, gridTemplateColumns: isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
             <div style={styles.step}>
               <div style={styles.stepNumber}>1</div>
               <h3>Click "Start Speaking"</h3>
@@ -33,11 +56,12 @@ export default function VoiceConsultation() {
               <p>Receive personalized medical advice from our AI doctor</p>
             </div>
           </div>
+          )}
         </section>
 
-        <section style={styles.section}>
+        <section style={{...styles.section, ...(isMobile ? { padding: '20px 16px' } : {})}}>
           <h2>Benefits</h2>
-          <div style={{...styles.benefits, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)'}}>
+          <div style={{...styles.benefits, gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)', ...(isMobile ? { gap: '12px' } : {})}}>
             <div style={styles.benefit}>
               <Headphones size={24} color="#3b82f6" />
               <div>
@@ -62,7 +86,7 @@ export default function VoiceConsultation() {
           </div>
         </section>
 
-        <section style={styles.section}>
+        <section style={{...styles.section, ...(isMobile ? { padding: '20px 16px' } : {})}}>
           <h2>Frequently Asked Questions</h2>
           <div style={styles.faq}>
             <div style={styles.faqItem}>
@@ -104,7 +128,7 @@ const styles = {
     marginBottom: '16px',
   },
   accent: {
-    color: '#3b82f6',
+    color: 'var(--accent-clinical)',
   },
   subtitle: {
     fontSize: '18px',

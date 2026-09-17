@@ -380,7 +380,7 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     padding: '20px 24px',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    background: 'var(--accent-clinical)',
     color: 'white',
     position: 'sticky' as const,
     top: 0,
@@ -527,7 +527,7 @@ const styles = {
   },
   progressFill: {
     height: '100%',
-    background: 'linear-gradient(90deg, #3b82f6, #2563eb)',
+    background: 'var(--accent-clinical)',
     borderRadius: '4px',
   },
   specialistList: {

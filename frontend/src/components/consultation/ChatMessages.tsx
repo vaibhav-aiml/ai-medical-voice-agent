@@ -210,7 +210,7 @@ export default function ChatMessages({
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: message.type === 'user' ? '#f3f4f6' : '#60a5fa',
+                        color: message.type === 'user' ? '#f3f4f6' : 'var(--accent-clinical)',
                         cursor: 'pointer',
                         fontSize: '11px',
                         padding: '4px 0 0 0',
