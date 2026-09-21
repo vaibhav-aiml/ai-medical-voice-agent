@@ -147,18 +147,20 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       pendingFollowUps: consultList.filter(c => c.status === 'completed').length,
     });
   }, []);
-  useEffect(() => {
-    if (!userId) return;
+  const effectiveUserId = userId || (import.meta.env.DEV ? 'dev_user_preview' : '');
 
-    logger.info('consultations_load_start', { userId });
-    const cachedData = consultationService.getCachedConsultations(userId);
+  useEffect(() => {
+    if (!effectiveUserId) return;
+
+    logger.info('consultations_load_start', { userId: effectiveUserId });
+    const cachedData = consultationService.getCachedConsultations(effectiveUserId);
     if (cachedData.length > 0) {
       setConsultations(cachedData as unknown as ConsultationSession[]);
       updateStats(cachedData as unknown as ConsultationSession[]);
       setConsultationsLoading(false); 
       logger.info('consultations_loaded_from_cache', { count: cachedData.length });
     }
-    consultationService.getUserConsultations(userId)
+    consultationService.getUserConsultations(effectiveUserId)
       .then(data => {
         if (data && data.length > 0) {
           setConsultations(data as unknown as ConsultationSession[]);
@@ -172,9 +174,10 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
               specialistType: 'general',
               specialistName: 'Dr. Sarah Wilson',
               status: 'completed',
-              startedAt: new Date('2024-03-15T10:30:00'),
-              endedAt: new Date('2024-03-15T10:45:00'),
+              startedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+              endedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 15 * 60 * 1000),
               duration: 15,
+              rating: 5,
               symptoms: 'Headache and fever for 2 days',
               notes: 'Recommended rest and hydration',
             },
@@ -183,15 +186,28 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
               specialistType: 'orthopedic',
               specialistName: 'Dr. James Chen',
               status: 'completed',
-              startedAt: new Date('2024-03-10T14:00:00'),
-              endedAt: new Date('2024-03-10T14:20:00'),
+              startedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+              endedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000 + 20 * 60 * 1000),
               duration: 20,
+              rating: 4,
               symptoms: 'Lower back pain when sitting',
               notes: 'Suggested posture correction exercises',
             },
+            {
+              id: '3',
+              specialistType: 'cardiologist',
+              specialistName: 'Dr. Emily Williams',
+              status: 'completed',
+              startedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+              endedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000 + 25 * 60 * 1000),
+              duration: 25,
+              rating: 5,
+              symptoms: 'Routine checkup and blood pressure monitoring',
+              notes: 'Normal readings',
+            },
           ];
           setConsultations(mockConsultations);
-          cacheService.set(`consultations_${userId}`, mockConsultations, 30 * 60 * 1000);
+          cacheService.set(`consultations_${effectiveUserId}`, mockConsultations, 30 * 60 * 1000);
           updateStats(mockConsultations);
         }
       })
@@ -201,14 +217,52 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
         });
         
         if (cachedData.length === 0) {
-          setConsultations([]);
-          updateStats([]);
+          const mockConsultations: ConsultationSession[] = [
+            {
+              id: '1',
+              specialistType: 'general',
+              specialistName: 'Dr. Sarah Wilson',
+              status: 'completed',
+              startedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+              endedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 15 * 60 * 1000),
+              duration: 15,
+              rating: 5,
+              symptoms: 'Headache and fever for 2 days',
+              notes: 'Recommended rest and hydration',
+            },
+            {
+              id: '2',
+              specialistType: 'orthopedic',
+              specialistName: 'Dr. James Chen',
+              status: 'completed',
+              startedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+              endedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000 + 20 * 60 * 1000),
+              duration: 20,
+              rating: 4,
+              symptoms: 'Lower back pain when sitting',
+              notes: 'Suggested posture correction exercises',
+            },
+            {
+              id: '3',
+              specialistType: 'cardiologist',
+              specialistName: 'Dr. Emily Williams',
+              status: 'completed',
+              startedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+              endedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000 + 25 * 60 * 1000),
+              duration: 25,
+              rating: 5,
+              symptoms: 'Routine checkup and blood pressure monitoring',
+              notes: 'Normal readings',
+            },
+          ];
+          setConsultations(mockConsultations);
+          updateStats(mockConsultations);
         }
       })
       .finally(() => {
         setConsultationsLoading(false);
       });
-  }, [userId, refreshKey, updateStats]);
+  }, [effectiveUserId, refreshKey, updateStats]);
   const generateUUID = () => {
     if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
       return window.crypto.randomUUID();

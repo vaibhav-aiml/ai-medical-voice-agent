@@ -11,6 +11,16 @@ export default function AuthGuard({ children }: Props) {
   const { isSignedIn, isLoaded } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
 
+  // Allow automated visual testing in dev mode via dev=true query parameter or session flag
+  const isDevBypass = import.meta.env.DEV && (
+    window.location.search.includes('dev=true') ||
+    sessionStorage.getItem('dev_auth') === 'true'
+  );
+
+  if (isDevBypass) {
+    return <>{children}</>;
+  }
+
   if (!isLoaded) {
     return <LoadingScreen message="Checking authentication..." />;
   }

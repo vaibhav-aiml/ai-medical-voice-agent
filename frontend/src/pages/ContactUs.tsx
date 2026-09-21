@@ -380,6 +380,57 @@ export default function ContactUs() {
             padding: 24px;
           }
         }
+
+        @media (max-width: 600px) {
+          .hero-section {
+            padding: 48px 16px !important;
+          }
+          .hero-section h1 {
+            font-size: 28px !important;
+            margin-bottom: 12px !important;
+          }
+          .hero-section p {
+            font-size: 15px !important;
+          }
+          .info-column h2, .form-column h2, .map-section h2 {
+            font-size: 22px !important;
+            margin-bottom: 16px !important;
+          }
+          .info-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+          }
+          .info-card {
+            padding: 16px 12px !important;
+            border-radius: 14px !important;
+          }
+          .info-icon {
+            width: 44px !important;
+            height: 44px !important;
+            margin-bottom: 12px !important;
+          }
+          .form-card {
+            padding: 18px 14px !important;
+            border-radius: 16px !important;
+          }
+          .contact-form input, .contact-form textarea {
+            font-size: 16px !important;
+            min-height: 48px !important;
+            padding: 12px 14px !important;
+          }
+          .contact-form textarea {
+            min-height: 100px !important;
+          }
+          .submit-button {
+            width: 100% !important;
+            min-height: 48px !important;
+            font-size: 16px !important;
+          }
+          .map-card {
+            padding: 32px 16px !important;
+            border-radius: 16px !important;
+          }
+        }
       `}</style>
     </div>
   );

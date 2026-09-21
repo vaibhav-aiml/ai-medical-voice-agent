@@ -7,14 +7,15 @@ export default function RemindersPage() {
   const ctx = useConsultation() as any;
 
   return (
-    <Suspense fallback={null}>
-      <MedicationReminder
-        userId={ctx.getCurrentUserId()}
-        onClose={() => {
-          
-          window.history.back();
-        }}
-      />
-    </Suspense>
+    <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <Suspense fallback={null}>
+        <MedicationReminder
+          userId={ctx.getCurrentUserId()}
+          onClose={() => {
+            window.history.back();
+          }}
+        />
+      </Suspense>
+    </div>
   );
 }

@@ -156,7 +156,14 @@ function AppContent() {
       {showSymptomChecker && (
         <div className="app-modal-overlay" style={styles.modalOverlay}>
           <div className="app-modal-content" style={styles.modalContent}>
-            <button onClick={() => setShowSymptomChecker(false)} style={styles.modalClose}><X size={18} /></button>
+            <button
+              onClick={() => setShowSymptomChecker(false)}
+              className="app-modal-close"
+              style={styles.modalClose}
+              aria-label="Close Symptom Checker"
+            >
+              <X size={18} />
+            </button>
             <Suspense fallback={<div>Loading...</div>}>
               <SymptomChecker onClose={() => setShowSymptomChecker(false)} />
             </Suspense>
@@ -294,7 +301,14 @@ function AppContent() {
       {showAppointmentsList && (
         <div className="app-modal-overlay" style={styles.modalOverlay}>
           <div className="app-modal-content" style={styles.modalContent}>
-            <button onClick={() => setShowAppointmentsList(false)} style={styles.modalClose}><X size={18} /></button>
+            <button
+              onClick={() => setShowAppointmentsList(false)}
+              className="app-modal-close"
+              style={styles.modalClose}
+              aria-label="Close Appointments List"
+            >
+              <X size={18} />
+            </button>
             <Suspense fallback={<div>Loading...</div>}>
               <MyAppointments />
             </Suspense>
@@ -362,6 +376,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '8px',
     padding: '8px 16px',
+    minHeight: '44px',
     background: 'transparent',
     border: 'none',
     borderRadius: '8px',

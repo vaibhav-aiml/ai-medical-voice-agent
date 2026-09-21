@@ -394,7 +394,10 @@ export default function HomePage() {
       <div style={styles.homeContainer}>
         {/* --- Hero with background image + parallax --- */}
         <div
-          style={styles.heroWrapper}
+          style={{
+            ...styles.heroWrapper,
+            ...(isMobile ? { margin: '0 12px 24px' } : {})
+          }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >
@@ -463,21 +466,46 @@ export default function HomePage() {
             </button>
           )}
 
-        <div style={{...styles.heroSection, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
+        <div style={{
+          ...styles.heroSection,
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          ...(isMobile ? { padding: '32px 16px', gap: '28px' } : {})
+        }}>
           <div style={styles.heroContent}>
-            <h1 style={styles.heroTitle}>
+            <h1 style={{
+              ...styles.heroTitle,
+              ...(isMobile ? { fontSize: '28px', lineHeight: 1.2, marginBottom: '12px' } : {})
+            }}>
               {t('home.yourHealth')}<br />
               <span style={{ color: 'var(--accent-clinical)' }}>{t('home.ourPriority')}</span>
             </h1>
-            <p style={styles.heroSubtitle}>
+            <p style={{
+              ...styles.heroSubtitle,
+              ...(isMobile ? { fontSize: '15px', lineHeight: 1.6, marginBottom: '24px' } : {})
+            }}>
               {t('home.subtitle')}
             </p>
-            <div style={styles.heroButtons}>
-              <button onClick={() => navigate('/consultation')} style={styles.primaryButton}>
+            <div style={{
+              ...styles.heroButtons,
+              ...(isMobile ? { flexDirection: 'column', gap: '12px', width: '100%' } : {})
+            }}>
+              <button
+                onClick={() => navigate('/consultation')}
+                style={{
+                  ...styles.primaryButton,
+                  ...(isMobile ? { width: '100%', justifyContent: 'center', minHeight: '48px', padding: '14px 20px' } : {})
+                }}
+              >
                 {t('home.startConsultation')}
                 <ArrowRight size={18} />
               </button>
-              <button onClick={() => setShowEnhancedSymptomChecker(true)} style={styles.secondaryButton}>
+              <button
+                onClick={() => setShowEnhancedSymptomChecker(true)}
+                style={{
+                  ...styles.secondaryButton,
+                  ...(isMobile ? { width: '100%', justifyContent: 'center', minHeight: '48px', padding: '14px 20px' } : {})
+                }}
+              >
                 {t('home.checkSymptoms')}
               </button>
             </div>
@@ -506,6 +534,7 @@ export default function HomePage() {
           ref={statsRef}
           style={{
             ...styles.statsSection,
+            ...(isMobile ? { padding: '24px 12px' } : {}),
             opacity: statsVisible ? 1 : 0,
             transform: statsVisible ? 'translateY(0)' : 'translateY(24px)',
             transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -570,16 +599,26 @@ export default function HomePage() {
           ref={featuresRef}
           style={{
             ...styles.featuresSection,
+            ...(isMobile ? { padding: '40px 16px' } : {}),
             opacity: featuresVisible ? 1 : 0,
             transform: featuresVisible ? 'translateY(0)' : 'translateY(24px)',
             transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <div style={styles.sectionHeader}>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '36px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>
+          <div style={{
+            ...styles.sectionHeader,
+            ...(isMobile ? { marginBottom: '24px' } : {})
+          }}>
+            <h2 style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: isMobile ? '26px' : '36px',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              marginBottom: '12px'
+            }}>
               {t('home.whyChoose')} <span style={styles.sectionHeaderAccent}>{t('home.mediVoiceAI')}</span>
             </h2>
-            <p>{t('home.featureDesc')}</p>
+            <p style={isMobile ? { fontSize: '14px' } : {}}>{t('home.featureDesc')}</p>
           </div>
           {isMobile ? (
             <MobileCarousel peekWidth={88} gap={16}>
@@ -624,6 +663,7 @@ export default function HomePage() {
           ref={howItWorksRef}
           style={{
             ...styles.howItWorksSection,
+            ...(isMobile ? { padding: '40px 16px' } : {}),
             background: prefersReducedMotion
               ? 'linear-gradient(135deg, rgba(37,99,235,0.04), rgba(79,70,229,0.04))'
               : undefined,
@@ -633,9 +673,12 @@ export default function HomePage() {
             transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <div style={styles.sectionHeader}>
-            <h2>{t('home.howItWorks')} <span style={styles.sectionHeaderAccent}>{t('home.works')}</span></h2>
-            <p>{t('home.clickToLearn')}</p>
+          <div style={{
+            ...styles.sectionHeader,
+            ...(isMobile ? { marginBottom: '24px' } : {})
+          }}>
+            <h2 style={isMobile ? { fontSize: '26px' } : {}}>{t('home.howItWorks')} <span style={styles.sectionHeaderAccent}>{t('home.works')}</span></h2>
+            <p style={isMobile ? { fontSize: '14px' } : {}}>{t('home.clickToLearn')}</p>
           </div>
           {isMobile ? (
             <MobileCarousel peekWidth={85} gap={16}>
@@ -754,14 +797,18 @@ export default function HomePage() {
           ref={testimonialsRef}
           style={{
             ...styles.testimonialsSection,
+            ...(isMobile ? { padding: '40px 16px' } : {}),
             opacity: testimonialsVisible ? 1 : 0,
             transform: testimonialsVisible ? 'translateY(0)' : 'translateY(24px)',
             transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <div style={styles.sectionHeader}>
-            <h2>{t('home.whatUsersSay')} <span style={styles.sectionHeaderAccent}>{t('home.aboutUs')}</span></h2>
-            <p>{t('home.trustedBy')}</p>
+          <div style={{
+            ...styles.sectionHeader,
+            ...(isMobile ? { marginBottom: '24px' } : {})
+          }}>
+            <h2 style={isMobile ? { fontSize: '26px' } : {}}>{t('home.whatUsersSay')} <span style={styles.sectionHeaderAccent}>{t('home.aboutUs')}</span></h2>
+            <p style={isMobile ? { fontSize: '14px' } : {}}>{t('home.trustedBy')}</p>
           </div>
           {isMobile ? (
             <MobileCarousel peekWidth={90} gap={16}>
@@ -843,6 +890,7 @@ export default function HomePage() {
           ref={ctaRef}
           style={{
             ...styles.ctaWrapper,
+            ...(isMobile ? { margin: '24px 12px 40px', borderRadius: '16px' } : {}),
             opacity: ctaVisible ? 1 : 0,
             transform: ctaVisible ? 'translateY(0)' : 'translateY(24px)',
             transition: prefersReducedMotion ? 'none' : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -854,11 +902,20 @@ export default function HomePage() {
             loading="lazy"
             style={styles.ctaBgImage}
           />
-        <div style={styles.ctaSection}>
+        <div style={{
+          ...styles.ctaSection,
+          ...(isMobile ? { padding: '36px 16px', borderRadius: '16px' } : {})
+        }}>
           <div style={styles.ctaContent}>
-            <h2>{t('home.readyTitle')}</h2>
-            <p>{t('home.readyDesc')}</p>
-            <button onClick={() => navigate('/consultation')} style={styles.ctaButton}>
+            <h2 style={isMobile ? { fontSize: '24px', lineHeight: 1.25 } : {}}>{t('home.readyTitle')}</h2>
+            <p style={isMobile ? { fontSize: '14px', lineHeight: 1.5, marginTop: '8px' } : {}}>{t('home.readyDesc')}</p>
+            <button
+              onClick={() => navigate('/consultation')}
+              style={{
+                ...styles.ctaButton,
+                ...(isMobile ? { width: '100%', justifyContent: 'center', minHeight: '48px', padding: '14px 20px', marginTop: '20px' } : {})
+              }}
+            >
               {t('home.startYourFreeConsultation')}
               <ArrowRight size={18} />
             </button>

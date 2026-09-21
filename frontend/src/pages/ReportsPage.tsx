@@ -32,7 +32,7 @@ export default function ReportsPage() {
       <div style={styles.pageHeader}><h2 style={{...styles.pageTitle, ...(isMobile ? { fontSize: '22px' } : {})}}>{t('reports.title')}</h2><p style={styles.pageSubtitle}>{t('reports.subtitle')}</p></div>
       <div style={{...styles.reportsList, ...(isMobile ? { gridTemplateColumns: '1fr' } : {})}}>
         {consultations.filter(c => c.status === 'completed').map((consultation: ConsultationSession) => (
-          <div key={consultation.id} style={styles.reportCard}>
+          <div key={consultation.id} style={{ ...styles.reportCard, ...(isMobile ? { padding: '16px' } : {}) }}>
             <div style={styles.reportHeader}>
               <div style={styles.reportIconArea}>{getSpecialistIcon(consultation.specialistType)}</div>
               <div style={styles.reportInfo}>
@@ -48,20 +48,51 @@ export default function ReportsPage() {
               <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
               <p><strong>{t('reports.duration')}:</strong> {consultation.duration} {t('reports.minutes')}</p>
             </div>
-            <div style={{...styles.reportActions, ...(isMobile ? { flexDirection: 'row' as const, overflowX: 'auto' as const, gap: '8px', scrollSnapType: 'x mandatory' as const } : {})}}>
-              <button onClick={() => handleViewReport(consultation.id)} style={{...styles.downloadButton, ...(isMobile ? { flex: '0 0 auto', minWidth: '120px', scrollSnapAlign: 'start' as const } : {})}}>
+            <div style={{
+              ...styles.reportActions,
+              ...(isMobile ? {
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '8px',
+              } : {})
+            }}>
+              <button
+                onClick={() => handleViewReport(consultation.id)}
+                style={{
+                  ...styles.downloadButton,
+                  ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
+                }}
+              >
                 <Download size={16} />
                 <span>{t('reports.viewReport')}</span>
               </button>
-              <button onClick={() => handleBookAppointment(consultation)} style={{...styles.bookButton, ...(isMobile ? { flex: '0 0 auto', minWidth: '120px', scrollSnapAlign: 'start' as const } : {})}}>
+              <button
+                onClick={() => handleBookAppointment(consultation)}
+                style={{
+                  ...styles.bookButton,
+                  ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
+                }}
+              >
                 <Calendar size={16} />
                 <span>{t('reports.bookFollowup')}</span>
               </button>
-              <button onClick={() => handleRateConsultation(consultation)} style={{...styles.ratingButton, ...(isMobile ? { flex: '0 0 auto', minWidth: '100px', scrollSnapAlign: 'start' as const } : {})}}>
+              <button
+                onClick={() => handleRateConsultation(consultation)}
+                style={{
+                  ...styles.ratingButton,
+                  ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
+                }}
+              >
                 <Star size={16} />
                 <span>{t('reports.rateConsultation')}</span>
               </button>
-              <button onClick={() => handleViewEnhancedReport(consultation)} style={{...styles.enhancedReportButton, ...(isMobile ? { flex: '0 0 auto', minWidth: '120px', scrollSnapAlign: 'start' as const } : {})}}>
+              <button
+                onClick={() => handleViewEnhancedReport(consultation)}
+                style={{
+                  ...styles.enhancedReportButton,
+                  ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
+                }}
+              >
                 <FileText size={16} />
                 <span>View SOAP Report</span>
               </button>

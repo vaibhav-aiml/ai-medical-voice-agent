@@ -23,13 +23,13 @@ export default function DashboardPage() {
       <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: isMobile ? 'center' : 'flex-end', flexWrap: 'wrap' as const, flexDirection: isMobile ? 'column' as const : 'row' as const }}>
         <button
           onClick={() => setShowAnalytics(true)}
-          style={{...styles.analyticsButton, ...(isMobile ? { fontSize: '13px', padding: '10px 16px', width: '100%', justifyContent: 'center' } : {})}}
+          style={{...styles.analyticsButton, ...(isMobile ? { fontSize: '14px', padding: '14px 16px', width: '100%', justifyContent: 'center', minHeight: '48px' } : {})}}
         >
           <TrendingUp size={16} /> View Analytics Dashboard
         </button>
         <button
           onClick={handleOpenClinicDashboard}
-          style={{...styles.clinicButton, ...(isMobile ? { fontSize: '14px', padding: '10px 16px', width: '100%', justifyContent: 'center' } : {})}}
+          style={{...styles.clinicButton, ...(isMobile ? { fontSize: '15px', padding: '14px 16px', width: '100%', justifyContent: 'center', minHeight: '48px' } : {})}}
           disabled={isCreatingClinic}
         >
           <Building2 size={18} /> {isCreatingClinic ? 'Loading Clinic...' : '🏥 Clinic Dashboard'}

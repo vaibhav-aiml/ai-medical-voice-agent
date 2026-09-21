@@ -23,11 +23,31 @@ export default function SpecialistSelector({ selectedSpecialist, onSelect }: Pro
         {specialists.map((specialist) => (
           <div
             key={specialist.id}
+            role="button"
+            tabIndex={0}
+            aria-pressed={selectedSpecialist === specialist.type}
+            aria-label={`${specialist.name}, ${specialist.type}`}
             onClick={() => onSelect(specialist.type)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(specialist.type);
+              }
+            }}
             style={{
               ...styles.card,
-              ...(isMobile ? { padding: '14px 10px' } : {}),
-              ...(selectedSpecialist === specialist.type ? styles.selectedCard : {}),
+              ...(isMobile ? {
+                padding: '14px 10px',
+                minHeight: '100px',
+                display: 'flex',
+                flexDirection: 'column' as const,
+                alignItems: 'center',
+                justifyContent: 'center',
+              } : {}),
+              ...(selectedSpecialist === specialist.type ? {
+                ...styles.selectedCard,
+                ...(isMobile ? { borderWidth: '3px' } : {}),
+              } : {}),
             }}
           >
             <div style={{...styles.icon, ...(isMobile ? { fontSize: '32px', marginBottom: '6px' } : {})}}>{specialist.icon}</div>

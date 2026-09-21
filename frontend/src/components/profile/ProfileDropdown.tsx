@@ -124,7 +124,14 @@ export default function ProfileDropdown({ onOpen2FA }: Props) {
 
   return (
     <div style={styles.container} ref={dropdownRef}>
-      <button onClick={() => setIsOpen(!isOpen)} style={styles.avatarButton}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          ...styles.avatarButton,
+          ...(isMobile ? { width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' } : {}),
+        }}
+        aria-label="User profile and settings"
+      >
         {getCurrentAvatar() ? (
           <img src={getCurrentAvatar()} alt="Profile" style={styles.avatar} />
         ) : (
@@ -435,6 +442,7 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     width: '100%',
+    minHeight: '44px',
     padding: '12px 16px',
     background: 'transparent',
     border: 'none',
@@ -461,6 +469,7 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     width: '100%',
+    minHeight: '44px',
     padding: '10px 16px',
     background: 'transparent',
     border: 'none',
@@ -500,7 +509,11 @@ const styles = {
   },
   addAccountButton: {
     width: '100%',
+    minHeight: '44px',
     padding: '10px 16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     background: 'transparent',
     border: 'none',
     borderTop: '1px solid var(--border-color)',
@@ -519,6 +532,7 @@ const styles = {
     alignItems: 'center',
     gap: '10px',
     width: '100%',
+    minHeight: '44px',
     padding: '12px 16px',
     background: 'transparent',
     border: 'none',

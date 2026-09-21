@@ -24,6 +24,7 @@ export interface ConsultationSession {
   startedAt: Date;
   endedAt?: Date;
   duration?: number;
+  rating?: number;
   symptoms?: string;
   notes?: string;
   emotion?: string;

@@ -1,9 +1,12 @@
 import React from 'react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import BackButton from '../components/shared/BackButton';
+import { useBreakpoint } from '../hooks/useBreakpoint';
+import MobileCarousel from '../components/shared/MobileCarousel';
 
 const AboutUs: React.FC = () => {
-  
+  const { isMobile } = useBreakpoint();
+
   const teamMembers = [
     {
       name: 'Vaibhav Badaya',
@@ -36,6 +39,7 @@ const AboutUs: React.FC = () => {
       }
     }
   ];
+
   const coreValues = [
     {
       title: 'Technical Excellence',
@@ -61,16 +65,13 @@ const AboutUs: React.FC = () => {
 
   return (
     <div className="about-us-container">
-      {}
       <BackButton />
 
-      {}
       <section className="hero-section">
         <h1>About Us</h1>
         <p>Transforming Healthcare with AI-Powered Voice Technology</p>
       </section>
 
-      {}
       <section className="story-section">
         <div className="container">
           <h2>Our Story</h2>
@@ -83,7 +84,6 @@ const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      {}
       <section className="mission-section">
         <div className="container">
           <div className="mission-card">
@@ -97,7 +97,6 @@ const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      {}
       <section className="team-section">
         <div className="container">
           <h2>Meet Our Team</h2>
@@ -122,24 +121,34 @@ const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      {}
       <section className="values-section">
         <div className="container">
           <h2>Our Core Values</h2>
           <p className="values-subtitle">The principles that guide everything we do</p>
-          <div className="values-grid">
-            {coreValues.map((value, index) => (
-              <div key={index} className="value-card">
-                <div className="value-icon">{value.icon}</div>
-                <h4>{value.title}</h4>
-                <p>{value.description}</p>
-              </div>
-            ))}
-          </div>
+          {isMobile ? (
+            <MobileCarousel peekWidth={85} gap={16}>
+              {coreValues.map((value, index) => (
+                <div key={index} className="value-card" style={{ flex: 'none', width: '100%', padding: '24px 16px', boxSizing: 'border-box' }}>
+                  <div className="value-icon" style={{ fontSize: '36px', marginBottom: '12px' }}>{value.icon}</div>
+                  <h4 style={{ fontSize: '18px', marginBottom: '8px' }}>{value.title}</h4>
+                  <p style={{ fontSize: '14px', lineHeight: 1.6 }}>{value.description}</p>
+                </div>
+              ))}
+            </MobileCarousel>
+          ) : (
+            <div className="values-grid">
+              {coreValues.map((value, index) => (
+                <div key={index} className="value-card">
+                  <div className="value-icon">{value.icon}</div>
+                  <h4>{value.title}</h4>
+                  <p>{value.description}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {}
       <section className="contact-cta">
         <div className="container">
           <h2>Ready to Transform Healthcare?</h2>
@@ -466,6 +475,68 @@ const AboutUs: React.FC = () => {
 
           .values-grid {
             grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 600px) {
+          .hero-section {
+            padding: 48px 16px !important;
+          }
+
+          .hero-section h1 {
+            font-size: 28px !important;
+            margin-bottom: 12px !important;
+          }
+
+          .hero-section p {
+            font-size: 15px !important;
+          }
+
+          .story-section,
+          .mission-section,
+          .team-section,
+          .values-section,
+          .contact-cta {
+            padding: 40px 16px !important;
+          }
+
+          .story-section h2,
+          .team-section h2,
+          .values-section h2,
+          .contact-cta h2 {
+            font-size: 24px !important;
+            margin-bottom: 24px !important;
+          }
+
+          .mission-card, .vision-card {
+            padding: 24px 18px !important;
+            border-radius: 16px !important;
+          }
+
+          .team-card {
+            padding: 20px 16px !important;
+            border-radius: 16px !important;
+          }
+
+          .team-icon {
+            width: 64px !important;
+            height: 64px !important;
+            font-size: 28px !important;
+            margin-bottom: 16px !important;
+          }
+
+          .values-subtitle {
+            font-size: 14px !important;
+            margin-bottom: 24px !important;
+          }
+
+          .cta-button {
+            width: 100% !important;
+            min-height: 48px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 14px 24px !important;
           }
         }
       `}</style>

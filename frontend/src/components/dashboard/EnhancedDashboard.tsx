@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
+import MobileCarousel from '../shared/MobileCarousel';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
 import { Calendar, TrendingUp, Activity, Clock, Award, Brain, Heart, Star, Users } from 'lucide-react';
@@ -222,166 +223,307 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
   }
 
   return (
-    <div style={styles.container}>
-      {}
-      <div style={styles.timeRangeSelector}>
-        <button onClick={() => setTimeRange('week')} style={{ ...styles.rangeButton, ...(timeRange === 'week' ? styles.rangeActive : {}) }}>Last 7 Days</button>
-        <button onClick={() => setTimeRange('month')} style={{ ...styles.rangeButton, ...(timeRange === 'month' ? styles.rangeActive : {}) }}>Last 30 Days</button>
-        <button onClick={() => setTimeRange('year')} style={{ ...styles.rangeButton, ...(timeRange === 'year' ? styles.rangeActive : {}) }}>Last Year</button>
+    <div style={{ ...styles.container, ...(isMobile ? { padding: '16px 0' } : {}) }}>
+      {/* Time Range Selector */}
+      <div
+        className={isMobile ? 'mobile-action-row' : ''}
+        style={{
+          ...styles.timeRangeSelector,
+          ...(isMobile ? {
+            justifyContent: 'flex-start',
+            overflowX: 'auto',
+            paddingBottom: '8px',
+            marginBottom: '16px',
+          } : {})
+        }}
+      >
+        <button
+          onClick={() => setTimeRange('week')}
+          style={{
+            ...styles.rangeButton,
+            ...(timeRange === 'week' ? styles.rangeActive : {}),
+            ...(isMobile ? { minHeight: '44px', padding: '10px 18px', fontSize: '13px' } : {})
+          }}
+        >
+          Last 7 Days
+        </button>
+        <button
+          onClick={() => setTimeRange('month')}
+          style={{
+            ...styles.rangeButton,
+            ...(timeRange === 'month' ? styles.rangeActive : {}),
+            ...(isMobile ? { minHeight: '44px', padding: '10px 18px', fontSize: '13px' } : {})
+          }}
+        >
+          Last 30 Days
+        </button>
+        <button
+          onClick={() => setTimeRange('year')}
+          style={{
+            ...styles.rangeButton,
+            ...(timeRange === 'year' ? styles.rangeActive : {}),
+            ...(isMobile ? { minHeight: '44px', padding: '10px 18px', fontSize: '13px' } : {})
+          }}
+        >
+          Last Year
+        </button>
       </div>
 
-      {}
-      <div style={{ ...styles.statsGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)' }}>
-        <div
-          style={{
-            ...styles.statCard,
-            borderRight: isMobile ? 'none' : isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
-            borderBottom: isMobile ? '1px solid var(--border-color)' : isTablet ? '1px solid var(--border-color)' : 'none',
-          }}
-        >
-          <div style={styles.statIcon}><Calendar size={24} /></div>
-          <div>
-            <div style={styles.statValue}>{filteredConsultations.length}</div>
-            <div style={styles.statLabel}>Consultations</div>
+      {/* Stats Grid — Mobile swipe carousel vs Desktop 4-col grid */}
+      {isMobile ? (
+        <div style={{ marginBottom: '24px' }}>
+          <MobileCarousel peekWidth={78} gap={12}>
+            <div style={styles.mobileStatCard}>
+              <div style={styles.statIcon}><Calendar size={24} /></div>
+              <div>
+                <div style={styles.statValue}>{filteredConsultations.length}</div>
+                <div style={styles.statLabel}>Consultations</div>
+              </div>
+              <div style={{ ...styles.trendBadge, ...(trend.direction === 'up' ? styles.trendUp : styles.trendDown) }}>
+                {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {Math.abs(trend.percentage)}%
+              </div>
+            </div>
+            <div style={styles.mobileStatCard}>
+              <div style={styles.statIcon}><Star size={24} /></div>
+              <div>
+                <div style={styles.statValue}>{avgRating.toFixed(1)}</div>
+                <div style={styles.statLabel}>Avg Rating</div>
+              </div>
+            </div>
+            <div style={styles.mobileStatCard}>
+              <div style={styles.statIcon}><Clock size={24} /></div>
+              <div>
+                <div style={styles.statValue}>{avgDuration}</div>
+                <div style={styles.statLabel}>Avg Duration (min)</div>
+              </div>
+            </div>
+            <div style={styles.mobileStatCard}>
+              <div style={styles.statIcon}><Activity size={24} /></div>
+              <div>
+                <div style={styles.statValue}>{totalMinutes}</div>
+                <div style={styles.statLabel}>Total Minutes</div>
+              </div>
+            </div>
+          </MobileCarousel>
+        </div>
+      ) : (
+        <div style={{ ...styles.statsGrid, gridTemplateColumns: isTablet ? '1fr 1fr' : 'repeat(4, 1fr)' }}>
+          <div
+            style={{
+              ...styles.statCard,
+              borderRight: isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
+              borderBottom: isTablet ? '1px solid var(--border-color)' : 'none',
+            }}
+          >
+            <div style={styles.statIcon}><Calendar size={24} /></div>
+            <div>
+              <div style={styles.statValue}>{filteredConsultations.length}</div>
+              <div style={styles.statLabel}>Consultations</div>
+            </div>
+            <div style={{ ...styles.trendBadge, ...(trend.direction === 'up' ? styles.trendUp : styles.trendDown) }}>
+              {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {Math.abs(trend.percentage)}%
+            </div>
           </div>
-          <div style={{ ...styles.trendBadge, ...(trend.direction === 'up' ? styles.trendUp : styles.trendDown) }}>
-            {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {Math.abs(trend.percentage)}%
+          <div
+            style={{
+              ...styles.statCard,
+              borderRight: isTablet ? 'none' : '1px solid var(--border-color)',
+              borderBottom: isTablet ? '1px solid var(--border-color)' : 'none',
+            }}
+          >
+            <div style={styles.statIcon}><Star size={24} /></div>
+            <div>
+              <div style={styles.statValue}>{avgRating.toFixed(1)}</div>
+              <div style={styles.statLabel}>Avg Rating</div>
+            </div>
+          </div>
+          <div
+            style={{
+              ...styles.statCard,
+              borderRight: isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
+              borderBottom: 'none',
+            }}
+          >
+            <div style={styles.statIcon}><Clock size={24} /></div>
+            <div>
+              <div style={styles.statValue}>{avgDuration}</div>
+              <div style={styles.statLabel}>Avg Duration (min)</div>
+            </div>
+          </div>
+          <div
+            style={{
+              ...styles.statCard,
+              borderRight: 'none',
+              borderBottom: 'none',
+            }}
+          >
+            <div style={styles.statIcon}><Activity size={24} /></div>
+            <div>
+              <div style={styles.statValue}>{totalMinutes}</div>
+              <div style={styles.statLabel}>Total Minutes</div>
+            </div>
           </div>
         </div>
-        <div
-          style={{
-            ...styles.statCard,
-            borderRight: isMobile ? 'none' : isTablet ? 'none' : '1px solid var(--border-color)',
-            borderBottom: isMobile ? '1px solid var(--border-color)' : isTablet ? '1px solid var(--border-color)' : 'none',
-          }}
-        >
-          <div style={styles.statIcon}><Star size={24} /></div>
-          <div>
-            <div style={styles.statValue}>{avgRating.toFixed(1)}</div>
-            <div style={styles.statLabel}>Avg Rating</div>
-          </div>
-        </div>
-        <div
-          style={{
-            ...styles.statCard,
-            borderRight: isMobile ? 'none' : isTablet ? '1px solid var(--border-color)' : '1px solid var(--border-color)',
-            borderBottom: isMobile ? '1px solid var(--border-color)' : 'none',
-          }}
-        >
-          <div style={styles.statIcon}><Clock size={24} /></div>
-          <div>
-            <div style={styles.statValue}>{avgDuration}</div>
-            <div style={styles.statLabel}>Avg Duration (min)</div>
-          </div>
-        </div>
-        <div
-          style={{
-            ...styles.statCard,
-            borderRight: 'none',
-            borderBottom: 'none',
-          }}
-        >
-          <div style={styles.statIcon}><Activity size={24} /></div>
-          <div>
-            <div style={styles.statValue}>{totalMinutes}</div>
-            <div style={styles.statLabel}>Total Minutes</div>
-          </div>
-        </div>
-      </div>
+      )}
 
-      {}
-      <div style={{...styles.chartsGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)'}}>
-        <div style={styles.chartCard}>
+      {/* Charts Grid */}
+      <div style={{ ...styles.chartsGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', ...(isMobile ? { gap: '16px' } : {}) }}>
+        <div style={{ ...styles.chartCard, ...(isMobile ? { padding: '16px' } : {}) }}>
           <h3 style={styles.chartTitle}>Consultations Trend</h3>
-          <div style={styles.chartWrapper}>
+          <div style={{ ...styles.chartWrapper, ...(isMobile ? { height: '220px' } : {}) }}>
             {chartData && <Line data={chartData.consultations} options={chartOptionsRef.current} />}
           </div>
         </div>
-        <div style={styles.chartCard}>
+        <div style={{ ...styles.chartCard, ...(isMobile ? { padding: '16px' } : {}) }}>
           <h3 style={styles.chartTitle}>Average Duration Trend</h3>
-          <div style={styles.chartWrapper}>
+          <div style={{ ...styles.chartWrapper, ...(isMobile ? { height: '220px' } : {}) }}>
             {chartData && <Line data={chartData.durations} options={chartOptionsRef.current} />}
           </div>
         </div>
-        <div style={styles.chartCard}>
+        <div style={{ ...styles.chartCard, ...(isMobile ? { padding: '16px' } : {}) }}>
           <h3 style={styles.chartTitle}>Specialist Distribution</h3>
-          <div style={styles.chartWrapperSmall}>
+          <div style={{ ...styles.chartWrapperSmall, ...(isMobile ? { height: '200px' } : {}) }}>
             {specialistChart && <Doughnut data={specialistChart} options={doughnutOptionsRef.current} />}
           </div>
         </div>
-        <div style={styles.chartCard}>
+        <div style={{ ...styles.chartCard, ...(isMobile ? { padding: '16px' } : {}) }}>
           <h3 style={styles.chartTitle}>Rating Distribution</h3>
-          <div style={styles.chartWrapper}>
+          <div style={{ ...styles.chartWrapper, ...(isMobile ? { height: '220px' } : {}) }}>
             {ratingChart && <Bar data={ratingChart} options={barOptionsRef.current} />}
           </div>
         </div>
       </div>
 
-      {}
-      <div style={styles.insightsCard}>
-        <h3 style={styles.insightsTitle}>📈 Health Insights</h3>
-        <div style={styles.insightsGrid}>
-          <div style={styles.insightItem}>
-            <TrendingUp size={20} color="var(--accent-clinical)" />
-            <div>
-              <div style={styles.insightTitle}>Most Active Day</div>
-              <div style={styles.insightValue}>
-                {chartData?.consultations.labels[
-                  chartData?.consultations.datasets[0].data.indexOf(
-                    Math.max(...(chartData?.consultations.datasets[0].data || [0]))
-                  )
-                ] || 'N/A'}
+      {/* Health Insights — Mobile swipe carousel vs Desktop grid */}
+      <div style={{ ...styles.insightsCard, ...(isMobile ? { padding: '16px' } : {}) }}>
+        <h3 style={{ ...styles.insightsTitle, ...(isMobile ? { fontSize: '16px', marginBottom: '12px' } : {}) }}>📈 Health Insights</h3>
+        {isMobile ? (
+          <MobileCarousel peekWidth={80} gap={12}>
+            <div style={styles.mobileInsightItem}>
+              <TrendingUp size={20} color="var(--accent-clinical)" style={{ flexShrink: 0 }} />
+              <div>
+                <div style={styles.insightTitle}>Most Active Day</div>
+                <div style={styles.insightValue}>
+                  {chartData?.consultations.labels[
+                    chartData?.consultations.datasets[0].data.indexOf(
+                      Math.max(...(chartData?.consultations.datasets[0].data || [0]))
+                    )
+                  ] || 'N/A'}
+                </div>
+              </div>
+            </div>
+            <div style={styles.mobileInsightItem}>
+              <Brain size={20} color="var(--accent-clinical)" style={{ flexShrink: 0 }} />
+              <div>
+                <div style={styles.insightTitle}>Most Used Specialist</div>
+                <div style={styles.insightValue}>
+                  {specialistChart?.labels[
+                    specialistChart?.datasets[0].data.indexOf(
+                      Math.max(...(specialistChart?.datasets[0].data || [0]))
+                    )
+                  ] || 'N/A'}
+                </div>
+              </div>
+            </div>
+            <div style={styles.mobileInsightItem}>
+              <Heart size={20} color="var(--accent-clinical)" style={{ flexShrink: 0 }} />
+              <div>
+                <div style={styles.insightTitle}>Best Rated Specialist</div>
+                <div style={styles.insightValue}>
+                  {(() => {
+                    const ratingsBySpecialist: Record<string, number[]> = {};
+                    filteredConsultations.forEach(c => {
+                      if (c.rating) {
+                        if (!ratingsBySpecialist[c.specialistType]) ratingsBySpecialist[c.specialistType] = [];
+                        ratingsBySpecialist[c.specialistType].push(c.rating);
+                      }
+                    });
+                    let bestSpecialist = 'N/A';
+                    let bestAvg = 0;
+                    Object.entries(ratingsBySpecialist).forEach(([type, ratings]) => {
+                      const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+                      if (avg > bestAvg) {
+                        bestAvg = avg;
+                        bestSpecialist = type;
+                      }
+                    });
+                    return bestSpecialist.charAt(0).toUpperCase() + bestSpecialist.slice(1);
+                  })()}
+                </div>
+              </div>
+            </div>
+            <div style={styles.mobileInsightItem}>
+              <Award size={20} color="var(--accent-clinical)" style={{ flexShrink: 0 }} />
+              <div>
+                <div style={styles.insightTitle}>Total Consultations</div>
+                <div style={styles.insightValue}>{stats.totalConsultations}</div>
+              </div>
+            </div>
+          </MobileCarousel>
+        ) : (
+          <div style={styles.insightsGrid}>
+            <div style={styles.insightItem}>
+              <TrendingUp size={20} color="var(--accent-clinical)" />
+              <div>
+                <div style={styles.insightTitle}>Most Active Day</div>
+                <div style={styles.insightValue}>
+                  {chartData?.consultations.labels[
+                    chartData?.consultations.datasets[0].data.indexOf(
+                      Math.max(...(chartData?.consultations.datasets[0].data || [0]))
+                    )
+                  ] || 'N/A'}
+                </div>
+              </div>
+            </div>
+            <div style={styles.insightItem}>
+              <Brain size={20} color="var(--accent-clinical)" />
+              <div>
+                <div style={styles.insightTitle}>Most Used Specialist</div>
+                <div style={styles.insightValue}>
+                  {specialistChart?.labels[
+                    specialistChart?.datasets[0].data.indexOf(
+                      Math.max(...(specialistChart?.datasets[0].data || [0]))
+                    )
+                  ] || 'N/A'}
+                </div>
+              </div>
+            </div>
+            <div style={styles.insightItem}>
+              <Heart size={20} color="var(--accent-clinical)" />
+              <div>
+                <div style={styles.insightTitle}>Best Rated Specialist</div>
+                <div style={styles.insightValue}>
+                  {(() => {
+                    const ratingsBySpecialist: Record<string, number[]> = {};
+                    filteredConsultations.forEach(c => {
+                      if (c.rating) {
+                        if (!ratingsBySpecialist[c.specialistType]) ratingsBySpecialist[c.specialistType] = [];
+                        ratingsBySpecialist[c.specialistType].push(c.rating);
+                      }
+                    });
+                    let bestSpecialist = 'N/A';
+                    let bestAvg = 0;
+                    Object.entries(ratingsBySpecialist).forEach(([type, ratings]) => {
+                      const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+                      if (avg > bestAvg) {
+                        bestAvg = avg;
+                        bestSpecialist = type;
+                      }
+                    });
+                    return bestSpecialist.charAt(0).toUpperCase() + bestSpecialist.slice(1);
+                  })()}
+                </div>
+              </div>
+            </div>
+            <div style={styles.insightItem}>
+              <Award size={20} color="var(--accent-clinical)" />
+              <div>
+                <div style={styles.insightTitle}>Total Consultations</div>
+                <div style={styles.insightValue}>{stats.totalConsultations}</div>
               </div>
             </div>
           </div>
-          <div style={styles.insightItem}>
-            <Brain size={20} color="var(--accent-clinical)" />
-            <div>
-              <div style={styles.insightTitle}>Most Used Specialist</div>
-              <div style={styles.insightValue}>
-                {specialistChart?.labels[
-                  specialistChart?.datasets[0].data.indexOf(
-                    Math.max(...(specialistChart?.datasets[0].data || [0]))
-                  )
-                ] || 'N/A'}
-              </div>
-            </div>
-          </div>
-          <div style={styles.insightItem}>
-            <Heart size={20} color="var(--accent-clinical)" />
-            <div>
-              <div style={styles.insightTitle}>Best Rated Specialist</div>
-              <div style={styles.insightValue}>
-                {(() => {
-                  const ratingsBySpecialist: Record<string, number[]> = {};
-                  filteredConsultations.forEach(c => {
-                    if (c.rating) {
-                      if (!ratingsBySpecialist[c.specialistType]) ratingsBySpecialist[c.specialistType] = [];
-                      ratingsBySpecialist[c.specialistType].push(c.rating);
-                    }
-                  });
-                  let bestSpecialist = 'N/A';
-                  let bestAvg = 0;
-                  Object.entries(ratingsBySpecialist).forEach(([type, ratings]) => {
-                    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-                    if (avg > bestAvg) {
-                      bestAvg = avg;
-                      bestSpecialist = type;
-                    }
-                  });
-                  return bestSpecialist.charAt(0).toUpperCase() + bestSpecialist.slice(1);
-                })()}
-              </div>
-            </div>
-          </div>
-          <div style={styles.insightItem}>
-            <Award size={20} color="var(--accent-clinical)" />
-            <div>
-              <div style={styles.insightTitle}>Total Consultations</div>
-              <div style={styles.insightValue}>{stats.totalConsultations}</div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -542,6 +684,27 @@ const styles = {
     fontSize: '16px',
     fontWeight: 600,
     color: 'var(--text-primary)',
+  },
+  mobileStatCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    padding: '18px 20px',
+    position: 'relative' as const,
+    background: 'var(--bg-card)',
+    borderRadius: '16px',
+    border: '1px solid var(--border-color)',
+    boxShadow: 'var(--card-shadow)',
+    minHeight: '88px',
+  },
+  mobileInsightItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '16px',
+    background: 'var(--badge-bg)',
+    borderRadius: '12px',
+    minHeight: '64px',
   },
 };
 const styleSheet = document.createElement('style');

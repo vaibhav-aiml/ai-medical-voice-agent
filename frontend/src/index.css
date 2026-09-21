@@ -1011,6 +1011,17 @@ html[lang="te"] .small-text { line-height: 1.6; }
     font-size: 15px !important;
   }
 
+  .cta-email {
+    font-size: 16px !important;
+    padding: 12px 28px !important;
+    max-width: 100% !important;
+    word-break: break-all !important;
+  }
+
+  .hero-section {
+    margin-bottom: 28px !important;
+  }
+
   /* Contact Us — 2×2 info grid on mobile */
   .info-grid {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -1098,5 +1109,15 @@ html[lang="te"] .small-text { line-height: 1.6; }
 
   .app-page-nav-title {
     font-size: 15px !important;
+  }
+
+  .appointment-datepicker {
+    min-height: 48px !important;
+    font-size: 16px !important;
+  }
+
+  .app-modal-close {
+    width: 44px !important;
+    height: 44px !important;
   }
 }

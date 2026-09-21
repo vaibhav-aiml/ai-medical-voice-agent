@@ -37,22 +37,96 @@ export default function ConsultationPage() {
   return (
     <div className="page-shell">
     <div className="page-card" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{...styles.consultationHeader, ...(isMobile ? { flexDirection: 'column' as const, gap: '12px', alignItems: 'flex-start' } : {})}}>
-        <div><h2 style={{...styles.consultationTitle, ...(isMobile ? { fontSize: '18px' } : {})}}>{t('consultation.title')}</h2><p style={styles.consultationSubtitle}>{t('consultation.subtitle')}</p></div>
-        <button onClick={() => navigate('/')} style={styles.closeButton}><X size={20} /></button>
+      <div style={{
+        ...styles.consultationHeader,
+        ...(isMobile ? {
+          display: 'flex',
+          flexDirection: 'row' as const,
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: '12px',
+          marginBottom: '16px',
+          paddingBottom: '16px',
+        } : {})
+      }}>
+        <div style={{ flex: 1 }}>
+          <h2 style={{...styles.consultationTitle, ...(isMobile ? { fontSize: '18px' } : {})}}>{t('consultation.title')}</h2>
+          <p style={{...styles.consultationSubtitle, ...(isMobile ? { fontSize: '13px' } : {})}}>{t('consultation.subtitle')}</p>
+        </div>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            ...styles.closeButton,
+            ...(isMobile ? {
+              minWidth: '44px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '10px',
+            } : {})
+          }}
+          aria-label="Close consultation"
+        >
+          <X size={20} />
+        </button>
       </div>
       {!consultationStarted ? (
-        <div style={styles.setupSection}>
+        <div style={{...styles.setupSection, ...(isMobile ? { padding: '16px' } : {})}}>
           <Suspense fallback={<SkeletonLoader />}>
             <SpecialistSelector selectedSpecialist={selectedSpecialist} onSelect={setSelectedSpecialist} />
           </Suspense>
-          <button onClick={startConsultation} disabled={!selectedSpecialist} style={styles.startConsultButton}>{t('consultation.startWith')} {selectedSpecialist || t('consultation.selectedSpecialist')}</button>
+          <button
+            onClick={startConsultation}
+            disabled={!selectedSpecialist}
+            style={{
+              ...styles.startConsultButton,
+              ...(isMobile ? {
+                minHeight: '48px',
+                fontSize: '16px',
+                padding: '14px 20px',
+                marginTop: '20px',
+              } : {})
+            }}
+          >
+            {t('consultation.startWith')} {selectedSpecialist || t('consultation.selectedSpecialist')}
+          </button>
         </div>
       ) : (
-        <div style={styles.activeConsultation}>
-          <div style={styles.specialistInfo}>
-            <div style={styles.specialistBadge}>{getSpecialistIcon(selectedSpecialist)}<span>{selectedSpecialist} {t('consultation.specialist') || 'Specialist'}</span></div>
-            <button onClick={endConsultation} style={styles.endButton}>{t('consultation.endConsultation')}</button>
+        <div style={{...styles.activeConsultation, ...(isMobile ? { padding: '12px' } : {})}}>
+          <div style={{
+            ...styles.specialistInfo,
+            ...(isMobile ? {
+              flexDirection: 'column' as const,
+              alignItems: 'stretch' as const,
+              gap: '12px',
+              marginBottom: '16px',
+              padding: '12px 14px',
+            } : {})
+          }}>
+            <div style={{
+              ...styles.specialistBadge,
+              ...(isMobile ? { minHeight: '44px', justifyContent: 'flex-start' } : {})
+            }}>
+              {getSpecialistIcon(selectedSpecialist)}
+              <span>{selectedSpecialist} {t('consultation.specialist') || 'Specialist'}</span>
+            </div>
+            <button
+              onClick={endConsultation}
+              style={{
+                ...styles.endButton,
+                ...(isMobile ? {
+                  minHeight: '44px',
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                } : {})
+              }}
+            >
+              {t('consultation.endConsultation')}
+            </button>
           </div>
           <Suspense fallback={<SkeletonLoader />}>
             <VoiceRecorder

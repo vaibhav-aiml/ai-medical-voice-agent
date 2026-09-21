@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { sendAppointmentReminder } from '../../services/whatsapp.service';
@@ -20,6 +21,7 @@ export default function AppointmentBooking({
   onClose, 
   onBooked 
 }: Props) {
+  const { isMobile } = useBreakpoint();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState('');
   const [reason, setReason] = useState('');
@@ -84,14 +86,43 @@ export default function AppointmentBooking({
   maxDate.setDate(maxDate.getDate() + 30);
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        <div style={styles.header}>
-          <h2 style={styles.title}>📅 Book Follow-up Appointment</h2>
-          <button onClick={onClose} style={styles.closeButton}>✕</button>
+    <div className="app-modal-overlay" style={styles.overlay}>
+      <div
+        className="app-modal-content"
+        style={{
+          ...styles.modal,
+          ...(isMobile ? {
+            width: '100%',
+            maxWidth: '100%',
+            borderRadius: '20px 20px 0 0',
+            maxHeight: '92vh',
+            padding: '20px 16px',
+            margin: 0,
+          } : {})
+        }}
+      >
+        <div style={{ ...styles.header, ...(isMobile ? { padding: '16px 0', marginBottom: '12px' } : {}) }}>
+          <h2 style={{ ...styles.title, ...(isMobile ? { fontSize: '18px' } : {}) }}>📅 Book Follow-up Appointment</h2>
+          <button
+            onClick={onClose}
+            style={{
+              ...styles.closeButton,
+              ...(isMobile ? {
+                minWidth: '44px',
+                minHeight: '44px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+              } : {})
+            }}
+            aria-label="Close modal"
+          >
+            ✕
+          </button>
         </div>
 
-        <div style={styles.content}>
+        <div style={{ ...styles.content, ...(isMobile ? { padding: '8px 0' } : {}) }}>
           <div style={styles.infoBox}>
             <p><strong>Specialist:</strong> {specialistName}</p>
             <p><strong>Type:</strong> {specialistType}</p>
@@ -116,7 +147,7 @@ export default function AppointmentBooking({
             <select 
               value={selectedTime} 
               onChange={(e) => setSelectedTime(e.target.value)}
-              style={styles.select}
+              style={{ ...styles.select, ...(isMobile ? { minHeight: '48px', fontSize: '16px' } : {}) }}
             >
               <option value="">Select time slot</option>
               {timeSlots.map(time => (
@@ -131,7 +162,7 @@ export default function AppointmentBooking({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g., Persistent symptoms, need medication refill, etc."
-              style={styles.textarea}
+              style={{ ...styles.textarea, ...(isMobile ? { fontSize: '16px' } : {}) }}
               rows={3}
             />
           </div>
@@ -143,13 +174,16 @@ export default function AppointmentBooking({
           </div>
         </div>
 
-        <div style={styles.footer}>
-          <button onClick={onClose} style={styles.cancelButton}>
+        <div style={{ ...styles.footer, ...(isMobile ? { flexDirection: 'column-reverse' as const, gap: '12px', padding: '16px 0' } : {}) }}>
+          <button
+            onClick={onClose}
+            style={{ ...styles.cancelButton, ...(isMobile ? { width: '100%', minHeight: '48px', fontSize: '15px' } : {}) }}
+          >
             Cancel
           </button>
           <button 
             onClick={handleBookAppointment}
-            style={styles.bookButton}
+            style={{ ...styles.bookButton, ...(isMobile ? { width: '100%', minHeight: '48px', fontSize: '15px' } : {}) }}
             disabled={!selectedDate || !selectedTime || isSubmitting}
           >
             {isSubmitting ? 'Booking...' : '📅 Book Appointment'}
