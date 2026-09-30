@@ -114,8 +114,8 @@ export default function VoiceCustomization({ onClose, onSettingsChange }: Props)
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <div className="app-modal-overlay" style={styles.overlay}>
+      <div className="app-modal-content" style={styles.modal}>
         <div style={styles.header}>
           <div style={styles.headerIcon}>
             <Mic size={24} />
@@ -300,7 +300,6 @@ const styles = {
     right: 0,
     bottom: 0,
     background: 'rgba(0,0,0,0.5)',
-    backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -320,7 +319,7 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     padding: '20px 24px',
-    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    background: 'var(--accent-clinical)',
     color: 'white',
     position: 'sticky' as const,
     top: 0,
@@ -371,12 +370,12 @@ const styles = {
   settingIcon: {
     width: '40px',
     height: '40px',
-    background: 'rgba(139, 92, 246, 0.1)',
+    background: 'var(--accent-clinical-soft)',
     borderRadius: '10px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#8b5cf6',
+    color: 'var(--accent-clinical)',
   },
   switch: {
     position: 'relative' as const,
@@ -430,13 +429,13 @@ const styles = {
     transition: 'all 0.2s ease',
   },
   voiceCardSelected: {
-    borderColor: '#8b5cf6',
-    background: 'rgba(139, 92, 246, 0.1)',
+    borderColor: 'var(--accent-clinical)',
+    background: 'var(--accent-clinical-soft)',
   },
   voiceIcon: {
     width: '32px',
     height: '32px',
-    background: 'rgba(139, 92, 246, 0.1)',
+    background: 'var(--accent-clinical-soft)',
     borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
@@ -486,7 +485,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '10px 20px',
-    background: '#8b5cf6',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -513,11 +512,11 @@ styleSheet.textContent = `
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #8b5cf6;
+    background: var(--accent-clinical);
     cursor: pointer;
   }
   .switch input:checked + .slider {
-    background-color: #8b5cf6;
+    background-color: var(--accent-clinical);
   }
   .switch input:checked + .slider:before {
     transform: translateX(26px);

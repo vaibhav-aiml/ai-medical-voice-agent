@@ -142,8 +142,8 @@ export default function VoiceEnrollmentModal({ onClose, userId }: Props) {
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <div className="app-modal-overlay" style={styles.overlay}>
+      <div className="app-modal-content" style={styles.modal}>
         <div style={styles.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Mic size={22} color="var(--accent-clinical)" />
@@ -224,7 +224,6 @@ const styles = {
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    backdropFilter: 'blur(4px)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',

@@ -47,11 +47,12 @@ export default function ConsultationHistory({ consultations, onViewReport, onNew
     });
   };
 
-  const formatDuration = (minutes?: number) => {
-    if (!minutes) return 'N/A';
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+  const formatDuration = (minutes?: number | string) => {
+    const num = Number(minutes);
+    if (!num || isNaN(num) || num <= 0) return 'N/A';
+    if (num < 60) return `${Math.round(num)} min`;
+    const hours = Math.floor(num / 60);
+    const mins = Math.round(num % 60);
     return `${hours}h ${mins}m`;
   };
 
@@ -189,7 +190,7 @@ const styles = {
   emptyButton: {
     marginTop: '20px',
     padding: '12px 24px',
-    background: '#667eea',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -237,7 +238,7 @@ const styles = {
   },
   viewButton: {
     padding: '6px 12px',
-    background: '#667eea',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     borderRadius: '4px',

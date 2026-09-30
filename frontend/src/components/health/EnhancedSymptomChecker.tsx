@@ -855,7 +855,7 @@ const styles = {
     overflow: 'auto' as const,
   },
   primaryDiagnosis: {
-    background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1))',
+    background: 'var(--accent-clinical-soft)',
     padding: '20px',
     borderRadius: '16px',
     marginBottom: '24px',
@@ -980,7 +980,7 @@ const styles = {
   consultBtn: {
     width: '100%',
     padding: '14px',
-    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     borderRadius: '12px',

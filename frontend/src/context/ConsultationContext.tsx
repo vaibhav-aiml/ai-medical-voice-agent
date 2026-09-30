@@ -137,14 +137,32 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
   const getCurrentSessionId = useCallback(() => {
     return consultationId || `session_${Date.now()}`;
   }, [consultationId]);
+  const normalizeConsultation = (c: any): ConsultationSession => ({
+    ...c,
+    duration: Number(c?.duration) || 0,
+    rating: c?.rating !== undefined && c?.rating !== null && !isNaN(Number(c.rating)) ? Number(c.rating) : undefined,
+  });
+
+  const normalizeConsultations = (list: any[]): ConsultationSession[] => {
+    if (!Array.isArray(list)) return [];
+    return list.map(normalizeConsultation);
+  };
+
   const updateStats = useCallback((consultList: ConsultationSession[]) => {
+    const list = Array.isArray(consultList) ? consultList : [];
+    const completed = list.filter(c => c.status === 'completed');
+    const validDurations = list
+      .map(c => Number(c.duration))
+      .filter(d => !isNaN(d) && d > 0);
+    const avgDuration = validDurations.length > 0
+      ? Math.round(validDurations.reduce((acc, d) => acc + d, 0) / validDurations.length)
+      : (list.length > 0 ? Math.round(list.reduce((acc, c) => acc + (Number(c.duration) || 0), 0) / list.length) : 0);
+
     setStats({
-      totalConsultations: consultList.length,
-      completedConsultations: consultList.filter(c => c.status === 'completed').length,
-      averageDuration: consultList.length > 0
-        ? Math.round(consultList.reduce((acc, c) => acc + (c.duration || 0), 0) / consultList.length)
-        : 0,
-      pendingFollowUps: consultList.filter(c => c.status === 'completed').length,
+      totalConsultations: list.length,
+      completedConsultations: completed.length,
+      averageDuration: isNaN(avgDuration) ? 0 : avgDuration,
+      pendingFollowUps: completed.length,
     });
   }, []);
   const effectiveUserId = userId || (import.meta.env.DEV ? 'dev_user_preview' : '');
@@ -155,16 +173,18 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     logger.info('consultations_load_start', { userId: effectiveUserId });
     const cachedData = consultationService.getCachedConsultations(effectiveUserId);
     if (cachedData.length > 0) {
-      setConsultations(cachedData as unknown as ConsultationSession[]);
-      updateStats(cachedData as unknown as ConsultationSession[]);
+      const normalizedCache = normalizeConsultations(cachedData);
+      setConsultations(normalizedCache);
+      updateStats(normalizedCache);
       setConsultationsLoading(false); 
       logger.info('consultations_loaded_from_cache', { count: cachedData.length });
     }
     consultationService.getUserConsultations(effectiveUserId)
       .then(data => {
         if (data && data.length > 0) {
-          setConsultations(data as unknown as ConsultationSession[]);
-          updateStats(data as unknown as ConsultationSession[]);
+          const normalizedData = normalizeConsultations(data);
+          setConsultations(normalizedData);
+          updateStats(normalizedData);
           logger.info('consultations_refreshed_from_api', { count: data.length });
         } else if (cachedData.length === 0) {
           
@@ -381,15 +401,16 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
         return consultationService.getUserConsultations(getCurrentUserId());
       })
       .then(updatedList => {
-        setConsultations(updatedList as unknown as ConsultationSession[]);
-        updateStats(updatedList as unknown as ConsultationSession[]);
+        const normalized = normalizeConsultations(updatedList);
+        setConsultations(normalized);
+        updateStats(normalized);
         setRefreshKey(prev => prev + 1);
       })
       .catch(error => {
         console.error('Error saving consultation:', error);
         const existing = localStorage.getItem(`consultations_${userId}`);
         const existingConsultations = existing ? JSON.parse(existing) : [];
-        const updatedConsultations = [newConsultation, ...existingConsultations];
+        const updatedConsultations = normalizeConsultations([newConsultation, ...existingConsultations]);
         localStorage.setItem(`consultations_${userId}`, JSON.stringify(updatedConsultations));
         setConsultations(updatedConsultations);
         updateStats(updatedConsultations);

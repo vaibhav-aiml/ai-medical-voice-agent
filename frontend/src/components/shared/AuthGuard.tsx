@@ -75,13 +75,13 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     height: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'var(--accent-clinical)',
   },
   loader: {
     width: '50px',
     height: '50px',
     border: '3px solid #f3f3f3',
-    borderTop: '3px solid #667eea',
+    borderTop: '3px solid var(--accent-clinical)',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
@@ -90,7 +90,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'var(--accent-clinical)',
     padding: '20px',
   },
   signInCard: {
@@ -104,7 +104,7 @@ const styles = {
   },
   title: {
     fontSize: '28px',
-    color: '#667eea',
+    color: 'var(--accent-clinical)',
     marginBottom: '10px',
   },
   subtitle: {
@@ -120,7 +120,7 @@ const styles = {
   switchButton: {
     background: 'transparent',
     border: 'none',
-    color: '#667eea',
+    color: 'var(--accent-clinical)',
     cursor: 'pointer',
     fontSize: '14px',
     textDecoration: 'underline',

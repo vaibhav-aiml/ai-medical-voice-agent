@@ -119,7 +119,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
         specialistType: c.specialistType || 'general',
         date: new Date(c.startedAt || Date.now()),
         symptoms: c.symptoms || 'No symptoms recorded',
-        duration: c.duration || 15,
+        duration: Number(c.duration) || 15,
         rating: ratingObj[c.id]?.rating,
       })),
       peakHours: [
@@ -203,8 +203,8 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
 
   if (loading) {
     return (
-      <div style={styles.overlay}>
-        <div style={styles.modal}>
+      <div className="app-modal-overlay" style={styles.overlay}>
+        <div className="app-modal-content" style={styles.modal}>
           <div style={styles.loadingContainer}>
             <div style={styles.spinner}></div>
             <p>Loading analytics dashboard...</p>
@@ -216,8 +216,8 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
 
   if (error) {
     return (
-      <div style={styles.overlay}>
-        <div style={styles.modal}>
+      <div className="app-modal-overlay" style={styles.overlay}>
+        <div className="app-modal-content" style={styles.modal}>
           <div style={styles.errorContainer}>
             <p style={{ color: '#ef4444' }}>Error: {error}</p>
             <button onClick={fetchAnalytics} style={styles.retryButton}>
@@ -243,8 +243,8 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
   const maxCount = Math.max(...getTrendData().map(d => d.count), 1);
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <div className="app-modal-overlay" style={styles.overlay}>
+      <div className="app-modal-content" style={styles.modal}>
         <div style={styles.header}>
           <div style={styles.headerLeft}>
             <TrendingUp size={24} color="#00C2FF" />
@@ -378,7 +378,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
                   </div>
                   <div style={{ width: 120 }}>
                     <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ width: `${symptom.percentage}%`, height: '100%', background: 'linear-gradient(90deg, #00C2FF, #0066FF)', borderRadius: 3 }} />
+                      <div style={{ width: `${symptom.percentage}%`, height: '100%', background: 'var(--accent-clinical)', borderRadius: 3 }} />
                     </div>
                   </div>
                   <div style={{ width: 45, textAlign: 'right', color: '#00C2FF' }}>{Math.round(symptom.percentage)}%</div>
@@ -413,7 +413,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
                       <span style={{ color: '#00C2FF' }}>{Math.round(group.percentage)}%</span>
                     </div>
                     <div style={{ height: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
-                      <div style={{ width: `${group.percentage}%`, height: '100%', background: 'linear-gradient(90deg, #00C2FF, #0066FF)', borderRadius: 4 }} />
+                      <div style={{ width: `${group.percentage}%`, height: '100%', background: 'var(--accent-clinical)', borderRadius: 4 }} />
                     </div>
                   </div>
                 ))}
@@ -427,7 +427,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
                       <span style={{ color: '#00C2FF' }}>{Math.round(gender.percentage)}%</span>
                     </div>
                     <div style={{ height: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
-                      <div style={{ width: `${gender.percentage}%`, height: '100%', background: 'linear-gradient(90deg, #00C2FF, #0066FF)', borderRadius: 4 }} />
+                      <div style={{ width: `${gender.percentage}%`, height: '100%', background: 'var(--accent-clinical)', borderRadius: 4 }} />
                     </div>
                   </div>
                 ))}
@@ -460,7 +460,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     right: 0,
     bottom: 0,
     background: 'rgba(0,0,0,0.8)',
-    backdropFilter: 'blur(8px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -468,7 +467,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '20px',
   },
   modal: {
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+    background: 'var(--bg-card)',
     borderRadius: '24px',
     width: '100%',
     maxWidth: '1200px',
@@ -523,7 +522,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     gap: '6px',
     padding: '8px 16px',
-    background: 'linear-gradient(90deg, #0066FF, #00C2FF)',
+    background: 'var(--accent-clinical)',
     border: 'none',
     borderRadius: '8px',
     color: '#fff',
@@ -659,7 +658,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   bar: {
     width: '30px',
-    background: 'linear-gradient(180deg, #00C2FF, #0066FF)',
+    background: 'var(--accent-clinical)',
     borderRadius: '4px',
   },
   barValue: {

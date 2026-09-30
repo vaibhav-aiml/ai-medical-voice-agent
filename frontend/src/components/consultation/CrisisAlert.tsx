@@ -95,7 +95,7 @@ const CrisisAlert: React.FC<CrisisAlertProps> = ({ crisisType, resource, onClose
         }
         
         .crisis-alert-modal {
-          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+          background: var(--bg-card);
           max-width: 650px;
           width: 100%;
           max-height: 90vh;
@@ -156,7 +156,7 @@ const CrisisAlert: React.FC<CrisisAlertProps> = ({ crisisType, resource, onClose
         
         /* Primary Hotline Section */
         .hotline-section {
-          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          background: #ef4444;
           padding: 20px;
           border-radius: 16px;
           margin-bottom: 20px;

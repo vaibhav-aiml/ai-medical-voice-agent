@@ -98,7 +98,7 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'sticky' as const,
     top: 0,
     zIndex: 900,
-    background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+    background: 'var(--bg-card)',
     borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
     padding: '14px 24px',
     color: '#e2e8f0',
@@ -152,7 +152,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   progressBar: {
     height: '100%',
-    background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6)',
+    background: 'var(--accent-clinical)',
     backgroundSize: '200% 100%',
     animation: 'csb-progress 2s ease-in-out infinite',
     borderRadius: '4px',

@@ -203,7 +203,7 @@ function AppContent() {
 
       {}
       {ctx.showClinicDashboard && ctx.currentClinicId && (
-        <div style={styles.modalOverlayFull}>
+        <div className="app-modal-overlay" style={styles.modalOverlayFull}>
           <div style={styles.modalFullContent}>
             <button onClick={() => ctx.setShowClinicDashboard(false)} style={styles.modalCloseBtn}>×</button>
             <Suspense fallback={<div style={{ padding: '40px', color: '#fff', textAlign: 'center' }}>Loading Clinic...</div>}>
@@ -402,7 +402,6 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'fixed' as const,
     top: 0, left: 0, right: 0, bottom: 0,
     background: 'rgba(0,0,0,0.4)',
-    backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -412,7 +411,6 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'fixed' as const,
     top: 0, left: 0, right: 0, bottom: 0,
     background: 'rgba(0,0,0,0.5)',
-    backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

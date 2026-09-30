@@ -46,7 +46,7 @@ export default function ReportsPage() {
             </div>
             <div style={styles.reportContent}>
               <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
-              <p><strong>{t('reports.duration')}:</strong> {consultation.duration} {t('reports.minutes')}</p>
+              <p><strong>{t('reports.duration')}:</strong> {Number(consultation.duration) || 0} {t('reports.minutes')}</p>
             </div>
             <div style={{
               ...styles.reportActions,
@@ -122,5 +122,5 @@ const styles: Record<string, React.CSSProperties> = {
   downloadButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', background: 'var(--badge-bg)', color: 'var(--text-secondary)', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
   bookButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', background: 'var(--badge-bg)', color: 'var(--button-primary)', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
   ratingButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
-  enhancedReportButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
+  enhancedReportButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', background: 'var(--accent-clinical)', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
 };

@@ -94,8 +94,11 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
       const date = new Date();
       date.setDate(date.getDate() - (6 - index));
       const dateStr = date.toDateString();
-      const dayConsultations = filtered.filter(c => new Date(c.startedAt).toDateString() === dateStr);
-      const totalDuration = dayConsultations.reduce((sum, c) => sum + c.duration, 0);
+      const dayConsultations = filtered.filter(c => {
+        const d = c.startedAt ? new Date(c.startedAt) : (c.date ? new Date(c.date) : null);
+        return d && !isNaN(d.getTime()) && d.toDateString() === dateStr;
+      });
+      const totalDuration = dayConsultations.reduce((sum, c) => sum + (Number(c.duration) || 0), 0);
       return dayConsultations.length > 0 ? Math.round(totalDuration / dayConsultations.length) : 0;
     });
 
@@ -207,11 +210,16 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
 
   const trend = getTrend();
   const filteredConsultations = getFilteredData();
-  const avgRating = filteredConsultations.filter(c => c.rating).length > 0 
-    ? filteredConsultations.filter(c => c.rating).reduce((acc, c) => acc + (c.rating || 0), 0) / filteredConsultations.filter(c => c.rating).length 
+  const ratedConsultations = filteredConsultations.filter(c => c.rating !== undefined && c.rating !== null && !isNaN(Number(c.rating)));
+  const avgRating = ratedConsultations.length > 0 
+    ? ratedConsultations.reduce((acc, c) => acc + Number(c.rating), 0) / ratedConsultations.length 
     : 0;
-  const totalMinutes = filteredConsultations.reduce((acc, c) => acc + c.duration, 0);
-  const avgDuration = filteredConsultations.length > 0 ? Math.round(totalMinutes / filteredConsultations.length) : 0;
+  const totalMinutes = Math.round(filteredConsultations.reduce((acc, c) => acc + (Number(c.duration) || 0), 0));
+  const consultationsWithDuration = filteredConsultations.filter(c => Number(c.duration) > 0);
+  const rawAvgDuration = consultationsWithDuration.length > 0
+    ? totalMinutes / consultationsWithDuration.length
+    : (filteredConsultations.length > 0 ? totalMinutes / filteredConsultations.length : 0);
+  const avgDuration = isNaN(rawAvgDuration) ? 0 : Math.round(rawAvgDuration);
 
   if (!isInitialized && consultations.length === 0) {
     return (

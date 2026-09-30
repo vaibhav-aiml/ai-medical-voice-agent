@@ -460,7 +460,7 @@ const MedicalConsultation: React.FC = () => {
           width: 40px;
           height: 40px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: var(--accent-clinical);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -468,7 +468,7 @@ const MedicalConsultation: React.FC = () => {
         }
 
         .message.user .message-avatar {
-          background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
+          background: var(--accent-clinical);
         }
 
         .message-content {

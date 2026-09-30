@@ -86,7 +86,13 @@ router.post('/save', validate(saveConsultationSchema), catchAsync(async (req: Re
   .returning();
   
   logger.info(`Saved consultation: ${consultation[0].id} for user: ${userId}`);
-  res.json({ success: true, consultation: consultation[0] });
+  res.json({
+    success: true,
+    consultation: {
+      ...consultation[0],
+      duration: consultation[0].duration !== null && consultation[0].duration !== undefined ? parseFloat(consultation[0].duration.toString()) : 0,
+    }
+  });
 }));
 router.post('/:id/end', catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -107,7 +113,14 @@ router.post('/:id/end', catchAsync(async (req: Request, res: Response) => {
   }
 
   logger.info(`Ended consultation: ${id}`);
-  res.json({ success: true, message: 'Consultation ended successfully', consultation: result[0] });
+  res.json({
+    success: true,
+    message: 'Consultation ended successfully',
+    consultation: {
+      ...result[0],
+      duration: result[0].duration !== null && result[0].duration !== undefined ? parseFloat(result[0].duration.toString()) : 0,
+    }
+  });
 }));
 router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
@@ -132,6 +145,7 @@ router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
   for (const row of rows) {
     const cons = {
       ...row.consultation,
+      duration: row.consultation.duration !== null && row.consultation.duration !== undefined ? parseFloat(row.consultation.duration.toString()) : 0,
       emotion: row.voiceSession?.emotion || null,
       emotionConfidence: row.voiceSession?.emotionConfidence || null,
     };
@@ -150,7 +164,10 @@ router.get('/:id', catchAsync(async (req: Request, res: Response) => {
     throw new AppError('Consultation not found', 404);
   }
   
-  res.json(consultation[0]);
+  res.json({
+    ...consultation[0],
+    duration: consultation[0].duration !== null && consultation[0].duration !== undefined ? parseFloat(consultation[0].duration.toString()) : 0,
+  });
 }));
 router.delete('/:id', catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;

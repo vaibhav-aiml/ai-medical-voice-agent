@@ -1117,7 +1117,7 @@ const styles = {
     fontWeight: 'bold',
   },
   voiceStatus: {
-    color: '#8b5cf6',
+    color: 'var(--accent-clinical)',
     fontWeight: 'bold',
   },
   contextBadge: {
@@ -1167,7 +1167,7 @@ const styles = {
   },
   voiceTip: {
     fontSize: '12px',
-    color: '#8b5cf6',
+    color: 'var(--accent-clinical)',
     marginTop: '5px',
   },
   contextTip: {

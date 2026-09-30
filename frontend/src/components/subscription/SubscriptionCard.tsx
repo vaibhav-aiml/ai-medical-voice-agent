@@ -80,7 +80,7 @@ const styles = {
   tierBadge: {
     display: 'inline-block',
     padding: '4px 12px',
-    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+    background: 'var(--accent-clinical)',
     color: 'white',
     borderRadius: '20px',
     fontSize: '12px',

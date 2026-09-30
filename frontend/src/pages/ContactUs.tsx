@@ -137,7 +137,7 @@ export default function ContactUs() {
 
         /* Hero Section */
         .hero-section {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: var(--accent-clinical);
           color: white;
           text-align: center;
           padding: 100px 20px;
@@ -195,7 +195,7 @@ export default function ContactUs() {
         .info-icon {
           width: 60px;
           height: 60px;
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: var(--accent-clinical);
           border-radius: 50%;
           display: flex;
           align-items: center;

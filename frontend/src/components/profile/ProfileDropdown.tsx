@@ -357,7 +357,7 @@ const styles = {
   avatarPlaceholder: {
     width: '100%',
     height: '100%',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    background: 'var(--accent-clinical)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -399,7 +399,7 @@ const styles = {
     width: '100%',
     height: '100%',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    background: 'var(--accent-clinical)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -490,7 +490,7 @@ const styles = {
     width: '32px',
     height: '32px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    background: 'var(--accent-clinical)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -591,7 +591,7 @@ const styles = {
     },
   },
   languageActive: {
-    background: 'rgba(139, 92, 246, 0.1)',
+    background: 'var(--accent-clinical-soft)',
   },
   flag: {
     fontSize: '18px',
@@ -605,7 +605,7 @@ const styles = {
     color: 'var(--text-secondary)',
   },
   checkIcon: {
-    color: '#8b5cf6',
+    color: 'var(--accent-clinical)',
     marginLeft: '8px',
   },
   avatarMenu: {

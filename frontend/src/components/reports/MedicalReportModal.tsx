@@ -69,8 +69,8 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
 
   return (
     <>
-      <div style={styles.overlay}>
-        <div style={styles.modal}>
+      <div className="app-modal-overlay" style={styles.overlay}>
+        <div className="app-modal-content" style={styles.modal}>
           <div style={styles.header}>
             <h2 style={styles.title}>📋 Medical Report</h2>
             <button onClick={onClose} style={styles.closeButton}>
@@ -126,7 +126,7 @@ export default function MedicalReportModal({ consultationId, specialistType, sym
             {onResume && (
               <button 
                 onClick={onResume} 
-                style={{ ...styles.downloadButton, backgroundColor: '#8b5cf6' }}
+                style={{ ...styles.downloadButton, backgroundColor: 'var(--accent-clinical)' }}
               >
                 <MessageCircle size={16} />
                 <span>Resume Chat</span>
@@ -207,7 +207,6 @@ const styles = {
     right: 0,
     bottom: 0,
     background: 'rgba(0,0,0,0.6)',
-    backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -229,7 +228,7 @@ const styles = {
     alignItems: 'center',
     padding: '20px 24px',
     borderBottom: '1px solid var(--border-color)',
-    background: 'linear-gradient(135deg, var(--gradient-start), var(--gradient-end))',
+    background: 'var(--accent-clinical)',
     borderRadius: '20px 20px 0 0',
   },
   title: {

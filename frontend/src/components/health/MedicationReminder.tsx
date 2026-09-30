@@ -722,7 +722,7 @@ const styles = {
     margin: 0,
   },
   icon: {
-    color: '#8b5cf6',
+    color: 'var(--accent-clinical)',
   },
   closeButton: {
     background: 'transparent',
@@ -789,7 +789,7 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     padding: '10px 16px',
-    background: '#8b5cf6',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -829,8 +829,8 @@ const styles = {
   },
   dosage: {
     fontSize: '13px',
-    color: '#8b5cf6',
-    background: '#f3e8ff',
+    color: 'var(--accent-clinical)',
+    background: 'var(--accent-clinical-soft)',
     padding: '2px 8px',
     borderRadius: '12px',
   },
@@ -876,7 +876,7 @@ const styles = {
   emptyButton: {
     marginTop: '16px',
     padding: '10px 20px',
-    background: '#8b5cf6',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -894,7 +894,7 @@ const styles = {
     width: '40px',
     height: '40px',
     border: '3px solid #e2e8f0',
-    borderTopColor: '#8b5cf6',
+    borderTopColor: 'var(--accent-clinical)',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
@@ -970,7 +970,7 @@ const styles = {
   },
   saveButton: {
     padding: '8px 16px',
-    background: '#8b5cf6',
+    background: 'var(--accent-clinical)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',

@@ -243,8 +243,8 @@ export default function FHIRConnector({ userId, onClose, consultations }: Props)
   }
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.container}>
+    <div className="app-modal-overlay" style={styles.overlay}>
+      <div className="app-modal-content" style={styles.container}>
         <div style={styles.header}>
           <div style={styles.titleArea}>
             <Database size={24} color="#3b82f6" />
@@ -557,7 +557,6 @@ const styles = {
     width: '100%',
     height: '100%',
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    backdropFilter: 'blur(8px)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',

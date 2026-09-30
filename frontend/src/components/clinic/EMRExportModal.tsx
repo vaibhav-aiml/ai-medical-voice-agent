@@ -58,8 +58,8 @@ export default function EMRExportModal({ consultationId, onClose }: Props) {
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <div className="app-modal-overlay" style={styles.overlay}>
+      <div className="app-modal-content" style={styles.modal}>
         <div style={styles.header}>
           <div style={styles.titleGroup}>
             <Database size={22} color="#3b82f6" />
@@ -142,7 +142,7 @@ export default function EMRExportModal({ consultationId, onClose }: Props) {
             <div style={styles.exportCard}>
               <div style={styles.cardInfo}>
                 <div style={styles.cardHeader}>
-                  <Code size={20} color="#8b5cf6" />
+                  <Code size={20} color="var(--accent-clinical)" />
                   <h4>Structured Medical JSON</h4>
                 </div>
                 <p>A complete data package containing detailed demographics, voice transcripts, emotion scoring, and assessment notes for analytics.</p>
@@ -150,7 +150,7 @@ export default function EMRExportModal({ consultationId, onClose }: Props) {
               <button 
                 onClick={() => handleDownload('structured', 'json')}
                 disabled={downloadingFormat !== null}
-                style={{...styles.downloadBtn, backgroundColor: '#8b5cf6'}}
+                style={{...styles.downloadBtn, backgroundColor: 'var(--accent-clinical)'}}
               >
                 {downloadingFormat === 'structured' ? <RefreshCw style={styles.spinner} size={14} /> : <Download size={14} />}
                 <span>Download JSON</span>
@@ -171,7 +171,6 @@ const styles = {
     right: 0,
     bottom: 0,
     background: 'rgba(15, 23, 42, 0.55)',
-    backdropFilter: 'blur(6px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

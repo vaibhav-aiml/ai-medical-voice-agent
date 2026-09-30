@@ -1309,7 +1309,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: '56px',
     height: '56px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #10b981, #059669)',
+    background: 'var(--accent-clinical)',
     color: 'white',
     display: 'flex',
     alignItems: 'center',

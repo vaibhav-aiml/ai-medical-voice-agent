@@ -469,7 +469,7 @@ const styles = {
     background: 'transparent',
     border: '1px solid var(--border-color)',
     cursor: 'pointer',
-    color: '#8b5cf6',
+    color: 'var(--accent-clinical)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -527,8 +527,8 @@ const styles = {
     fontWeight: 600,
     padding: '2px 8px',
     borderRadius: '9999px',
-    background: 'rgba(139, 92, 246, 0.12)',
-    color: '#8b5cf6',
+    background: 'var(--accent-clinical-soft)',
+    color: 'var(--accent-clinical)',
   },
   remindersList: {
     maxHeight: '220px',
@@ -585,7 +585,7 @@ const styles = {
     cursor: 'pointer',
     fontSize: '12px',
     fontWeight: 600,
-    color: '#8b5cf6',
+    color: 'var(--accent-clinical)',
     textAlign: 'center' as const,
     transition: 'background 0.15s ease',
   },
@@ -716,7 +716,7 @@ hoverStyles.textContent = `
   
   /* Reminder bell hover - distinct subtle background fill, NO translateY lift */
   .reminder-bell-button:hover {
-    background: rgba(139, 92, 246, 0.1) !important;
+    background: var(--accent-clinical-soft) !important;
   }
   
   /* Upgrade button hover */

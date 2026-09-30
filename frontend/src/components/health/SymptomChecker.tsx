@@ -249,8 +249,8 @@ export default function SymptomChecker({ onClose, onStartConsultation }: Props) 
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <div className="app-modal-overlay" style={styles.overlay}>
+      <div className="app-modal-content" style={styles.modal}>
         <div style={styles.header}>
           <div style={styles.headerIcon}>
             <Activity size={24} />
@@ -383,7 +383,6 @@ const styles = {
     right: 0,
     bottom: 0,
     background: 'rgba(0,0,0,0.5)',
-    backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

@@ -80,7 +80,7 @@ export default function TermsConditions() {
 
         /* Hero Section */
         .hero-section {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: var(--accent-clinical);
           color: white;
           text-align: center;
           padding: 100px 20px;
@@ -159,7 +159,7 @@ export default function TermsConditions() {
 
         /* Contact CTA Section */
         .contact-cta-section {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: var(--accent-clinical);
           color: white;
           text-align: center;
           padding: 80px 20px;

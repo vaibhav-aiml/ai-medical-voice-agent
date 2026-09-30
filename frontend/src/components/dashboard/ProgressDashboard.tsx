@@ -70,8 +70,8 @@ export default function ProgressDashboard({ onClose }: Props) {
         id: c.id,
         date: new Date(c.startedAt),
         specialistType: c.specialistType,
-        duration: c.duration,
-        rating: ratings[c.id]?.rating,
+        duration: Number(c.duration) || 0,
+        rating: ratings[c.id]?.rating !== undefined && ratings[c.id]?.rating !== null ? Number(ratings[c.id]?.rating) : undefined,
       }));
       setConsultations(formatted);
     }
@@ -114,8 +114,11 @@ export default function ProgressDashboard({ onClose }: Props) {
 
   const averages = calculateAverages();
   const filteredConsultations = getFilteredConsultations();
-  const avgRating = filteredConsultations.filter(c => c.rating).reduce((acc, c) => acc + (c.rating || 0), 0) / (filteredConsultations.filter(c => c.rating).length || 1);
-  const totalMinutes = filteredConsultations.reduce((acc, c) => acc + c.duration, 0);
+  const ratedConsultations = filteredConsultations.filter(c => c.rating !== undefined && c.rating !== null && !isNaN(Number(c.rating)));
+  const avgRating = ratedConsultations.length > 0
+    ? ratedConsultations.reduce((acc, c) => acc + Number(c.rating), 0) / ratedConsultations.length
+    : 0;
+  const totalMinutes = Math.round(filteredConsultations.reduce((acc, c) => acc + (Number(c.duration) || 0), 0));
   const specialistCounts = filteredConsultations.reduce((acc, c) => {
     acc[c.specialistType] = (acc[c.specialistType] || 0) + 1;
     return acc;
@@ -127,8 +130,8 @@ export default function ProgressDashboard({ onClose }: Props) {
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <div className="app-modal-overlay" style={styles.overlay}>
+      <div className="app-modal-content" style={styles.modal}>
         <div style={styles.header}>
           <div style={styles.headerIcon}>
             <TrendingUp size={24} />
@@ -360,7 +363,6 @@ const styles = {
     right: 0,
     bottom: 0,
     background: 'rgba(0,0,0,0.5)',
-    backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

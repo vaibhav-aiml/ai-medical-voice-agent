@@ -188,7 +188,7 @@ const styles = {
     transition: 'background 0.2s ease',
   },
   activeOption: {
-    background: 'rgba(139, 92, 246, 0.1)',
+    background: 'var(--accent-clinical-soft)',
   },
   flag: {
     fontSize: '18px',
@@ -206,7 +206,7 @@ const styles = {
     color: 'var(--text-secondary)',
   },
   checkMark: {
-    color: '#8b5cf6',
+    color: 'var(--accent-clinical)',
     fontSize: '12px',
     fontWeight: 'bold',
   },

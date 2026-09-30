@@ -171,7 +171,7 @@ const AboutUs: React.FC = () => {
 
         /* Hero Section */
         .hero-section {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: var(--accent-clinical);
           color: white;
           text-align: center;
           padding: 100px 20px;
@@ -225,7 +225,7 @@ const AboutUs: React.FC = () => {
         }
 
         .mission-card, .vision-card {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: var(--accent-clinical);
           color: white;
           padding: 48px 32px;
           border-radius: 20px;
@@ -288,7 +288,7 @@ const AboutUs: React.FC = () => {
         .team-icon {
           width: 90px;
           height: 90px;
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: var(--accent-clinical);
           color: white;
           font-size: 40px;
           font-weight: bold;
@@ -400,7 +400,7 @@ const AboutUs: React.FC = () => {
 
         /* Contact CTA */
         .contact-cta {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: var(--accent-clinical);
           color: white;
           text-align: center;
           padding: 80px 20px;
@@ -419,7 +419,7 @@ const AboutUs: React.FC = () => {
 
         .cta-button {
           background: white;
-          color: #1e3a8a;
+          color: var(--accent-clinical);
           border: none;
           padding: 14px 36px;
           font-size: 16px;

@@ -138,7 +138,7 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+    background: 'var(--bg-card)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -169,7 +169,7 @@ const styles: Record<string, React.CSSProperties> = {
   waveBar: {
     width: '4px',
     height: '100%',
-    background: 'linear-gradient(180deg, #3b82f6, #8b5cf6)',
+    background: 'var(--accent-clinical)',
     borderRadius: '2px',
     transformOrigin: 'center',
     animation: 'startupWaveBar ease-in-out infinite',
@@ -191,7 +191,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   progressFill: {
     height: '100%',
-    background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
+    background: 'var(--accent-clinical)',
     borderRadius: '2px',
   },
   skipHint: {

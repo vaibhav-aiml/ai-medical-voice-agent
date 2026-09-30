@@ -93,7 +93,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     minHeight: '100vh',
     padding: '24px',
-    background: 'linear-gradient(135deg, #0f172a, #1e293b)',
+    background: 'var(--bg-card)',
     fontFamily: "'Inter', system-ui, sans-serif",
   },
   card: {
