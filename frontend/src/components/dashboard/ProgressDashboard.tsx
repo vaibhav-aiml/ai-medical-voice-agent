@@ -307,7 +307,7 @@ export default function ProgressDashboard({ onClose }: Props) {
                     <div key={type} style={styles.specialistItem}>
                       <span style={styles.specialistName}>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
                       <div style={styles.specialistBar}>
-                        <div style={{ ...styles.specialistFill, width: `${(count / filteredConsultations.length) * 100}%` }} />
+                        <div style={{ ...styles.specialistFill, width: `${(Number(count) / (filteredConsultations.length || 1)) * 100}%` }} />
                       </div>
                       <span>{count}</span>
                     </div>

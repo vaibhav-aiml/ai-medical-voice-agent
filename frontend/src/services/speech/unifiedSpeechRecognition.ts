@@ -17,7 +17,7 @@ const NativeSpeechRecognition = registerPlugin<SpeechRecognitionPluginInterface>
 export class NativeSpeechRecognitionAdapter {
   continuous: boolean = true;
   interimResults: boolean = true;
-  lang: string = 'en-US';
+  lang: string = 'en-IN';
 
   onstart: (() => void) | null = null;
   onresult: ((event: any) => void) | null = null;
@@ -25,11 +25,13 @@ export class NativeSpeechRecognitionAdapter {
   onend: (() => void) | null = null;
 
   private isStarted: boolean = false;
+  private finalSegments: string[] = [];
   private listeners: Array<() => Promise<void>> = [];
 
   async start(): Promise<void> {
     if (this.isStarted) return;
     this.isStarted = true;
+    this.finalSegments = [];
 
     try {
       await this.cleanupListeners();
@@ -40,27 +42,61 @@ export class NativeSpeechRecognitionAdapter {
       this.listeners.push(() => readySub.remove());
 
       const partialSub = await NativeSpeechRecognition.addListener('partialResult', (data: { transcript: string }) => {
-        if (this.onresult && data.transcript) {
-          const fakeResult = [{ transcript: data.transcript, confidence: 0.8 }];
-          (fakeResult as any).isFinal = false;
-          const fakeEvent = {
+        const interim = (data.transcript || '').trim();
+        if (!interim && this.finalSegments.length === 0) return;
+
+        const results: any[] = this.finalSegments.map(seg => {
+          const item = [{ transcript: seg, confidence: 1.0 }];
+          (item as any).isFinal = true;
+          return item;
+        });
+
+        if (interim) {
+          const item = [{ transcript: interim, confidence: 0.8 }];
+          (item as any).isFinal = false;
+          results.push(item);
+        }
+
+        if (this.onresult && results.length > 0) {
+          this.onresult({
             resultIndex: 0,
-            results: [fakeResult],
-          };
-          this.onresult(fakeEvent);
+            results,
+          });
         }
       });
       this.listeners.push(() => partialSub.remove());
 
       const resultSub = await NativeSpeechRecognition.addListener('result', (data: { transcript: string }) => {
-        if (this.onresult && data.transcript) {
-          const fakeResult = [{ transcript: data.transcript, confidence: 1.0 }];
-          (fakeResult as any).isFinal = true;
-          const fakeEvent = {
+        const finalText = (data.transcript || '').trim();
+        if (finalText) {
+          this.finalSegments.push(finalText);
+        }
+
+        const results: any[] = this.finalSegments.map(seg => {
+          const item = [{ transcript: seg, confidence: 1.0 }];
+          (item as any).isFinal = true;
+          return item;
+        });
+
+        if (this.onresult && results.length > 0) {
+          this.onresult({
             resultIndex: 0,
-            results: [fakeResult],
-          };
-          this.onresult(fakeEvent);
+            results,
+          });
+        }
+
+        // If continuous dictation is requested and user has not stopped, auto-restart next utterance
+        if (this.continuous && this.isStarted) {
+          setTimeout(() => {
+            if (this.isStarted) {
+              NativeSpeechRecognition.startListening({
+                language: this.lang,
+                partialResults: this.interimResults,
+              }).catch(err => {
+                console.warn('Native speech continuous listen restart:', err);
+              });
+            }
+          }, 150);
         }
       });
       this.listeners.push(() => resultSub.remove());
@@ -73,8 +109,10 @@ export class NativeSpeechRecognitionAdapter {
       this.listeners.push(() => errorSub.remove());
 
       const endSub = await NativeSpeechRecognition.addListener('end', () => {
-        this.isStarted = false;
-        if (this.onend) this.onend();
+        if (!this.continuous || !this.isStarted) {
+          this.isStarted = false;
+          if (this.onend) this.onend();
+        }
       });
       this.listeners.push(() => endSub.remove());
 
@@ -99,6 +137,7 @@ export class NativeSpeechRecognitionAdapter {
     } catch (e) {
       console.warn('Native speech stop error:', e);
     }
+    if (this.onend) this.onend();
   }
 
   async abort(): Promise<void> {

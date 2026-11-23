@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Heart, Brain, Activity, Moon, Droplet, Apple, Wind, TrendingUp, BookOpen, Clock, ChevronRight } from 'lucide-react';
 
 interface Article {
@@ -16,7 +16,7 @@ interface Tip {
   id: string;
   title: string;
   description: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   category: string;
 }
 

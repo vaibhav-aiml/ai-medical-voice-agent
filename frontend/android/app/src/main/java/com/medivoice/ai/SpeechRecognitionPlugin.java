@@ -90,10 +90,10 @@ public class SpeechRecognitionPlugin extends Plugin {
 
                     @Override
                     public void onEndOfSpeech() {
-                        isListening = false;
+                        // User paused speaking; do not terminate session before results arrive
                         JSObject data = new JSObject();
-                        data.put("status", "stopped");
-                        notifyListeners("end", data);
+                        data.put("status", "processing");
+                        notifyListeners("speechEnd", data);
                     }
 
                     @Override
@@ -104,6 +104,10 @@ public class SpeechRecognitionPlugin extends Plugin {
                         data.put("error", errorMessage);
                         data.put("errorCode", error);
                         notifyListeners("error", data);
+
+                        JSObject endData = new JSObject();
+                        endData.put("status", "stopped");
+                        notifyListeners("end", endData);
                     }
 
                     @Override
@@ -121,6 +125,11 @@ public class SpeechRecognitionPlugin extends Plugin {
                         data.put("transcript", matches != null && !matches.isEmpty() ? matches.get(0) : "");
                         data.put("isFinal", true);
                         notifyListeners("result", data);
+
+                        // Notify end after result has been successfully dispatched
+                        JSObject endData = new JSObject();
+                        endData.put("status", "stopped");
+                        notifyListeners("end", endData);
                     }
 
                     @Override
@@ -146,9 +155,20 @@ public class SpeechRecognitionPlugin extends Plugin {
                 Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, language);
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, language);
+                intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, false);
+                intent.putExtra("android.speech.extra.DICTATION_MODE", true);
                 intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, partialResults);
                 intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
                 intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getContext().getPackageName());
+
+                // Extended silence lengths so patient pauses for breathing do not cut speech off prematurely
+                intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 3000L);
+                intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L);
+                intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1500L);
+
+                // Prefer high-accuracy online models for medical vocabulary if network is available
+                intent.putExtra("android.speech.extra.PREFER_OFFLINE", false);
 
                 speechRecognizer.startListening(intent);
 

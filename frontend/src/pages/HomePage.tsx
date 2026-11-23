@@ -126,6 +126,7 @@ function FeatureCardItem({
   onToggle,
   t,
 }: {
+  key?: string | number;
   item: FeatureItem;
   isExpanded: boolean;
   isReceded: boolean;

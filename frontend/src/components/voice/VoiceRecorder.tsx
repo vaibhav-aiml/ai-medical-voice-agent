@@ -29,8 +29,15 @@ interface TriageResult {
   colorCode: 'green' | 'yellow' | 'orange' | 'red';
 }
 const getSpeechRecognitionCode = (language: string): string => {
+  if (language === 'en') {
+    // Detect regional English dialect (e.g., en-IN, en-GB, en-US)
+    if (typeof navigator !== 'undefined' && navigator.language && navigator.language.toLowerCase().startsWith('en-')) {
+      return navigator.language;
+    }
+    // Default to en-IN (Indian English) for highest acoustic model accuracy
+    return 'en-IN';
+  }
   const langMap: Record<string, string> = {
-    en: 'en-US',
     hi: 'hi-IN',
     ta: 'ta-IN',
     te: 'te-IN',
@@ -41,7 +48,7 @@ const getSpeechRecognitionCode = (language: string): string => {
     ml: 'ml-IN',
     pa: 'pa-IN',
   };
-  return langMap[language] || 'en-US';
+  return langMap[language] || 'en-IN';
 };
 
 const getEmotionEmoji = (emotion: string): string => {
@@ -559,7 +566,6 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       }
       setIsRecording(true);
       console.log('🎤 Voice recording started');
-      startVerificationRecording();
     } else {
       alert(t('errors.microphone'));
       setUseTextInput(true);
