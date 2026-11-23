@@ -329,16 +329,21 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.log(`🎤 [VoiceRecorder] Speech recognition language set to: ${speechLang} (${language})`);
       
       recognitionInstance.onresult = (event: any) => {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
+        let completeFinal = '';
+        let currentInterim = '';
+        for (let i = 0; i < event.results.length; i++) {
+          const res = event.results[i];
+          if (res.isFinal) {
+            completeFinal += (res[0]?.transcript || '') + ' ';
+          } else {
+            currentInterim += (res[0]?.transcript || '');
           }
         }
-        if (finalTranscript) {
-          finalTranscriptRef.current = finalTranscript;
-          setTranscript(finalTranscript);
-          console.log('🎤 [VoiceRecorder] Final transcript captured:', finalTranscript);
+        const full = (completeFinal + currentInterim).trim();
+        if (full) {
+          finalTranscriptRef.current = full;
+          setTranscript(full);
+          console.log('🎤 [VoiceRecorder] Speech recognized:', full);
         }
       };
       
@@ -349,26 +354,10 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
         }
       };
       recognitionInstance.onend = () => {
-        console.log('🎤 [VoiceRecorder] Recognition ended. Transcript:', finalTranscriptRef.current);
-        console.log('🔌 [VoiceRecorder] Socket state at onend — ref:', socketRef.current?.id, 'connected:', socketRef.current?.connected);
+        console.log('🎤 [VoiceRecorder] Recognition ended. Final text:', finalTranscriptRef.current);
         setIsRecording(false);
-        if (finalTranscriptRef.current && !isProcessingRef.current) {
-          const spokenText = finalTranscriptRef.current;
-          const userMessage = { role: 'user', content: spokenText };
-          setConversationHistory(prev => [...prev, userMessage]);
-          onTranscriptUpdateRef.current(spokenText);
-          hasReceivedResponseRef.current = false;
-          setIsProcessing(true);
-          const sent = getAIResponseStream(spokenText, 'voice');
-          if (!sent) {
-            console.error('❌ [VoiceRecorder] Voice message failed — socket not connected. socketRef:', socketRef.current);
-            setIsProcessing(false);
-            onAIResponseRef.current(
-              tRef.current('errors.server') || 'Connection lost. Please wait for reconnection or refresh the page.',
-              true
-            );
-          }
-          analyzeSymptomsForTriage(spokenText);
+        if (finalTranscriptRef.current) {
+          setTranscript(finalTranscriptRef.current);
         }
       };
       
@@ -377,7 +366,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       console.log('Speech recognition not supported in this environment');
       setUseTextInput(true);
     }
-  }, [language, getAIResponseStream, setConversationHistory]);
+  }, [language]);
   useEffect(() => {
     if (!socket) return;
     
@@ -563,7 +552,11 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       setTranscript('');
       finalTranscriptRef.current = '';
       accumulatedResponseRef.current = '';
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (err) {
+        console.warn('Speech recognition start error:', err);
+      }
       setIsRecording(true);
       console.log('🎤 Voice recording started');
       startVerificationRecording();
@@ -573,12 +566,57 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     }
   };
 
-  const stopVoiceRecording = () => {
+  const stopVoiceRecording = (andSend: boolean = false) => {
     if (recognition) {
-      recognition.stop();
-      setIsRecording(false);
-      console.log('🛑 Voice recording stopped');
+      try {
+        recognition.stop();
+      } catch (err) {
+        console.warn('Speech stop warning:', err);
+      }
     }
+    setIsRecording(false);
+    console.log('🛑 Voice recording stopped. andSend:', andSend);
+
+    const text = (finalTranscriptRef.current || transcript).trim();
+    if (text) {
+      setTranscript(text);
+      if (andSend) {
+        sendVoiceTranscript(text);
+      }
+    }
+  };
+
+  const sendVoiceTranscript = (textToSend?: string) => {
+    const text = (textToSend !== undefined ? textToSend : transcript).trim();
+    if (!text) return;
+
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    console.log('📤 [VoiceRecorder] Sending voice transcript to AI Doctor:', text);
+
+    const userMessage = { role: 'user', content: text };
+    setConversationHistory(prev => [...prev, userMessage]);
+
+    onTranscriptUpdate(text);
+    accumulatedResponseRef.current = '';
+    hasReceivedResponseRef.current = false;
+    setIsProcessing(true);
+
+    const sent = getAIResponseStream(text, 'voice');
+    if (!sent) {
+      console.error('❌ [VoiceRecorder] Voice message failed — socket not connected');
+      setIsProcessing(false);
+      onAIResponse(
+        t('errors.server') || 'Connection lost. Please wait for reconnection or refresh the page.',
+        true
+      );
+    }
+    analyzeSymptomsForTriage(text);
+
+    // Clear transcript so review card closes and waiting/streaming UI takes over
+    setTranscript('');
+    finalTranscriptRef.current = '';
   };
 
   const sendTextMessage = () => {
@@ -880,27 +918,115 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
               )}
             </div>
             
-            {!isRecording ? (
-              <button onClick={startVoiceRecording} style={styles.recordButton}>
-                🎤 {t('symptoms.speak')}
-              </button>
+            {isRecording ? (
+              <div style={styles.activeRecordingContainer}>
+                <div style={styles.recordingIndicator}>
+                  <span style={styles.redDot}></span>
+                  <strong>{t('consultation.recording')}</strong>
+                </div>
+
+                {transcript && (
+                  <div style={styles.liveTranscriptBox}>
+                    <span style={styles.liveBadge}>● LIVE RECOGNITION</span>
+                    <p style={styles.liveTranscriptText}>"{transcript}"</p>
+                  </div>
+                )}
+
+                <div style={styles.recordingControls}>
+                  <button 
+                    type="button" 
+                    onClick={() => stopVoiceRecording(false)} 
+                    style={styles.stopButton}
+                    title="Stop recording and review symptoms"
+                  >
+                    ⏹️ {t('consultation.stopRecording') || 'Stop Recording'}
+                  </button>
+
+                  {transcript.trim() && (
+                    <button 
+                      type="button" 
+                      onClick={() => stopVoiceRecording(true)} 
+                      style={styles.quickSendButton}
+                      title="Stop recording and immediately send to AI doctor"
+                    >
+                      🚀 {t('consultation.sendToAI') || 'Send to AI Doctor'}
+                    </button>
+                  )}
+                </div>
+              </div>
             ) : (
-              <button onClick={stopVoiceRecording} style={styles.stopButton}>
-                ⏹️ {t('symptoms.stop')}
-              </button>
-            )}
-            
-            {isRecording && (
-              <div style={styles.recordingIndicator}>
-                <span style={styles.redDot}></span>
-                {t('consultation.recording')}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <button 
+                  type="button" 
+                  onClick={startVoiceRecording} 
+                  style={styles.recordButton}
+                  disabled={isProcessing || isAnalyzing}
+                >
+                  🎤 {t('symptoms.speak')}
+                </button>
               </div>
             )}
             
             {transcript && !isRecording && (
-              <div style={styles.transcriptPreview}>
-                <strong>{t('chat.you')} {t('common.said')}:</strong>
-                <p>{transcript}</p>
+              <div style={styles.transcriptReviewCard}>
+                <div style={styles.reviewHeader}>
+                  <div style={styles.reviewTitleGroup}>
+                    <span style={{ fontSize: '20px' }}>📋</span>
+                    <strong>{t('consultation.reviewVoice') || 'Review Your Voice Consultation'}</strong>
+                  </div>
+                  <span style={styles.reviewBadge}>✓ {t('consultation.ready') || 'Ready to Send'}</span>
+                </div>
+
+                <p style={styles.reviewSubtitle}>
+                  {t('consultation.reviewInstructions') || 'Review or edit your spoken symptoms below before consulting the AI doctor:'}
+                </p>
+
+                <textarea
+                  value={transcript}
+                  onChange={(e) => {
+                    setTranscript(e.target.value);
+                    finalTranscriptRef.current = e.target.value;
+                  }}
+                  rows={3}
+                  style={styles.reviewTextarea}
+                  placeholder="Your spoken symptoms will appear here..."
+                  disabled={isProcessing || isAnalyzing}
+                />
+
+                <div style={styles.reviewActions}>
+                  <button
+                    type="button"
+                    onClick={() => sendVoiceTranscript(transcript)}
+                    style={{
+                      ...styles.sendToDoctorButton,
+                      ...((!transcript.trim() || isProcessing || isAnalyzing) ? styles.disabledButton : {})
+                    }}
+                    disabled={!transcript.trim() || isProcessing || isAnalyzing}
+                  >
+                    {isProcessing ? '⏳ ' + (t('consultation.sending') || 'Consulting AI Doctor...') : '🩺 ' + (t('consultation.sendToAI') || 'Send to AI Doctor')}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={startVoiceRecording}
+                    style={styles.reRecordButton}
+                    disabled={isProcessing || isAnalyzing}
+                  >
+                    🔄 {t('consultation.speakAgain') || 'Speak Again'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTranscript('');
+                      finalTranscriptRef.current = '';
+                    }}
+                    style={styles.discardButton}
+                    disabled={isProcessing || isAnalyzing}
+                  >
+                    ✕ {t('consultation.discard') || 'Discard'}
+                  </button>
+                </div>
               </div>
             )}
             
@@ -1218,6 +1344,163 @@ const styles = {
     background: '#f8f9fa',
     borderRadius: '8px',
     textAlign: 'left' as const,
+  },
+  activeRecordingContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '12px',
+    width: '100%',
+  },
+  recordingControls: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '12px',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: '10px',
+    width: '100%',
+  },
+  quickSendButton: {
+    padding: '14px 24px',
+    fontSize: '16px',
+    background: '#2E6B5E',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '50px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    boxShadow: '0 4px 12px rgba(46, 107, 94, 0.3)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  liveTranscriptBox: {
+    width: '100%',
+    maxWidth: '560px',
+    padding: '12px 16px',
+    background: '#f0fdf4',
+    border: '1px solid #bbf7d0',
+    borderRadius: '10px',
+    textAlign: 'left' as const,
+    boxSizing: 'border-box' as const,
+  },
+  liveBadge: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: '#dc2626',
+    letterSpacing: '0.05em',
+    display: 'block',
+    marginBottom: '4px',
+  },
+  liveTranscriptText: {
+    margin: 0,
+    fontSize: '14px',
+    color: '#166534',
+    lineHeight: '1.4',
+    fontStyle: 'italic',
+  },
+  transcriptReviewCard: {
+    marginTop: '20px',
+    padding: '18px 20px',
+    background: '#ffffff',
+    border: '1.5px solid #2E6B5E',
+    borderRadius: '14px',
+    boxShadow: '0 4px 16px rgba(46, 107, 94, 0.12)',
+    textAlign: 'left' as const,
+    boxSizing: 'border-box' as const,
+    width: '100%',
+  },
+  reviewHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '8px',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
+  },
+  reviewTitleGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    color: '#1e293b',
+    fontSize: '16px',
+  },
+  reviewBadge: {
+    padding: '4px 10px',
+    fontSize: '12px',
+    fontWeight: '600',
+    background: '#e6f4f1',
+    color: '#2E6B5E',
+    borderRadius: '12px',
+  },
+  reviewSubtitle: {
+    fontSize: '13px',
+    color: '#64748b',
+    margin: '0 0 12px 0',
+    lineHeight: '1.4',
+  },
+  reviewTextarea: {
+    width: '100%',
+    padding: '12px 14px',
+    fontSize: '15px',
+    lineHeight: '1.5',
+    border: '1px solid #cbd5e1',
+    borderRadius: '10px',
+    fontFamily: 'inherit',
+    resize: 'vertical' as const,
+    boxSizing: 'border-box' as const,
+    background: '#f8fafc',
+    color: '#0f172a',
+    minHeight: '80px',
+  },
+  reviewActions: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '10px',
+    marginTop: '14px',
+    alignItems: 'center',
+  },
+  sendToDoctorButton: {
+    flex: '1 1 200px',
+    minHeight: '48px',
+    padding: '12px 22px',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    color: '#ffffff',
+    background: '#2E6B5E',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    boxShadow: '0 4px 14px rgba(46, 107, 94, 0.3)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+  },
+  reRecordButton: {
+    minHeight: '44px',
+    padding: '10px 18px',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#334155',
+    background: '#f1f5f9',
+    border: '1px solid #cbd5e1',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  discardButton: {
+    minHeight: '44px',
+    padding: '10px 16px',
+    fontSize: '14px',
+    color: '#64748b',
+    background: 'transparent',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    cursor: 'pointer',
   },
   processingIndicator: {
     marginTop: '15px',
