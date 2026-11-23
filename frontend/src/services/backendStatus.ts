@@ -7,9 +7,9 @@ let currentState: BackendState = 'unknown';
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let consecutiveFailures = 0;
 let wakingStartedAt = 0;
-const MAX_POLL_FAILURES = 5;
+const MAX_POLL_FAILURES = 15;
 const POLL_INTERVAL_MS = 4000;
-const PING_TIMEOUT_MS = 8000;
+const PING_TIMEOUT_MS = 10000;
 
 const listeners = new Set<StateListener>();
 function setState(next: BackendState): void {

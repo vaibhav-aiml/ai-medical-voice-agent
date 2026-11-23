@@ -14,6 +14,11 @@ describe('CORS Preflight & Header Policy', () => {
     'https://medivoice-ai.netlify.app',
     'https://majestic-speculoos-f73a91.netlify.app',
     /\.netlify\.app$/,
+    'https://localhost',
+    'http://localhost',
+    'capacitor://localhost',
+    /^https?:\/\/localhost(:\d+)?$/,
+    /^capacitor:\/\/localhost$/,
   ];
 
   const app = express();
@@ -76,5 +81,25 @@ describe('CORS Preflight & Header Policy', () => {
     expect(res.status).toBe(200);
     expect(res.headers['access-control-expose-headers']).toContain('X-Request-ID');
     expect(res.headers['x-request-id']).toBe('test-req-123');
+  });
+
+  it('should allow requests from Android Capacitor https://localhost origin', async () => {
+    const res = await request(app)
+      .get('/api/test')
+      .set('Origin', 'https://localhost');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['access-control-allow-origin']).toBe('https://localhost');
+    expect(res.headers['access-control-allow-credentials']).toBe('true');
+  });
+
+  it('should allow requests from Android Capacitor capacitor://localhost origin', async () => {
+    const res = await request(app)
+      .get('/api/test')
+      .set('Origin', 'capacitor://localhost');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['access-control-allow-origin']).toBe('capacitor://localhost');
+    expect(res.headers['access-control-allow-credentials']).toBe('true');
   });
 });

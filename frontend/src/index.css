@@ -1121,3 +1121,103 @@ html[lang="te"] .small-text { line-height: 1.6; }
     height: 44px !important;
   }
 }
+
+/* ==========================================================================
+   Clerk Authentication Mobile Responsiveness & Strict Overflow Prevention
+   ========================================================================== */
+
+.cl-rootBox {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.cl-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+}
+
+.cl-cardBox {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.cl-main {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.cl-socialButtons {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.cl-socialButtonsBlockButton {
+  width: 100% !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.cl-formButtonPrimary {
+  width: 100% !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+  border-radius: 10px !important;
+  background-color: var(--accent-clinical) !important;
+  font-weight: 600 !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: #24544a !important;
+}
+
+.cl-formFieldInput {
+  width: 100% !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+  border-radius: 10px !important;
+}
+
+.cl-formFieldLabel {
+  text-align: left !important;
+  font-weight: 500 !important;
+}
+
+.cl-footerActionLink {
+  color: var(--accent-clinical) !important;
+  font-weight: 600 !important;
+}
+
+.cl-footer {
+  background: transparent !important;
+  border: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 480px) {
+  .cl-headerTitle {
+    font-size: 1.25rem !important;
+  }
+  .cl-headerSubtitle {
+    font-size: 0.875rem !important;
+  }
+  .cl-socialButtonsBlockButtonText {
+    font-size: 0.875rem !important;
+  }
+}

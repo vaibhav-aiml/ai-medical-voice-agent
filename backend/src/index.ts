@@ -40,23 +40,36 @@ import interopRoutes from './routes/interop.routes';
 
 const app = express();
 const httpServer = createServer(app);
-const allowedOrigins = [
+const allowedOrigins: (string | RegExp)[] = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:5174',
   'http://localhost:5175',
+  'https://localhost',
+  'http://localhost',
+  'capacitor://localhost',
   'https://ai-medical-voice-agent.netlify.app',
   'https://ai-medical-frontend.onrender.com',
   'https://medivoice-ai.netlify.app',
   'https://majestic-speculoos-f73a91.netlify.app',
   /\.netlify\.app$/,
+  /^https?:\/\/localhost(:\d+)?$/,
+  /^capacitor:\/\/localhost$/,
+  /^http:\/\/127\.0\.0\.1(:\d+)?$/,
   process.env.FRONTEND_URL
-].filter(Boolean);
+].filter(Boolean) as (string | RegExp)[];
 
 logger.info('Configured CORS allowed origins', { allowedOrigins: allowedOrigins.map(o => o.toString()) });
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: function(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+      if (!origin) return callback(null, true);
+      const isAllowed = allowedOrigins.some(allowed => {
+        if (allowed instanceof RegExp) return allowed.test(origin);
+        return allowed === origin;
+      });
+      callback(null, isAllowed);
+    },
     credentials: true,
     methods: ['GET', 'POST']
   },
