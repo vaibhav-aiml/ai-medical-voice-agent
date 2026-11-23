@@ -60,7 +60,7 @@ function calculateTrends(consultations: any[]): AnalyticsData['consultationTrend
     const weekKey = `${date.getFullYear()}-W${weekYear}`;
     weeklyMap.set(weekKey, (weeklyMap.get(weekKey) || 0) + 1);
     
-    const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     monthlyMap.set(monthKey, (monthlyMap.get(monthKey) || 0) + 1);
   });
   
@@ -224,7 +224,7 @@ export function generateAnalytics(consultations: any[], ratings?: any): Analytic
     totalPatients: getUniquePatientCount(consultations),
     totalConsultations: consultations.length,
     averageRating: avgRating,
-    patientSatisfaction: avgRating * 20,
+    patientSatisfaction: Math.min(Math.round(avgRating * 20), 100),
     consultationTrends,
     commonSymptoms,
     specialistDistribution,

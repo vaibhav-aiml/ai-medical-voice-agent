@@ -1,3 +1,4 @@
+import { useConsultation } from '../../context/ConsultationContext';
 import { Star, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export default function ProgressDashboard({ onClose }: Props) {
+  const { consultations: contextConsultations } = useConsultation();
   const { isMobile, isTablet } = useBreakpoint();
   const [healthData, setHealthData] = useState<HealthData[]>([]);
   const [consultations, setConsultations] = useState<ConsultationData[]>([]);
@@ -39,8 +41,12 @@ export default function ProgressDashboard({ onClose }: Props) {
   const loadHealthData = () => {
     const saved = localStorage.getItem('dailyHealthLogs');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      setHealthData(parsed.sort((a: HealthData, b: HealthData) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+      try {
+        const parsed = JSON.parse(saved);
+        setHealthData(parsed.sort((a: HealthData, b: HealthData) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+      } catch (err) {
+        console.error('Error parsing dailyHealthLogs', err);
+      }
     } else {
       
       const mockData: HealthData[] = [];
@@ -61,33 +67,49 @@ export default function ProgressDashboard({ onClose }: Props) {
   };
 
   const loadConsultations = () => {
+    if (contextConsultations && contextConsultations.length > 0) {
+      const ratings = JSON.parse(localStorage.getItem('consultationRatings') || '{}');
+      const formatted = contextConsultations.map((c: any) => ({
+        id: c.id,
+        date: new Date(c.startedAt || c.date || Date.now()),
+        specialistType: c.specialistType || 'general',
+        duration: Number(c.duration) || 0,
+        rating: c.rating !== undefined && c.rating !== null ? Number(c.rating) : (ratings[c.id]?.rating !== undefined ? Number(ratings[c.id]?.rating) : undefined),
+      }));
+      setConsultations(formatted);
+      return;
+    }
     const userId = localStorage.getItem('userId') || 'user';
     const saved = localStorage.getItem(`consultations_${userId}`);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      const ratings = JSON.parse(localStorage.getItem('consultationRatings') || '{}');
-      const formatted = parsed.map((c: any) => ({
-        id: c.id,
-        date: new Date(c.startedAt),
-        specialistType: c.specialistType,
-        duration: Number(c.duration) || 0,
-        rating: ratings[c.id]?.rating !== undefined && ratings[c.id]?.rating !== null ? Number(ratings[c.id]?.rating) : undefined,
-      }));
-      setConsultations(formatted);
+      try {
+        const parsed = JSON.parse(saved);
+        const ratings = JSON.parse(localStorage.getItem('consultationRatings') || '{}');
+        const formatted = parsed.map((c: any) => ({
+          id: c.id,
+          date: new Date(c.startedAt || c.date || Date.now()),
+          specialistType: c.specialistType || 'general',
+          duration: Number(c.duration) || 0,
+          rating: ratings[c.id]?.rating !== undefined && ratings[c.id]?.rating !== null ? Number(ratings[c.id]?.rating) : undefined,
+        }));
+        setConsultations(formatted);
+      } catch (e) {
+        console.error('Error parsing consultations in ProgressDashboard', e);
+      }
     }
   };
 
   const getFilteredHealthData = () => {
     const now = new Date();
     const filterDays = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365;
-    const cutoff = new Date(now.setDate(now.getDate() - filterDays));
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - filterDays);
     return healthData.filter(d => new Date(d.date) >= cutoff);
   };
 
   const getFilteredConsultations = () => {
     const now = new Date();
     const filterDays = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365;
-    const cutoff = new Date(now.setDate(now.getDate() - filterDays));
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - filterDays);
     return consultations.filter(c => c.date >= cutoff);
   };
 
@@ -104,11 +126,11 @@ export default function ProgressDashboard({ onClose }: Props) {
     };
   };
 
-  const calculateTrend = (key: keyof HealthData) => {
+  const calculateTrend = (key: keyof HealthData): 'up' | 'down' | 'same' => {
     const filtered = getFilteredHealthData();
-    if (filtered.length < 2) return 0;
-    const recent = filtered.slice(-3).reduce((acc, d) => acc + (d[key] as number), 0) / 3;
-    const previous = filtered.slice(-6, -3).reduce((acc, d) => acc + (d[key] as number), 0) / 3;
+    if (filtered.length < 2) return 'same';
+    const recent = filtered.slice(-3).reduce((acc, d) => acc + (d[key] as number), 0) / Math.min(3, filtered.length);
+    const previous = filtered.slice(-6, -3).reduce((acc, d) => acc + (d[key] as number), 0) / Math.min(3, Math.max(1, filtered.length - 3));
     return recent > previous ? 'up' : recent < previous ? 'down' : 'same';
   };
 
@@ -180,7 +202,7 @@ export default function ProgressDashboard({ onClose }: Props) {
                     <div style={styles.summaryValue}>{averages.water} glasses</div>
                     <div style={styles.summaryLabel}>Daily Water</div>
                   </div>
-                  <span style={{ ...styles.trend, color: calculateTrend('water') === 'up' ? '#10b981' : '#ef4444' }}>
+                  <span style={{ ...styles.trend, color: calculateTrend('water') === 'up' ? '#10b981' : calculateTrend('water') === 'down' ? '#ef4444' : '#6b7280' }}>
                     {calculateTrend('water') === 'up' ? '↑' : calculateTrend('water') === 'down' ? '↓' : '→'}
                   </span>
                 </div>
@@ -190,7 +212,7 @@ export default function ProgressDashboard({ onClose }: Props) {
                     <div style={styles.summaryValue}>{averages.steps.toLocaleString()}</div>
                     <div style={styles.summaryLabel}>Daily Steps</div>
                   </div>
-                  <span style={{ ...styles.trend, color: calculateTrend('steps') === 'up' ? '#10b981' : '#ef4444' }}>
+                  <span style={{ ...styles.trend, color: calculateTrend('steps') === 'up' ? '#10b981' : calculateTrend('steps') === 'down' ? '#ef4444' : '#6b7280' }}>
                     {calculateTrend('steps') === 'up' ? '↑' : calculateTrend('steps') === 'down' ? '↓' : '→'}
                   </span>
                 </div>
@@ -200,7 +222,7 @@ export default function ProgressDashboard({ onClose }: Props) {
                     <div style={styles.summaryValue}>{averages.sleep} hrs</div>
                     <div style={styles.summaryLabel}>Sleep</div>
                   </div>
-                  <span style={{ ...styles.trend, color: calculateTrend('sleep') === 'up' ? '#10b981' : '#ef4444' }}>
+                  <span style={{ ...styles.trend, color: calculateTrend('sleep') === 'up' ? '#10b981' : calculateTrend('sleep') === 'down' ? '#ef4444' : '#6b7280' }}>
                     {calculateTrend('sleep') === 'up' ? '↑' : calculateTrend('sleep') === 'down' ? '↓' : '→'}
                   </span>
                 </div>
@@ -210,7 +232,7 @@ export default function ProgressDashboard({ onClose }: Props) {
                     <div style={styles.summaryValue}>{averages.calories}</div>
                     <div style={styles.summaryLabel}>Calories</div>
                   </div>
-                  <span style={{ ...styles.trend, color: calculateTrend('calories') === 'up' ? '#10b981' : '#ef4444' }}>
+                  <span style={{ ...styles.trend, color: calculateTrend('calories') === 'up' ? '#10b981' : calculateTrend('calories') === 'down' ? '#ef4444' : '#6b7280' }}>
                     {calculateTrend('calories') === 'up' ? '↑' : calculateTrend('calories') === 'down' ? '↓' : '→'}
                   </span>
                 </div>

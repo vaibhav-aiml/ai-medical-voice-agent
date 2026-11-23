@@ -37,8 +37,11 @@ export default function ConsultationHistory({ consultations, onViewReport, onNew
     return status === 'completed' ? '#28a745' : '#ffc107';
   };
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-US', {
+  const formatDate = (date: Date | string | undefined | null) => {
+    if (!date) return 'N/A';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

@@ -13,7 +13,7 @@ export default function ReportsPage() {
   const {
     consultations,
     handleViewReport, handleBookAppointment,
-    handleRateConsultation, handleViewEnhancedReport,
+    handleRateConsultation, handleViewEnhancedReport, handleNewConsultation,
   } = useConsultation();
 
   const getSpecialistIcon = (type: string) => {
@@ -27,79 +27,98 @@ export default function ReportsPage() {
     }
   };
 
+  const completedConsultations = consultations.filter(c => c.status === 'completed');
+
   return (
     <div className="page-shell" style={{ maxWidth: '1280px', margin: '0 auto' }}>
-      <div style={styles.pageHeader}><h2 style={{...styles.pageTitle, ...(isMobile ? { fontSize: '22px' } : {})}}>{t('reports.title')}</h2><p style={styles.pageSubtitle}>{t('reports.subtitle')}</p></div>
-      <div style={{...styles.reportsList, ...(isMobile ? { gridTemplateColumns: '1fr' } : {})}}>
-        {consultations.filter(c => c.status === 'completed').map((consultation: ConsultationSession) => (
-          <div key={consultation.id} style={{ ...styles.reportCard, ...(isMobile ? { padding: '16px' } : {}) }}>
-            <div style={styles.reportHeader}>
-              <div style={styles.reportIconArea}>{getSpecialistIcon(consultation.specialistType)}</div>
-              <div style={styles.reportInfo}>
-                <h3 style={styles.reportTitle}>{t('reports.consultationWith')} {consultation.specialistName}</h3>
-                <p style={styles.reportDate}>{new Date(consultation.startedAt).toLocaleDateString()}</p>
-              </div>
-              <div style={styles.reportStatus}>
-                <CheckCircle size={14} color="#10b981" />
-                <span>{t('reports.completed')}</span>
-              </div>
-            </div>
-            <div style={styles.reportContent}>
-              <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
-              <p><strong>{t('reports.duration')}:</strong> {Number(consultation.duration) || 0} {t('reports.minutes')}</p>
-            </div>
-            <div style={{
-              ...styles.reportActions,
-              ...(isMobile ? {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '8px',
-              } : {})
-            }}>
-              <button
-                onClick={() => handleViewReport(consultation.id)}
-                style={{
-                  ...styles.downloadButton,
-                  ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
-                }}
-              >
-                <Download size={16} />
-                <span>{t('reports.viewReport')}</span>
-              </button>
-              <button
-                onClick={() => handleBookAppointment(consultation)}
-                style={{
-                  ...styles.bookButton,
-                  ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
-                }}
-              >
-                <Calendar size={16} />
-                <span>{t('reports.bookFollowup')}</span>
-              </button>
-              <button
-                onClick={() => handleRateConsultation(consultation)}
-                style={{
-                  ...styles.ratingButton,
-                  ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
-                }}
-              >
-                <Star size={16} />
-                <span>{t('reports.rateConsultation')}</span>
-              </button>
-              <button
-                onClick={() => handleViewEnhancedReport(consultation)}
-                style={{
-                  ...styles.enhancedReportButton,
-                  ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
-                }}
-              >
-                <FileText size={16} />
-                <span>View SOAP Report</span>
-              </button>
-            </div>
-          </div>
-        ))}
+      <div style={styles.pageHeader}>
+        <h2 style={{...styles.pageTitle, ...(isMobile ? { fontSize: '22px' } : {})}}>{t('reports.title')}</h2>
+        <p style={styles.pageSubtitle}>{t('reports.subtitle')}</p>
       </div>
+
+      {completedConsultations.length === 0 ? (
+        <div style={styles.emptyContainer}>
+          <div style={styles.emptyIconArea}>
+            <FileText size={48} color="var(--button-primary)" />
+          </div>
+          <h3 style={styles.emptyTitle}>No Medical Reports Yet</h3>
+          <p style={styles.emptySubtitle}>Completed consultations will automatically generate downloadable medical reports here.</p>
+          <button onClick={handleNewConsultation} style={styles.emptyButton}>
+            + Start a Consultation
+          </button>
+        </div>
+      ) : (
+        <div style={{...styles.reportsList, ...(isMobile ? { gridTemplateColumns: '1fr' } : {})}}>
+          {completedConsultations.map((consultation: ConsultationSession) => (
+            <div key={consultation.id} style={{ ...styles.reportCard, ...(isMobile ? { padding: '16px' } : {}) }}>
+              <div style={styles.reportHeader}>
+                <div style={styles.reportIconArea}>{getSpecialistIcon(consultation.specialistType)}</div>
+                <div style={styles.reportInfo}>
+                  <h3 style={styles.reportTitle}>{t('reports.consultationWith')} {consultation.specialistName}</h3>
+                  <p style={styles.reportDate}>{new Date(consultation.startedAt).toLocaleDateString()}</p>
+                </div>
+                <div style={styles.reportStatus}>
+                  <CheckCircle size={14} color="#10b981" />
+                  <span>{t('reports.completed')}</span>
+                </div>
+              </div>
+              <div style={styles.reportContent}>
+                <p><strong>{t('reports.symptoms')}:</strong> {consultation.symptoms?.substring(0, 100)}...</p>
+                <p><strong>{t('reports.duration')}:</strong> {Number(consultation.duration) || 0} {t('reports.minutes')}</p>
+              </div>
+              <div style={{
+                ...styles.reportActions,
+                ...(isMobile ? {
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '8px',
+                } : {})
+              }}>
+                <button
+                  onClick={() => handleViewReport(consultation.id)}
+                  style={{
+                    ...styles.downloadButton,
+                    ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
+                  }}
+                >
+                  <Download size={16} />
+                  <span>{t('reports.viewReport')}</span>
+                </button>
+                <button
+                  onClick={() => handleBookAppointment(consultation)}
+                  style={{
+                    ...styles.bookButton,
+                    ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
+                  }}
+                >
+                  <Calendar size={16} />
+                  <span>{t('reports.bookFollowup')}</span>
+                </button>
+                <button
+                  onClick={() => handleRateConsultation(consultation)}
+                  style={{
+                    ...styles.ratingButton,
+                    ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
+                  }}
+                >
+                  <Star size={16} />
+                  <span>{t('reports.rateConsultation')}</span>
+                </button>
+                <button
+                  onClick={() => handleViewEnhancedReport(consultation)}
+                  style={{
+                    ...styles.enhancedReportButton,
+                    ...(isMobile ? { minHeight: '44px', width: '100%', padding: '10px 8px', fontSize: '12px' } : {})
+                  }}
+                >
+                  <FileText size={16} />
+                  <span>View SOAP Report</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -123,4 +142,9 @@ const styles: Record<string, React.CSSProperties> = {
   bookButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', background: 'var(--badge-bg)', color: 'var(--button-primary)', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
   ratingButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
   enhancedReportButton: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', background: 'var(--accent-clinical)', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' },
+  emptyContainer: { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', padding: '60px 20px', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' as const },
+  emptyIconArea: { width: '80px', height: '80px', borderRadius: '50%', background: 'var(--badge-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' },
+  emptyTitle: { fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 8px' },
+  emptySubtitle: { fontSize: '14px', color: 'var(--text-secondary)', maxWidth: '420px', margin: '0 0 20px' },
+  emptyButton: { padding: '12px 24px', background: 'var(--accent-clinical)', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 600, fontSize: '14px' },
 };

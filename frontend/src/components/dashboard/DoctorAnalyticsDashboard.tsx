@@ -160,7 +160,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
       if (data.success) {
         setAnalytics(data.data);
       } else {
-        throw new Error(data.message || 'Failed to fetch analytics');
+        throw new Error(data.message || data.error || 'Failed to fetch analytics');
       }
     } catch (fetchError: any) {
       if (fetchError.name === 'AbortError') return; 
@@ -177,6 +177,34 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExportAnalytics = () => {
+    if (!analytics) return;
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      summary: {
+        totalPatients: analytics.totalPatients,
+        totalConsultations: analytics.totalConsultations,
+        averageRating: analytics.averageRating,
+        patientSatisfaction: `${Math.round(analytics.patientSatisfaction)}%`,
+      },
+      consultationTrends: analytics.consultationTrends,
+      commonSymptoms: analytics.commonSymptoms,
+      specialistDistribution: analytics.specialistDistribution,
+      patientDemographics: analytics.patientDemographics,
+      topDoctors: analytics.topDoctors,
+      recentConsultations: analytics.recentConsultations,
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `doctor-analytics-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const getSpecialistIcon = (type: string) => {
@@ -257,7 +285,7 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
             <button onClick={fetchAnalytics} style={styles.refreshBtn}>
               <RefreshCw size={16} /> Refresh
             </button>
-            <button style={styles.exportBtn}>
+            <button onClick={handleExportAnalytics} style={styles.exportBtn}>
               <Download size={16} /> Export
             </button>
             {onClose && (
@@ -438,14 +466,18 @@ const DoctorAnalyticsDashboard: React.FC<Props> = ({ consultations, ratings, onC
 
         <div style={styles.recentSection}>
           <h3 style={styles.recentTitle}>📋 Recent Consultations</h3>
-          {analytics.recentConsultations.map((c: any) => (
+          {analytics.recentConsultations.length === 0 ? (
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '16px' }}>No consultations recorded yet</p>
+          ) : (
+            analytics.recentConsultations.map((c: any) => (
             <div key={c.id} style={{...styles.recentRow, gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr 2fr 0.8fr'}}>
               <div><span style={{ fontWeight: 600 }}>{c.patientName}</span><br /><span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{new Date(c.date).toLocaleDateString()}</span></div>
               <div><span style={{ color: '#00C2FF' }}>{getSpecialistTypeName(c.specialistType)}</span><br /><span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{c.duration} min</span></div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{c.symptoms?.substring(0, 40)}...</div>
               <div>{c.rating ? `⭐ ${c.rating}` : 'Not rated'}</div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

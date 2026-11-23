@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../config/database';
 import { consultations, users, voiceSessions } from '../db/schema/index';
-import { eq } from 'drizzle-orm';
+import { eq, or, desc } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger';
 import { catchAsync } from '../utils/catchAsync';
@@ -23,9 +23,16 @@ async function getOrCreateInternalUserId(clerkId: string, email?: string, name?:
       clerkId: clerkId,
       email: email || `${clerkId}@example.com`,
       name: name || 'MediVoice Patient',
-    }).returning();
+    })
+    .onConflictDoUpdate({
+      target: users.clerkId,
+      set: {
+        updatedAt: new Date(),
+      }
+    })
+    .returning();
 
-    logger.info(`Created new user record for Clerk ID: ${clerkId}`);
+    logger.info(`Created or resolved user record for Clerk ID: ${clerkId}`);
     return newUser[0].id;
   } catch (error: any) {
     logger.error('Failed in getOrCreateInternalUserId', { clerkId, error: error.message });
@@ -125,7 +132,10 @@ router.post('/:id/end', catchAsync(async (req: Request, res: Response) => {
 router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
   
-  const dbUser = await db.select().from(users).where(eq(users.clerkId, userId as string));
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId as string);
+  const dbUser = await db.select().from(users).where(
+    isUuid ? or(eq(users.clerkId, userId as string), eq(users.id, userId as string)) : eq(users.clerkId, userId as string)
+  );
   if (dbUser.length === 0) {
     return res.json([]);
   }
@@ -140,7 +150,7 @@ router.get('/user/:userId', catchAsync(async (req: Request, res: Response) => {
   .from(consultations)
   .leftJoin(voiceSessions, eq(consultations.id, voiceSessions.consultationId))
   .where(eq(consultations.userId, dbUser[0].id))
-  .orderBy(consultations.startedAt);
+  .orderBy(desc(consultations.startedAt));
   const uniqueConsultations = new Map<string, any>();
   for (const row of rows) {
     const cons = {

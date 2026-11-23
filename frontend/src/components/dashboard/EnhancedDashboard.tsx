@@ -221,6 +221,24 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
     : (filteredConsultations.length > 0 ? totalMinutes / filteredConsultations.length : 0);
   const avgDuration = isNaN(rawAvgDuration) ? 0 : Math.round(rawAvgDuration);
 
+  const getMostActiveDay = () => {
+    const data = chartData?.consultations?.datasets?.[0]?.data;
+    if (!data || data.length === 0) return 'N/A';
+    const max = Math.max(...data);
+    if (max <= 0) return 'No activity';
+    const idx = data.indexOf(max);
+    return chartData?.consultations?.labels?.[idx] || 'N/A';
+  };
+
+  const getMostUsedSpecialist = () => {
+    const data = specialistChart?.datasets?.[0]?.data;
+    if (!data || data.length === 0) return 'N/A';
+    const max = Math.max(...data);
+    if (max <= 0) return 'N/A';
+    const idx = data.indexOf(max);
+    return specialistChart?.labels?.[idx] || 'N/A';
+  };
+
   if (!isInitialized && consultations.length === 0) {
     return (
       <div style={styles.loadingContainer}>
@@ -412,11 +430,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
               <div>
                 <div style={styles.insightTitle}>Most Active Day</div>
                 <div style={styles.insightValue}>
-                  {chartData?.consultations.labels[
-                    chartData?.consultations.datasets[0].data.indexOf(
-                      Math.max(...(chartData?.consultations.datasets[0].data || [0]))
-                    )
-                  ] || 'N/A'}
+                  {getMostActiveDay()}
                 </div>
               </div>
             </div>
@@ -425,11 +439,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
               <div>
                 <div style={styles.insightTitle}>Most Used Specialist</div>
                 <div style={styles.insightValue}>
-                  {specialistChart?.labels[
-                    specialistChart?.datasets[0].data.indexOf(
-                      Math.max(...(specialistChart?.datasets[0].data || [0]))
-                    )
-                  ] || 'N/A'}
+                  {getMostUsedSpecialist()}
                 </div>
               </div>
             </div>
@@ -475,11 +485,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
               <div>
                 <div style={styles.insightTitle}>Most Active Day</div>
                 <div style={styles.insightValue}>
-                  {chartData?.consultations.labels[
-                    chartData?.consultations.datasets[0].data.indexOf(
-                      Math.max(...(chartData?.consultations.datasets[0].data || [0]))
-                    )
-                  ] || 'N/A'}
+                  {getMostActiveDay()}
                 </div>
               </div>
             </div>
@@ -488,11 +494,7 @@ export default function EnhancedDashboard({ consultations, stats }: Props) {
               <div>
                 <div style={styles.insightTitle}>Most Used Specialist</div>
                 <div style={styles.insightValue}>
-                  {specialistChart?.labels[
-                    specialistChart?.datasets[0].data.indexOf(
-                      Math.max(...(specialistChart?.datasets[0].data || [0]))
-                    )
-                  ] || 'N/A'}
+                  {getMostUsedSpecialist()}
                 </div>
               </div>
             </div>
@@ -715,13 +717,15 @@ const styles = {
     minHeight: '64px',
   },
 };
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  `;
+  if (!document.head.querySelector('#dashboard-styles')) {
+    styleSheet.id = 'dashboard-styles';
+    document.head.appendChild(styleSheet);
   }
-`;
-if (!document.head.querySelector('#dashboard-styles')) {
-  styleSheet.id = 'dashboard-styles';
-  document.head.appendChild(styleSheet);
 }

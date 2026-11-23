@@ -7,6 +7,7 @@ import TriageDisplay from '../consultation/TriageDisplay';
 import { useLanguage } from '../../context/LanguageContext';
 import { cleanTextForSpeech, splitIntoSentences } from '../../utils/cleanTextForSpeech';
 import { isMoreUrgent } from '../../utils/triageUtils';
+import { createSpeechRecognition } from '../../services/speech/unifiedSpeechRecognition';
 
 interface Props {
   consultationId: string;
@@ -240,6 +241,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       utterance.rate = voiceSettings.rate;
       utterance.pitch = voiceSettings.pitch;
       utterance.volume = voiceSettings.volume;
+      utterance.lang = getSpeechRecognitionCode(language);
       if (selectedVoice) utterance.voice = selectedVoice;
       window.speechSynthesis.speak(utterance);
     });
@@ -318,9 +320,8 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      const recognitionInstance = new SpeechRecognition();
+    const recognitionInstance = createSpeechRecognition();
+    if (recognitionInstance) {
       recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
       const speechLang = getSpeechRecognitionCode(language);
@@ -373,7 +374,7 @@ export default function VoiceRecorder({ consultationId, specialistType, onTransc
       
       setRecognition(recognitionInstance);
     } else {
-      console.log('Web Speech API not supported');
+      console.log('Speech recognition not supported in this environment');
       setUseTextInput(true);
     }
   }, [language, getAIResponseStream, setConversationHistory]);
